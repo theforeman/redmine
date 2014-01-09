@@ -106,6 +106,7 @@ class IssuesSystemTest < ApplicationSystemTestCase
     visit '/projects/ecookbook/issues/new'
     fill_in 'Subject', :with => 'Issue with watchers'
     # Add a project member as watcher
+    find('#issue_watchers_edit').click
     check 'Dave Lopper'
     # Search for another user
     assert page.has_no_css?('form#new-watcher-form')
