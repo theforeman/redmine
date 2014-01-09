@@ -34,9 +34,12 @@
 
     <% if @issue.safe_attribute? 'watcher_user_ids' -%>
       <p id="watchers_form"><label><%= l(:label_issue_watchers) %></label>
-      <span id="watchers_inputs">
-        <%= watchers_checkboxes(@issue, users_for_new_issue_watchers(@issue)) %>
-      </span>
+      <%= link_to_function image_tag('edit.png'), '$(this).hide(); $("#issue_watchers").show()' %>
+      <%= content_tag 'span', :id => "issue_watchers", :style => 'display:none' do %>
+        <span id="watchers_inputs">
+          <%= watchers_checkboxes(@issue, users_for_new_issue_watchers(@issue)) %>
+        </span>
+      <% end %>
       <span class="search_for_watchers">
       <%= link_to l(:label_search_for_watchers),
                   {:controller => 'watchers', :action => 'new', :project_id => @issue.project},
