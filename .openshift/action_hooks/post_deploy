@@ -1,0 +1,65 @@
+#!/bin/bash
+# This is a simple post deploy hook executed after your application
+# is deployed and started.  This script gets executed directly, so
+# it could be python, php, ruby, etc.
+
+set -e
+
+function postgresql_call() {
+    PGPASSWORD="$OPENSHIFT_POSTGRESQL_DB_PASSWORD" psql \
+            -h "$OPENSHIFT_POSTGRESQL_DB_HOST" \
+            -p "$OPENSHIFT_POSTGRESQL_DB_PORT" \
+            -U "$OPENSHIFT_POSTGRESQL_DB_USERNAME" \
+            "$OPENSHIFT_APP_NAME"
+}
+
+function postgresql_restore() {
+    PGPASSWORD="$OPENSHIFT_POSTGRESQL_DB_PASSWORD" pg_restore \
+            -C -d "$OPENSHIFT_APP_NAME" \
+            -h "$OPENSHIFT_POSTGRESQL_DB_HOST" \
+            -p "$OPENSHIFT_POSTGRESQL_DB_PORT" \
+            -U "$OPENSHIFT_POSTGRESQL_DB_USERNAME" "$1"
+}
+
+if [ -z $OPENSHIFT_POSTGRESQL_DB_HOST ]; then
+    echo 1>&2
+    echo "Could not find postgresql database. Please run:" 1>&2
+    echo "rhc cartridge add -a $OPENSHIFT_APP_NAME -c postgresql-9.4" 1>&2
+    echo "then make a sample commit (add whitespace somewhere) and re-push" 1>&2
+    echo 1>&2
+    exit 5
+fi
+
+# Determinate wheather it is or it isn't the initial deployment,
+# so the database will be created from redmine.sql or there are
+# changes which need to be migrated.
+
+DB_PRESENT=$(echo "\d" | postgresql_call | grep -q attachments; echo $?)
+if [ "$DB_PRESENT" -eq 0 -o ! -e ${OPENSHIFT_DATA_DIR}/redmine.sql.gz ]
+then
+    # Runs on every other Redmine application deployment
+    # except the first one.
+    pushd ${OPENSHIFT_REPO_DIR} > /dev/null
+    echo "Migrating database"
+    bundle exec "env RAILS_ENV='production' rake db:migrate"
+    popd > /dev/null
+else
+    # Runs on the initial Redmine deployment
+    pushd ${OPENSHIFT_REPO_DIR} > /dev/null
+    echo "Creating DB"
+    bundle exec "env RAILS_ENV='production' rake db:create"
+    popd > /dev/null
+
+    pushd ${OPENSHIFT_DATA_DIR} > /dev/null
+    echo "Loading database dump"
+    gunzip -c redmine.sql.gz > redmine.sql
+    postgresql_restore redmine.sql
+    popd > /dev/null
+fi
+
+if [ ! -d ${OPENSHIFT_DATA_DIR}files ]
+then
+	mkdir ${OPENSHIFT_DATA_DIR}files
+fi
+
+ln -sf ${OPENSHIFT_DATA_DIR}files ${OPENSHIFT_REPO_DIR}files
