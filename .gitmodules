@@ -1,0 +1,12 @@
+[submodule "plugins/redmine_backlogs"]
+	path = plugins/redmine_backlogs
+	url = https://github.com/theforeman/redmine_backlogs.git
+[submodule "plugins/redmine_omniauth_github"]
+	path = plugins/redmine_omniauth_github
+	url = https://github.com/ares/redmine_omniauth_github.git
+[submodule "plugins/redmine_ruby_code"]
+	path = plugins/redmine_ruby_code
+	url = https://github.com/ares/redmine_ruby_code.git
+[submodule "plugins/redmine_vote"]
+	path = plugins/redmine_vote
+	url = https://github.com/ares/redmine_vote.git
