@@ -1,0 +1,43 @@
+#!/bin/bash
+
+update_repo() {
+  pushd ${OPENSHIFT_DATA_DIR} >/dev/null
+  [ -e git ] || mkdir git
+  if [ -e git/${1} ]; then
+    cd git/${1} && git pull -q
+  else
+    git clone -q ${2} git/${1}
+  fi
+  popd >/dev/null
+}
+
+update_repo foreman_api https://github.com/theforeman/foreman_api.git
+update_repo foreman_content https://github.com/theforeman/foreman_content
+update_repo foreman_discovery https://github.com/theforeman/foreman_discovery
+update_repo foreman https://github.com/theforeman/foreman.git
+update_repo foreman-installer https://github.com/theforeman/foreman-installer.git
+update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
+update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
+update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
+update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
+update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
+update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
+update_repo hammer-cli https://github.com/theforeman/hammer-cli
+update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
+update_repo kafo https://github.com/theforeman/kafo.git
+update_repo katello https://github.com/Katello/katello.git
+update_repo katello-installer https://github.com/Katello/katello-installer.git
+update_repo ofi https://github.com/theforeman/ofi.git
+update_repo puppet-concat https://github.com/theforeman/puppet-concat.git
+update_repo puppet-dhcp https://github.com/theforeman/puppet-dhcp.git
+update_repo puppet-dns https://github.com/theforeman/puppet-dns.git
+update_repo puppet-foreman https://github.com/theforeman/puppet-foreman.git
+update_repo puppet-foreman_proxy https://github.com/theforeman/puppet-foreman_proxy.git
+update_repo puppet-git https://github.com/theforeman/puppet-git.git
+update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
+update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
+update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
+update_repo stacker https://github.com/ohadlevy/stacker.git
+
+cd ${OPENSHIFT_REPO_DIR}
+script/rails runner "Repository.fetch_changesets" -e production
