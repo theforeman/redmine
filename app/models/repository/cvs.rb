@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -47,7 +47,7 @@ class Repository::Cvs < Repository
     scm.entry(path, rev.nil? ? nil : rev.committed_on)
   end
 
-  def entries(path=nil, identifier=nil)
+  def scm_entries(path=nil, identifier=nil)
     rev = nil
     if ! identifier.nil?
       rev = changesets.find_by_revision(identifier)
@@ -69,9 +69,9 @@ class Repository::Cvs < Repository
         end
       end
     end
-    load_entries_changesets(entries)
     entries
   end
+  protected :scm_entries
 
   def cat(path, identifier=nil)
     rev = nil
@@ -138,9 +138,9 @@ class Repository::Cvs < Repository
         # is not exclusive at all.
         tmp_time = revision.time.clone
         unless filechanges.find_by_path_and_revision(
-	                         scm.with_leading_slash(revision.paths[0][:path]),
-	                         revision.paths[0][:revision]
-	                           )
+                                scm.with_leading_slash(revision.paths[0][:path]),
+                                revision.paths[0][:revision]
+                             )
           cmt = Changeset.normalize_comments(revision.message, repo_log_encoding)
           author_utf8 = Changeset.to_utf8(revision.author, repo_log_encoding)
           cs  = changesets.where(
@@ -150,7 +150,7 @@ class Repository::Cvs < Repository
                 ).first
           # create a new changeset....
           unless cs
-            # we use a temporaray revision number here (just for inserting)
+            # we use a temporary revision number here (just for inserting)
             # later on, we calculate a continous positive number
             tmp_time2 = tmp_time.clone.gmtime
             branch    = revision.paths[0][:branch]
@@ -186,7 +186,7 @@ class Repository::Cvs < Repository
         order('committed_on ASC, id ASC').
         where("repository_id = ? AND revision LIKE 'tmp%'", id).
         each do |changeset|
-        changeset.update_attribute :revision, next_revision_number
+          changeset.update_attribute :revision, next_revision_number
       end
     end # transaction
     @current_revision_number = nil

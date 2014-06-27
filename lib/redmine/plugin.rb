@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -79,7 +79,7 @@ module Redmine #:nodoc:
 
       # Adds plugin locales if any
       # YAML translation files should be found under <plugin>/config/locales/
-      ::I18n.load_path += Dir.glob(File.join(p.directory, 'config', 'locales', '*.yml'))
+      Rails.application.config.i18n.load_path += Dir.glob(File.join(p.directory, 'config', 'locales', '*.yml'))
 
       # Prepends the app/views directory of the plugin to the view path
       view_path = File.join(p.directory, 'app', 'views')
@@ -111,6 +111,12 @@ module Redmine #:nodoc:
     # It doesn't unload installed plugins
     def self.clear
       @registered_plugins = {}
+    end
+
+    # Removes a plugin from the registered plugins
+    # It doesn't unload the plugin
+    def self.unregister(id)
+      @registered_plugins.delete(id)
     end
 
     # Checks if a plugin is installed
@@ -325,7 +331,7 @@ module Redmine #:nodoc:
     # Associated model(s) must implement the find_events class method.
     # ActiveRecord models can use acts_as_activity_provider as a way to implement this class method.
     #
-    # The following call should return all the scrum events visible by current user that occured in the 5 last days:
+    # The following call should return all the scrum events visible by current user that occurred in the 5 last days:
     #   Meeting.find_events('scrums', User.current, 5.days.ago, Date.today)
     #   Meeting.find_events('scrums', User.current, 5.days.ago, Date.today, :project => foo) # events for project foo only
     #

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -87,7 +87,7 @@ module Redmine
                 a = Attachment.find_by_token(token)
                 next unless a
                 a.filename = attachment['filename'] unless attachment['filename'].blank?
-                a.content_type = attachment['content_type']
+                a.content_type = attachment['content_type'] unless attachment['content_type'].blank?
               end
               next unless a
               a.description = attachment['description'].to_s.strip

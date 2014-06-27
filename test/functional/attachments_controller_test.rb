@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -193,12 +193,12 @@ class AttachmentsControllerTest < ActionController::TestCase
   end
 
   def test_show_text_file_should_send_if_too_big
-    Setting.file_max_size_displayed = 512
-    Attachment.find(4).update_attribute :filesize, 754.kilobyte
-
-    get :show, :id => 4
-    assert_response :success
-    assert_equal 'application/x-ruby', @response.content_type
+    with_settings :file_max_size_displayed => 512 do
+      Attachment.find(4).update_attribute :filesize, 754.kilobyte
+      get :show, :id => 4
+      assert_response :success
+      assert_equal 'application/x-ruby', @response.content_type
+    end
     set_tmp_attachments_directory
   end
 
@@ -250,6 +250,13 @@ class AttachmentsControllerTest < ActionController::TestCase
     get :download, :id => 4
     assert_response :success
     assert_equal 'application/x-ruby', @response.content_type
+    etag = @response.etag
+    assert_not_nil etag
+
+    @request.env["HTTP_IF_NONE_MATCH"] = etag
+    get :download, :id => 4
+    assert_response 304
+
     set_tmp_attachments_directory
   end
 
@@ -284,10 +291,16 @@ class AttachmentsControllerTest < ActionController::TestCase
     def test_thumbnail
       Attachment.clear_thumbnails
       @request.session[:user_id] = 2
-
       get :thumbnail, :id => 16
       assert_response :success
       assert_equal 'image/png', response.content_type
+
+      etag = @response.etag
+      assert_not_nil etag
+
+      @request.env["HTTP_IF_NONE_MATCH"] = etag
+      get :thumbnail, :id => 16
+      assert_response 304
     end
 
     def test_thumbnail_should_not_exceed_maximum_size
@@ -339,7 +352,7 @@ class AttachmentsControllerTest < ActionController::TestCase
       end
     end
     assert_nil Attachment.find_by_id(1)
-    j = Journal.first(:order => 'id DESC')
+    j = Journal.order('id DESC').first
     assert_equal issue, j.journalized
     assert_equal 'attachment', j.details.first.property
     assert_equal '1', j.details.first.prop_key

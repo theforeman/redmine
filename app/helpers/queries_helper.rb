@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module QueriesHelper
+  include ApplicationHelper
+
   def filters_options_for_select(query)
     options_for_select(filters_options(query))
   end
@@ -56,7 +58,7 @@ module QueriesHelper
   def available_block_columns_tags(query)
     tags = ''.html_safe
     query.available_block_columns.each do |column|
-      tags << content_tag('label', check_box_tag('c[]', column.name.to_s, query.has_column?(column)) + " #{column.caption}", :class => 'inline')
+      tags << content_tag('label', check_box_tag('c[]', column.name.to_s, query.has_column?(column), :id => nil) + " #{column.caption}", :class => 'inline')
     end
     tags
   end
@@ -81,7 +83,7 @@ module QueriesHelper
   end
 
   def column_content(column, issue)
-    value = column.value(issue)
+    value = column.value_object(issue)
     if value.is_a?(Array)
       value.collect {|v| column_value(column, issue, v)}.compact.join(', ').html_safe
     else
@@ -90,53 +92,27 @@ module QueriesHelper
   end
   
   def column_value(column, issue, value)
-    case value.class.name
-    when 'String'
-      if column.name == :subject
-        link_to(h(value), :controller => 'issues', :action => 'show', :id => issue)
-      elsif column.name == :description
-        issue.description? ? content_tag('div', textilizable(issue, :description), :class => "wiki") : ''
-      else
-        h(value)
-      end
-    when 'Time'
-      format_time(value)
-    when 'Date'
-      format_date(value)
-    when 'Fixnum'
-      if column.name == :id
-        link_to value, issue_path(issue)
-      elsif column.name == :done_ratio
-        progress_bar(value, :width => '80px')
-      else
-        value.to_s
-      end
-    when 'Float'
-      sprintf "%.2f", value
-    when 'User'
-      link_to_user value
-    when 'Project'
-      link_to_project value
-    when 'Version'
-      link_to(h(value), :controller => 'versions', :action => 'show', :id => value)
-    when 'TrueClass'
-      l(:general_text_Yes)
-    when 'FalseClass'
-      l(:general_text_No)
-    when 'Issue'
-      value.visible? ? link_to_issue(value) : "##{value.id}"
-    when 'IssueRelation'
+    case column.name
+    when :id
+      link_to value, issue_path(issue)
+    when :subject
+      link_to value, issue_path(issue)
+    when :description
+      issue.description? ? content_tag('div', textilizable(issue, :description), :class => "wiki") : ''
+    when :done_ratio
+      progress_bar(value, :width => '80px')
+    when :relations
       other = value.other_issue(issue)
       content_tag('span',
         (l(value.label_for(issue)) + " " + link_to_issue(other, :subject => false, :tracker => false)).html_safe,
         :class => value.css_classes_for(issue))
     else
-      h(value)
+      format_object(value)
     end
   end
 
   def csv_content(column, issue)
-    value = column.value(issue)
+    value = column.value_object(issue)
     if value.is_a?(Array)
       value.collect {|v| csv_value(column, issue, v)}.compact.join(', ')
     else
@@ -145,18 +121,16 @@ module QueriesHelper
   end
 
   def csv_value(column, issue, value)
-    case value.class.name
-    when 'Time'
-      format_time(value)
-    when 'Date'
-      format_date(value)
-    when 'Float'
-      sprintf("%.2f", value).gsub('.', l(:general_csv_decimal_separator))
-    when 'IssueRelation'
-      other = value.other_issue(issue)
-      l(value.label_for(issue)) + " ##{other.id}"
-    else
-      value.to_s
+    format_object(value, false) do |value|
+      case value.class.name
+      when 'Float'
+        sprintf("%.2f", value).gsub('.', l(:general_csv_decimal_separator))
+      when 'IssueRelation'
+        other = value.other_issue(issue)
+        l(value.label_for(issue)) + " ##{other.id}"
+      else
+        value
+      end
     end
   end
 

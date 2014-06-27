@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -200,7 +200,7 @@ class RepositoriesCvsControllerTest < ActionController::TestCase
         assert_tag :tag => 'th', :attributes => { :class => 'filename' },
                                  :content => /test\/README/
         assert_tag :tag => 'th', :attributes => { :class => 'filename' },
-                                 :content => /test\/images\/delete.png	/
+                                 :content => /test\/images\/delete.png/
         assert_tag :tag => 'th', :attributes => { :class => 'filename' },
                                  :content => /test\/images\/edit.png/
         assert_tag :tag => 'th', :attributes => { :class => 'filename' },

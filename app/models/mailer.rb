@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -80,7 +80,7 @@ class Mailer < ActionMailer::Base
   def self.deliver_issue_edit(journal)
     issue = journal.journalized.reload
     to = journal.notified_users
-    cc = journal.notified_watchers
+    cc = journal.notified_watchers - to
     journal.each_notification(to + cc) do |users|
       issue.each_notification(users) do |users2|
         Mailer.issue_edit(journal, to & users2, cc & users2).deliver
@@ -158,6 +158,7 @@ class Mailer < ActionMailer::Base
     @news = news
     @news_url = url_for(:controller => 'news', :action => 'show', :id => news)
     mail :to => news.recipients,
+      :cc => news.cc_for_added_news,
       :subject => "[#{news.project.name}] #{l(:label_news)}: #{news.title}"
   end
 
@@ -266,7 +267,7 @@ class Mailer < ActionMailer::Base
   #   Mailer.account_activation_request(user).deliver => sends an email to all active administrators
   def account_activation_request(user)
     # Send the email to all active administrators
-    recipients = User.active.where(:admin => true).all.collect { |u| u.mail }.compact
+    recipients = User.active.where(:admin => true).collect { |u| u.mail }.compact
     @user = user
     @url = url_for(:controller => 'users', :action => 'index',
                          :status => User::STATUS_REGISTERED,
@@ -330,8 +331,8 @@ class Mailer < ActionMailer::Base
     scope = scope.where(:assigned_to_id => user_ids) if user_ids.present?
     scope = scope.where(:project_id => project.id) if project
     scope = scope.where(:tracker_id => tracker.id) if tracker
-
-    issues_by_assignee = scope.includes(:status, :assigned_to, :project, :tracker).all.group_by(&:assigned_to)
+    issues_by_assignee = scope.includes(:status, :assigned_to, :project, :tracker).
+                              group_by(&:assigned_to)
     issues_by_assignee.keys.each do |assignee|
       if assignee.is_a?(Group)
         assignee.users.each do |user|
@@ -368,7 +369,7 @@ class Mailer < ActionMailer::Base
     ActionMailer::Base.delivery_method = saved_method
   end
 
-  def mail(headers={})
+  def mail(headers={}, &block)
     headers.merge! 'X-Mailer' => 'Redmine',
             'X-Redmine-Host' => Setting.host_name,
             'X-Redmine-Site' => Setting.app_title,
@@ -403,12 +404,17 @@ class Mailer < ActionMailer::Base
       headers[:references] = @references_objects.collect {|o| "<#{self.class.references_for(o)}>"}.join(' ')
     end
 
-    super headers do |format|
-      format.text
-      format.html unless Setting.plain_text_mail?
+    m = if block_given?
+      super headers, &block
+    else
+      super headers do |format|
+        format.text
+        format.html unless Setting.plain_text_mail?
+      end
     end
-
     set_language_if_valid @initial_language
+
+    m
   end
 
   def initialize(*args)
@@ -458,7 +464,7 @@ class Mailer < ActionMailer::Base
     if rand
       hash << Redmine::Utils.random_hex(8)
     end
-    host = Setting.mail_from.to_s.gsub(%r{^.*@}, '')
+    host = Setting.mail_from.to_s.strip.gsub(%r{^.*@|>}, '')
     host = "#{::Socket.gethostname}.redmine" if host.empty?
     "#{hash.join('.')}@#{host}"
   end

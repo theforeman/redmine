@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,7 +26,6 @@ end
 class AccountTest < ActionController::IntegrationTest
   fixtures :users, :roles
 
-  # Replace this with your real tests.
   def test_login
     get "my/page"
     assert_redirected_to "/login?back_url=http%3A%2F%2Fwww.example.com%2Fmy%2Fpage"
@@ -126,6 +125,35 @@ class AccountTest < ActionController::IntegrationTest
 
     log_user('jsmith', 'newpass123')
     assert_equal 0, Token.count
+  end
+
+  def test_user_with_must_change_passwd_should_be_forced_to_change_its_password
+    User.find_by_login('jsmith').update_attribute :must_change_passwd, true
+
+    post '/login', :username => 'jsmith', :password => 'jsmith'
+    assert_redirected_to '/my/page'
+    follow_redirect!
+    assert_redirected_to '/my/password'
+
+    get '/issues'
+    assert_redirected_to '/my/password'
+  end
+
+  def test_user_with_must_change_passwd_should_be_able_to_change_its_password
+    User.find_by_login('jsmith').update_attribute :must_change_passwd, true
+
+    post '/login', :username => 'jsmith', :password => 'jsmith'
+    assert_redirected_to '/my/page'
+    follow_redirect!
+    assert_redirected_to '/my/password'
+    follow_redirect!
+    assert_response :success
+    post '/my/password', :password => 'jsmith', :new_password => 'newpassword', :new_password_confirmation => 'newpassword'
+    assert_redirected_to '/my/account'
+    follow_redirect!
+    assert_response :success
+
+    assert_equal false, User.find_by_login('jsmith').must_change_passwd?
   end
 
   def test_register_with_automatic_activation

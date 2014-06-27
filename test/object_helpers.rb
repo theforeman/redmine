@@ -166,4 +166,29 @@ module ObjectHelpers
     field.save!
     field
   end
+
+  def Changeset.generate!(attributes={})
+    @generated_changeset_rev ||= '123456'
+    @generated_changeset_rev.succ!
+    changeset = new(attributes)
+    changeset.repository ||= Project.find(1).repository
+    changeset.revision ||= @generated_changeset_rev
+    changeset.committed_on ||= Time.now
+    yield changeset if block_given?
+    changeset.save!
+    changeset
+  end
 end
+
+module IssueObjectHelpers
+  def close!
+    self.status = IssueStatus.where(:is_closed => true).first
+    save!
+  end
+
+  def generate_child!(attributes={})
+    Issue.generate!(attributes.merge(:parent_issue_id => self.id))
+  end
+end
+
+Issue.send :include, IssueObjectHelpers

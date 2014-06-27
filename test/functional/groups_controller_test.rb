@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,6 +30,12 @@ class GroupsControllerTest < ActionController::TestCase
     assert_template 'index'
   end
 
+  def test_index_should_show_user_count
+    get :index
+    assert_response :success
+    assert_select 'tr#group-11 td.user_count', :text => '1'
+  end
+
   def test_show
     get :show, :id => 10
     assert_response :success
@@ -53,7 +59,7 @@ class GroupsControllerTest < ActionController::TestCase
       post :create, :group => {:name => 'New group'}
     end
     assert_redirected_to '/groups'
-    group = Group.first(:order => 'id DESC')
+    group = Group.order('id DESC').first
     assert_equal 'New group', group.name
     assert_equal [], group.users
   end
@@ -63,7 +69,7 @@ class GroupsControllerTest < ActionController::TestCase
       post :create, :group => {:name => 'New group'}, :continue => 'Create and continue'
     end
     assert_redirected_to '/groups/new'
-    group = Group.first(:order => 'id DESC')
+    group = Group.order('id DESC').first
     assert_equal 'New group', group.name
   end
 

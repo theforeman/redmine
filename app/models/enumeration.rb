@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -60,7 +60,7 @@ class Enumeration < ActiveRecord::Base
 
   def check_default
     if is_default? && is_default_changed?
-      Enumeration.update_all({:is_default => false}, {:type => type})
+      Enumeration.where({:type => type}).update_all({:is_default => false})
     end
   end
 
@@ -73,7 +73,7 @@ class Enumeration < ActiveRecord::Base
     self.objects_count != 0
   end
 
-  # Is this enumeration overiding a system level enumeration?
+  # Is this enumeration overriding a system level enumeration?
   def is_override?
     !self.parent.nil?
   end
@@ -103,8 +103,14 @@ class Enumeration < ActiveRecord::Base
     subclasses
   end
 
-  # Does the +new+ Hash override the previous Enumeration?
+  # TODO: remove in Redmine 3.0
   def self.overridding_change?(new, previous)
+    ActiveSupport::Deprecation.warn "Enumeration#overridding_change? is deprecated and will be removed in Redmine 3.0. Please use #overriding_change?."
+    overriding_change?(new, previous)
+  end
+
+  # Does the +new+ Hash override the previous Enumeration?
+  def self.overriding_change?(new, previous)
     if (same_active_state?(new['active'], previous.active)) && same_custom_values?(new,previous)
       return false
     else

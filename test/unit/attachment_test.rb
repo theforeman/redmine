@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,10 +22,10 @@ require File.expand_path('../../test_helper', __FILE__)
 class AttachmentTest < ActiveSupport::TestCase
   fixtures :users, :projects, :roles, :members, :member_roles,
            :enabled_modules, :issues, :trackers, :attachments
-  
+
   class MockFile
     attr_reader :original_filename, :content_type, :content, :size
-    
+
     def initialize(attributes)
       @original_filename = attributes[:original_filename]
       @content_type = attributes[:content_type]
@@ -40,6 +40,13 @@ class AttachmentTest < ActiveSupport::TestCase
 
   def test_container_for_new_attachment_should_be_nil
     assert_nil Attachment.new.container
+  end
+
+  def test_filename_should_remove_eols
+    assert_equal "line_feed", Attachment.new(:filename => "line\nfeed").filename
+    assert_equal "line_feed", Attachment.new(:filename => "some\npath/line\nfeed").filename
+    assert_equal "carriage_return", Attachment.new(:filename => "carriage\rreturn").filename
+    assert_equal "carriage_return", Attachment.new(:filename => "some\rpath/carriage\rreturn").filename
   end
 
   def test_create
@@ -146,12 +153,12 @@ class AttachmentTest < ActiveSupport::TestCase
                             :author => User.find(1))
     assert a1.disk_filename != a2.disk_filename
   end
-  
+
   def test_filename_should_be_basenamed
     a = Attachment.new(:file => MockFile.new(:original_filename => "path/to/the/file"))
     assert_equal 'file', a.filename
   end
-  
+
   def test_filename_should_be_sanitized
     a = Attachment.new(:file => MockFile.new(:original_filename => "valid:[] invalid:?%*|\"'<>chars"))
     assert_equal 'valid_[] invalid_chars', a.filename
@@ -207,8 +214,7 @@ class AttachmentTest < ActiveSupport::TestCase
           'description' => 'test'
         })
     end
-
-    attachment = Attachment.first(:order => 'id DESC')
+    attachment = Attachment.order('id DESC').first
     assert_equal issue, attachment.container
     assert_equal 'testfile.txt', attachment.filename
     assert_equal 59, attachment.filesize
@@ -233,6 +239,15 @@ class AttachmentTest < ActiveSupport::TestCase
       assert response[:unsaved].second.new_record?
       assert_equal response[:unsaved], @project.unsaved_attachments
     end
+  end
+
+  test "Attachment.attach_files should preserve the content_type of attachments added by token" do
+    @project = Project.find(1)
+    attachment = Attachment.create!(:file => uploaded_test_file("testfile.txt", ""), :author_id => 1, :created_on => 2.days.ago)
+    assert_equal 'text/plain', attachment.content_type
+    Attachment.attach_files(@project, { '1' => {'token' => attachment.token } })
+    attachment.reload
+    assert_equal 'text/plain', attachment.content_type
   end
 
   def test_latest_attach

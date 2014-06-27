@@ -1,5 +1,5 @@
 /* Redmine - project management software
-   Copyright (C) 2006-2013  Jean-Philippe Lang */
+   Copyright (C) 2006-2014  Jean-Philippe Lang */
 
 function addFile(inputEl, file, eagerUpload) {
 
@@ -117,7 +117,7 @@ function uploadBlob(blob, uploadUrl, attachmentId, options) {
 function addInputFiles(inputEl) {
   var clearedFileInput = $(inputEl).clone().val('');
 
-  if (inputEl.files) {
+  if ('FileReader' in window && inputEl.files) {
     // upload files using ajax
     uploadAndAttachFiles(inputEl.files, inputEl);
     $(inputEl).remove();

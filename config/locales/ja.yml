@@ -188,7 +188,7 @@ ja:
   notice_successful_connection: 接続しました。
   notice_file_not_found: アクセスしようとしたページは存在しないか削除されています。
   notice_locking_conflict: 別のユーザーがデータを更新しています。
-  notice_not_authorized: このページにアクセスするには認証が必要です。
+  notice_not_authorized: このページのアクセスは許可されていません。
   notice_not_authorized_archived_project: プロジェクトはアーカイブされています。
   notice_email_sent: "%{value} 宛にメールを送信しました。"
   notice_email_error: "メール送信中にエラーが発生しました (%{value})"
@@ -354,8 +354,8 @@ ja:
   setting_attachment_max_size: 添付ファイルサイズの上限
   setting_issues_export_limit: エクスポートするチケット数の上限
   setting_mail_from: 送信元メールアドレス
-  setting_bcc_recipients: ブラインドカーボンコピーで受信(bcc)
-  setting_plain_text_mail: プレインテキストのみ(HTMLなし)
+  setting_bcc_recipients: 宛先を非表示(bcc)
+  setting_plain_text_mail: プレインテキスト形式(HTMLなし)
   setting_host_name: ホスト名
   setting_text_formatting: テキストの書式
   setting_cache_formatted_text: 書式化されたテキストをキャッシュする
@@ -380,7 +380,7 @@ ja:
   setting_activity_days_default: プロジェクトの活動ページに表示される日数
   setting_display_subprojects_issues: サブプロジェクトのチケットをメインプロジェクトに表示する
   setting_enabled_scm: 使用するバージョン管理システム
-  setting_mail_handler_body_delimiters: "メール本文から一致する行以降を切り取る"
+  setting_mail_handler_body_delimiters: "メール本文から一致する行以降を切り捨てる"
   setting_mail_handler_api_enabled: 受信メール用のWebサービスを有効にする
   setting_mail_handler_api_key: APIキー
   setting_sequential_project_identifiers: プロジェクト識別子を連番で生成する
@@ -489,12 +489,12 @@ ja:
   label_issue_plural: チケット
   label_issue_view_all: すべてのチケットを見る
   label_issues_by: "%{value} 別のチケット"
-  label_issue_added: チケットが追加されました
-  label_issue_updated: チケットが更新されました
+  label_issue_added: チケットの追加
+  label_issue_updated: チケットの更新
   label_document: 文書
   label_document_new: 新しい文書
   label_document_plural: 文書
-  label_document_added: 文書が追加されました
+  label_document_added: 文書の追加
   label_role: ロール
   label_role_plural: ロール
   label_role_new: 新しいロール
@@ -566,7 +566,7 @@ ja:
   label_attachment_new: 新しいファイル
   label_attachment_delete: ファイルを削除
   label_attachment_plural: ファイル
-  label_file_added: ファイルが追加されました
+  label_file_added: ファイルの追加
   label_report: レポート
   label_report_plural: レポート
   label_news: ニュース
@@ -574,8 +574,8 @@ ja:
   label_news_plural: ニュース
   label_news_latest: 最新ニュース
   label_news_view_all: すべてのニュースを見る
-  label_news_added: ニュースが追加されました
-  label_news_comment_added: ニュースにコメントが追加されました
+  label_news_added: ニュースの追加
+  label_news_comment_added: ニュースへのコメント追加
   label_settings: 設定
   label_overview: 概要
   label_version: バージョン
@@ -748,7 +748,7 @@ ja:
   label_message_plural: メッセージ
   label_message_last: 最新のメッセージ
   label_message_new: 新しいメッセージ
-  label_message_posted: メッセージが追加されました
+  label_message_posted: メッセージの追加
   label_reply_plural: 返答
   label_send_information: アカウント情報をユーザーに送信
   label_year: 年
@@ -809,8 +809,8 @@ ja:
   label_ascending: 昇順
   label_descending: 降順
   label_date_from_to: "%{start}から%{end}まで"
-  label_wiki_content_added: Wikiページが追加されました
-  label_wiki_content_updated: Wikiページが更新されました
+  label_wiki_content_added: Wikiページの追加
+  label_wiki_content_updated: Wikiページの更新
   label_group: グループ
   label_group_plural: グループ
   label_group_new: 新しいグループ
@@ -894,7 +894,7 @@ ja:
 
   field_active: 有効
 
-  text_select_mail_notifications: どのメール通知を送信するか、アクションを選択してください。
+  text_select_mail_notifications: メール通知の送信対象とする操作を選択してください。
   text_regexp_info: 例) ^[A-Z0-9]+$
   text_min_max_length_info: 0だと無制限になります
   text_project_destroy_confirmation: 本当にこのプロジェクトと関連データを削除しますか？
@@ -933,7 +933,7 @@ ja:
   text_default_administrator_account_changed: デフォルト管理アカウントが変更済
   text_file_repository_writable: ファイルリポジトリに書き込み可能
   text_plugin_assets_writable: Plugin assetsディレクトリに書き込み可能
-  text_rmagick_available: RMagickが使用可能 (オプション)
+  text_rmagick_available: RMagickが利用可能 (オプション)
   text_destroy_time_entries_question: このチケットの%{hours}時間分の作業記録の扱いを選択してください。
   text_destroy_time_entries: 記録された作業時間を含めて削除
   text_assign_time_entries_to_project: 記録された作業時間をプロジェクト自体に割り当て
@@ -995,9 +995,9 @@ ja:
   label_role_anonymous: 匿名ユーザー
   label_role_non_member: 非メンバー
 
-  label_issue_note_added: 注記が追加されました
-  label_issue_status_updated: ステータスが更新されました
-  label_issue_priority_updated: 優先度が更新されました
+  label_issue_note_added: 注記の追加
+  label_issue_status_updated: ステータスの更新
+  label_issue_priority_updated: 優先度の更新
   label_issues_visibility_own: 作成者か担当者であるチケット
   field_issues_visibility: 表示できるチケット
   label_issues_visibility_all: すべてのチケット
@@ -1124,3 +1124,19 @@ ja:
   label_visibility_private: 自分のみ
   label_visibility_roles: 以下のロールのみ
   label_visibility_public: すべてのユーザー
+  field_must_change_passwd: 次回ログイン時にパスワード変更を強制
+  notice_new_password_must_be_different: 新しいパスワードは現在のパスワードと異なるものでなければなりません
+  setting_mail_handler_excluded_filenames: 除外する添付ファイル名
+  text_convert_available: ImageMagickのconvertコマンドが利用可能 (オプション)
+  label_link: リンク
+  label_only: 次のもののみ
+  label_drop_down_list: ドロップダウンリスト
+  label_checkboxes: チェックボックス
+  label_link_values_to: 値に設定するリンクURL
+  setting_force_default_language_for_anonymous: 匿名ユーザーに既定の言語を強制
+  setting_force_default_language_for_loggedin: ログインユーザーに既定の言語を強制
+  label_custom_field_select_type: カスタムフィールドを追加するオブジェクトを選択してください
+  label_issue_assigned_to_updated: 担当者の更新
+  label_check_for_updates: アップデートを確認
+  label_latest_compatible_version: 互換性のある最新バージョン
+  label_unknown_plugin: 不明なプラグイン

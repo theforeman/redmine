@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -82,9 +82,12 @@ module Redmine
       def load_from_yaml(filename, env)
         yaml = nil
         begin
-          yaml = YAML::load_file(filename)
+          yaml = YAML::load(ERB.new(File.read(filename)).result)
         rescue ArgumentError
           $stderr.puts "Your Redmine configuration file located at #{filename} is not a valid YAML file and could not be loaded."
+          exit 1
+        rescue SyntaxError => e
+          $stderr.puts "A syntax error occurred when parsing your Redmine configuration file located at #{filename} with ERB:\n#{e.message}"
           exit 1
         end
         conf = {}

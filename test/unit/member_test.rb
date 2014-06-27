@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -69,7 +69,8 @@ class MemberTest < ActiveSupport::TestCase
     assert !member.save
 
     # must have one role at least
-    user = User.new(:firstname => "new1", :lastname => "user1", :mail => "test_validate@somenet.foo")
+    user = User.new(:firstname => "new1", :lastname => "user1",
+                    :mail => "test_validate@somenet.foo")
     user.login = "test_validate"
     user.password, user.password_confirmation = "password", "password"
     assert user.save
@@ -84,7 +85,8 @@ class MemberTest < ActiveSupport::TestCase
   end
 
   def test_validate_member_role
-    user = User.new(:firstname => "new1", :lastname => "user1", :mail => "test_validate@somenet.foo")
+    user = User.new(:firstname => "new1", :lastname => "user1",
+                    :mail => "test_validate@somenet.foo")
     user.login = "test_validate_member_role"
     user.password, user.password_confirmation = "password", "password"
     assert user.save
@@ -103,6 +105,23 @@ class MemberTest < ActiveSupport::TestCase
     assert_raise(ActiveRecord::RecordNotFound) { Member.find(@jsmith.id) }
     category1.reload
     assert_nil category1.assigned_to_id
+  end
+
+  def test_destroy_should_trigger_callbacks_only_once
+    Member.class_eval { def destroy_test_callback; end}
+    Member.after_destroy :destroy_test_callback
+
+    m = Member.create!(:user_id => 1, :project_id => 1, :role_ids => [1,3])
+
+    Member.any_instance.expects(:destroy_test_callback).once
+    assert_difference 'Member.count', -1 do
+      assert_difference 'MemberRole.count', -2 do
+        m.destroy
+      end
+    end
+    assert m.destroyed?
+  ensure
+    Member._destroy_callbacks.reject! {|c| c.filter==:destroy_test_callback}
   end
 
   def test_sort_without_roles

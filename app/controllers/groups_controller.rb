@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,9 +26,10 @@ class GroupsController < ApplicationController
 
   def index
     @groups = Group.sorted.all
-
     respond_to do |format|
-      format.html
+      format.html {
+        @user_count_by_group_id = user_count_by_group_id
+      }
       format.api
     end
   end
@@ -90,7 +91,7 @@ class GroupsController < ApplicationController
   end
 
   def add_users
-    @users = User.find_all_by_id(params[:user_id] || params[:user_ids])
+    @users = User.where(:id => (params[:user_id] || params[:user_ids])).all
     @group.users << @users if request.post?
     respond_to do |format|
       format.html { redirect_to edit_group_path(@group, :tab => 'users') }
@@ -137,5 +138,13 @@ class GroupsController < ApplicationController
     @group = Group.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  def user_count_by_group_id
+    h = User.joins(:groups).group('group_id').count
+    h.keys.each do |key|
+      h[key.to_i] = h.delete(key)
+    end
+    h
   end
 end

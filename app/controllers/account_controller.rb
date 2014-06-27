@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2013  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,13 +20,21 @@ class AccountController < ApplicationController
   include CustomFieldsHelper
 
   # prevents login action to be filtered by check_if_login_required application scope filter
-  skip_before_filter :check_if_login_required
+  skip_before_filter :check_if_login_required, :check_password_change
+
+  # Overrides ApplicationController#verify_authenticity_token to disable
+  # token verification on openid callbacks
+  def verify_authenticity_token
+    unless using_open_id?
+      super
+    end
+  end
 
   # Login request and validation
   def login
     if request.get?
       if User.current.logged?
-        redirect_to home_url
+        redirect_back_or_default home_url, :referer => true
       end
     else
       authenticate_user
