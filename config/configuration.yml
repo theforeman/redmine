@@ -203,7 +203,7 @@ production:
       domain: "theforeman.org"
       authentication: :plain
       user_name: "nobody@theforeman.org"
-      password: "<%= ENV['EMAIL_PASSWORD'%>"
+      password: "<%= ENV['EMAIL_PASSWORD']%>"
 
 # specific configuration options for development environment
 # that overrides the default ones
