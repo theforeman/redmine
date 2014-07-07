@@ -280,7 +280,7 @@ class AccountController < ApplicationController
 
   def invalid_credentials
     logger.warn "Failed login for '#{params[:username]}' from #{request.remote_ip} at #{Time.now.utc}"
-    flash.now[:error] = l(:notice_account_invalid_creditentials)
+    flash.now[:error] = l(:notice_account_invalid_creditentials) + '. Please note that due to a security incident in July 2014, all passwords have been expired as a precaution. Use the Lost password link to reset it.'
   end
 
   # Register a user for email activation.
