@@ -67,6 +67,7 @@ class MailHandlerTest < ActiveSupport::TestCase
     # Email notification should be sent
     mail = ActionMailer::Base.deliveries.last
     assert_not_nil mail
+    assert mail.subject.include?("##{issue.id}")
     assert mail.subject.include?('New ticket on a given project')
   end
 
@@ -643,6 +644,19 @@ class MailHandlerTest < ActiveSupport::TestCase
 
       assert_no_difference 'Issue.count' do
         assert_equal false, MailHandler.receive(raw), "email with #{header} header was not ignored"
+      end
+    end
+  end
+
+  test "should not ignore Auto-Submitted headers not defined in RFC3834" do
+    [
+      "Auto-Submitted: auto-forwarded"
+    ].each do |header|
+      raw = IO.read(File.join(FIXTURES_PATH, 'ticket_on_given_project.eml'))
+      raw = header + "\n" + raw
+
+      assert_difference 'Issue.count', 1 do
+        assert_not_nil MailHandler.receive(raw), "email with #{header} header was ignored"
       end
     end
   end
