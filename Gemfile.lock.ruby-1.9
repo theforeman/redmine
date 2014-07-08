@@ -89,6 +89,7 @@ GEM
       treetop (~> 1.4.8)
     metaclass (0.0.4)
     mime-types (1.25.1)
+    mini_portile (0.6.0)
     mocha (1.0.0)
       metaclass (~> 0.0.1)
     multi_json (1.10.1)
@@ -96,7 +97,8 @@ GEM
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     net-ldap (0.3.1)
-    nokogiri (1.5.11)
+    nokogiri (1.6.2.1)
+      mini_portile (= 0.6.0)
     oauth2 (0.9.4)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0)
@@ -228,7 +230,7 @@ DEPENDENCIES
   mime-types
   mocha (~> 1.0.0)
   net-ldap (~> 0.3.1)
-  nokogiri (< 1.6.0)
+  nokogiri
   oauth2
   open-uri-cached
   pg (>= 0.11.0)
