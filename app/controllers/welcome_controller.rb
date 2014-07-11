@@ -25,5 +25,6 @@ class WelcomeController < ApplicationController
   def robots
     @projects = Project.all_public.active
     render :layout => false, :content_type => 'text/plain'
+    response.headers['Content-Type'] = 'text/plain'
   end
 end
