@@ -674,4 +674,11 @@ class ApplicationController < ActionController::Base
   def _include_layout?(*args)
     api_request? ? false : super
   end
+
+  before_filter :block_spiders
+  def block_spiders
+    if request.env['HTTP_USER_AGENT'] =~ %r{Sogou|AhrefsBot|SemrushBot|BLEXBot} || request.env['HTTP_USER_AGENT'] == 'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)'
+      render :text => 'access denied, spider is causing too much load', :status => 403
+    end
+  end
 end
