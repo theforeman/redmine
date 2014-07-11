@@ -29,5 +29,6 @@ class WelcomeController < ApplicationController
   def robots
     @projects = Project.visible(User.anonymous) unless Setting.login_required?
     render :layout => false, :content_type => 'text/plain'
+    response.headers['Content-Type'] = 'text/plain'
   end
 end
