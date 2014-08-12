@@ -11,14 +11,18 @@ update_repo() {
   popd >/dev/null
 }
 
+update_repo foreman_abrt https://github.com/theforeman/foreman_abrt
 update_repo foreman_api https://github.com/theforeman/foreman_api.git
 update_repo foreman_content https://github.com/theforeman/foreman_content
 update_repo foreman_discovery https://github.com/theforeman/foreman_discovery
 update_repo foreman https://github.com/theforeman/foreman.git
 update_repo foreman-installer https://github.com/theforeman/foreman-installer.git
+update_repo foreman-one https://github.com/theforeman/foreman-one
 update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
+update_repo foreman_salt https://github.com/theforeman/foreman_salt
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
 update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
+update_repo foreman-xen https://github.com/theforeman/foreman-xen
 update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
 update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
 update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
@@ -38,6 +42,8 @@ update_repo puppet-git https://github.com/theforeman/puppet-git.git
 update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
+update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
+update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
 
 cd ${OPENSHIFT_REPO_DIR}
