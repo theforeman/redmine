@@ -22,6 +22,7 @@ update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
 update_repo foreman_salt https://github.com/theforeman/foreman_salt
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
 update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
+update_repo foreman-tasks https://github.com/theforeman/foreman-tasks
 update_repo foreman-xen https://github.com/theforeman/foreman-xen
 update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
 update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
