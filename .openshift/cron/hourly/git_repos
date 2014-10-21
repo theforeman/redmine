@@ -36,6 +36,7 @@ update_repo katello https://github.com/Katello/katello.git
 update_repo katello-installer https://github.com/Katello/katello-installer.git
 update_repo katello.org https://github.com/Katello/katello.org.git
 update_repo katello-agent https://github.com/Katello/katello-agent.git
+update_repo bastion https://github.com/Katello/bastion.git
 update_repo ofi https://github.com/theforeman/ofi.git
 update_repo puppet-concat https://github.com/theforeman/puppet-concat.git
 update_repo puppet-dhcp https://github.com/theforeman/puppet-dhcp.git
