@@ -31,6 +31,7 @@ update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
 update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
 update_repo hammer-cli https://github.com/theforeman/hammer-cli
 update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
+update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
 update_repo kafo https://github.com/theforeman/kafo.git
 update_repo katello https://github.com/Katello/katello.git
 update_repo katello-installer https://github.com/Katello/katello-installer.git
@@ -46,6 +47,7 @@ update_repo puppet-foreman_proxy https://github.com/theforeman/puppet-foreman_pr
 update_repo puppet-git https://github.com/theforeman/puppet-git.git
 update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
+update_repo sam-plugin https://github.com/Katello/sam-plugin.git
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
