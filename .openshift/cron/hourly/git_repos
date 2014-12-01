@@ -15,6 +15,7 @@ update_repo foreman_abrt https://github.com/theforeman/foreman_abrt
 update_repo foreman_api https://github.com/theforeman/foreman_api.git
 update_repo foreman_bootdisk https://github.com/theforeman/foreman_bootdisk
 update_repo foreman_content https://github.com/theforeman/foreman_content
+update_repo foreman-digitalocean https://github.com/theforeman/foreman-digitalocean
 update_repo foreman_discovery https://github.com/theforeman/foreman_discovery
 update_repo foreman-docker https://github.com/theforeman/foreman-docker
 update_repo foreman https://github.com/theforeman/foreman.git
