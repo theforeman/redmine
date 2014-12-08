@@ -24,7 +24,7 @@ update_repo foreman-installer https://github.com/theforeman/foreman-installer.gi
 update_repo foreman-one https://github.com/theforeman/foreman-one
 update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
 update_repo foreman_salt https://github.com/theforeman/foreman_salt
-update_repo foreman-sam https://github.com/Katello/foreman-sam.git
+update_repo foreman_sam https://github.com/Katello/foreman_sam.git
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
 update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
 update_repo foreman-tasks https://github.com/theforeman/foreman-tasks
