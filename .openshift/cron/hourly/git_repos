@@ -19,10 +19,12 @@ update_repo foreman-digitalocean https://github.com/theforeman/foreman-digitaloc
 update_repo foreman_discovery https://github.com/theforeman/foreman_discovery
 update_repo foreman-docker https://github.com/theforeman/foreman-docker
 update_repo foreman https://github.com/theforeman/foreman.git
+update_repo foreman-gutterball https://github.com/Katello/foreman-gutterball.git
 update_repo foreman-installer https://github.com/theforeman/foreman-installer.git
 update_repo foreman-one https://github.com/theforeman/foreman-one
 update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
 update_repo foreman_salt https://github.com/theforeman/foreman_salt
+update_repo foreman-sam https://github.com/Katello/foreman-sam.git
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
 update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
 update_repo foreman-tasks https://github.com/theforeman/foreman-tasks
@@ -30,8 +32,10 @@ update_repo foreman-xen https://github.com/theforeman/foreman-xen
 update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
 update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
 update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
+update_repo hammer-cli-gutterball https://github.com/Katello/hammer-cli-gutterball.git
 update_repo hammer-cli https://github.com/theforeman/hammer-cli
 update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
+update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
 update_repo kafo https://github.com/theforeman/kafo.git
 update_repo katello https://github.com/Katello/katello.git
 update_repo katello-installer https://github.com/Katello/katello-installer.git
