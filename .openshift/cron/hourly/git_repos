@@ -53,6 +53,7 @@ update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
+update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
 
