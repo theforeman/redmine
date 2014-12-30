@@ -32,6 +32,7 @@ update_repo foreman-xen https://github.com/theforeman/foreman-xen
 update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
 update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
 update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
+update_repo hammer-cli-foreman-discovery https://github.com/theforeman/hammer-cli-foreman-discovery
 update_repo hammer-cli-gutterball https://github.com/Katello/hammer-cli-gutterball.git
 update_repo hammer-cli https://github.com/theforeman/hammer-cli
 update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
