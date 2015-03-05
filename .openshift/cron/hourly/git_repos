@@ -57,6 +57,7 @@ update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
 update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
+update_repo foreman_deployments https://github.com/theforeman/foreman_deployments
 
 cd ${OPENSHIFT_REPO_DIR}
 script/rails runner "Repository.fetch_changesets" -e production
