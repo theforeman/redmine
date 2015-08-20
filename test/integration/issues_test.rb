@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,6 +63,27 @@ class IssuesTest < ActionController::IntegrationTest
     assert_equal 'jsmith', issue.author.login
     assert_equal 1, issue.project.id
     assert_equal 1, issue.status.id
+  end
+
+  def test_create_issue_by_anonymous_without_permission_should_fail
+    Role.anonymous.remove_permission! :add_issues
+
+    assert_no_difference 'Issue.count' do
+      post 'projects/1/issues', :tracker_id => "1", :issue => {:subject => "new test issue"}
+    end
+    assert_response 302
+  end
+
+  def test_create_issue_by_anonymous_with_custom_permission_should_succeed
+    Role.anonymous.remove_permission! :add_issues
+    Member.create!(:project_id => 1, :principal => Group.anonymous, :role_ids => [3])
+
+    assert_difference 'Issue.count' do
+      post 'projects/1/issues', :tracker_id => "1", :issue => {:subject => "new test issue"}
+    end
+    assert_response 302
+    issue = Issue.order("id DESC").first
+    assert_equal User.anonymous, issue.author
   end
 
   # add then remove 2 attachments to an issue

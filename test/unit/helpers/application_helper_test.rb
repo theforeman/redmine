@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -155,6 +155,24 @@ RAW
     }
     attachments = Attachment.all
     to_test.each { |text, result| assert_equal "<p>#{result}</p>", textilizable(text, :attachments => attachments) }
+  end
+
+  def test_attached_images_with_textile_and_non_ascii_filename
+    attachment = Attachment.generate!(:filename => 'café.jpg')
+    with_settings :text_formatting => 'textile' do
+      assert_include %(<img src="/attachments/download/#{attachment.id}/caf%C3%A9.jpg" alt="" />),
+        textilizable("!café.jpg!)", :attachments => [attachment])
+    end
+  end
+
+  if Object.const_defined?(:Redcarpet)
+  def test_attached_images_with_markdown_and_non_ascii_filename
+    attachment = Attachment.generate!(:filename => 'café.jpg')
+    with_settings :text_formatting => 'markdown' do
+      assert_include %(<img src="/attachments/download/#{attachment.id}/caf%C3%A9.jpg" alt="">),
+        textilizable("![](café.jpg)", :attachments => [attachment])
+    end
+  end
   end
 
   def test_attached_images_filename_extension

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ class MailHandler < ActionMailer::Base
   attr_reader :email, :user
 
   def self.receive(email, options={})
-    @@handler_options = options.dup
+    @@handler_options = options.deep_dup
 
     @@handler_options[:issue] ||= {}
 
@@ -145,7 +145,7 @@ class MailHandler < ActionMailer::Base
   private
 
   MESSAGE_ID_RE = %r{^<?redmine\.([a-z0-9_]+)\-(\d+)\.\d+(\.[a-f0-9]+)?@}
-  ISSUE_REPLY_SUBJECT_RE = %r{\[[^\]]*#(\d+)\]}
+  ISSUE_REPLY_SUBJECT_RE = %r{\[(?:[^\]]*\s+)?#(\d+)\]}
   MESSAGE_REPLY_SUBJECT_RE = %r{\[[^\]]*msg(\d+)\]}
 
   def dispatch
@@ -319,7 +319,7 @@ class MailHandler < ActionMailer::Base
     else
       @keywords[attr] = begin
         if (options[:override] || @@handler_options[:allow_override].include?(attr.to_s)) &&
-              (v = extract_keyword!(plain_text_body, attr, options[:format]))
+              (v = extract_keyword!(cleaned_up_text_body, attr, options[:format]))
           v
         elsif !@@handler_options[:issue][attr].blank?
           @@handler_options[:issue][attr]
@@ -347,7 +347,7 @@ class MailHandler < ActionMailer::Base
     regexp = /^(#{keys.join('|')})[ \t]*:[ \t]*(#{format})\s*$/i
     if m = text.match(regexp)
       keyword = m[2].strip
-      text.gsub!(regexp, '')
+      text.sub!(regexp, '')
     end
     keyword
   end
@@ -421,7 +421,7 @@ class MailHandler < ActionMailer::Base
     end
 
     @plain_text_body = parts.map do |p|
-      body_charset = p.charset.respond_to?(:force_encoding) ?
+      body_charset = Mail::RubyVer.respond_to?(:pick_encoding) ?
                        Mail::RubyVer.pick_encoding(p.charset).to_s : p.charset
       Redmine::CodesetUtil.to_utf8(p.body.decoded, body_charset)
     end.join("\r\n")
@@ -436,7 +436,7 @@ class MailHandler < ActionMailer::Base
   end
 
   def cleaned_up_text_body
-    cleanup_body(plain_text_body)
+    @cleaned_up_text_body ||= cleanup_body(plain_text_body)
   end
 
   def cleaned_up_subject

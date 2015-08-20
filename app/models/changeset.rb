@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -130,7 +130,7 @@ class Changeset < ActiveRecord::Base
 
       refs.scan(/#(\d+)(\s+@#{TIMELOG_RE})?/).each do |m|
         issue, hours = find_referenced_issue_by_id(m[0].to_i), m[2]
-        if issue
+        if issue && !issue_linked_to_same_commit?(issue)
           referenced_issues << issue
           # Don't update issues or log time when importing old commits
           unless repository.created_on && committed_on && committed_on < repository.created_on
@@ -214,6 +214,12 @@ class Changeset < ActiveRecord::Base
 
   private
 
+  # Returns true if the issue is already linked to the same commit
+  # from a different repository
+  def issue_linked_to_same_commit?(issue)
+    repository.same_commits_in_scope(issue.changesets, self).any?
+  end
+
   # Updates the +issue+ according to +action+
   def fix_issue(issue, action)
     # the issue may have been updated by the closure of another one (eg. duplicate)
@@ -234,8 +240,11 @@ class Changeset < ActiveRecord::Base
     end
     Redmine::Hook.call_hook(:model_changeset_scan_commit_for_issue_ids_pre_issue_update,
                             { :changeset => self, :issue => issue, :action => action })
-    unless issue.save
-      logger.warn("Issue ##{issue.id} could not be saved by changeset #{id}: #{issue.errors.full_messages}") if logger
+
+    if issue.changes.any?
+      unless issue.save
+        logger.warn("Issue ##{issue.id} could not be saved by changeset #{id}: #{issue.errors.full_messages}") if logger
+      end
     end
     issue
   end

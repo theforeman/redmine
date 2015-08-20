@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -94,7 +94,7 @@ module Redmine
     module LinksHelper
       AUTO_LINK_RE = %r{
                       (                          # leading text
-                        <\w+.*?>|                # leading HTML tag, or
+                        <\w+[^>]*?>|             # leading HTML tag, or
                         [\s\(\[,;]|              # leading punctuation, or
                         ^                        # beginning of line
                       )
@@ -135,7 +135,7 @@ module Redmine
 
       # Destructively replaces email addresses into clickable links
       def auto_mailto!(text)
-        text.gsub!(/([\w\.!#\$%\-+.]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+)/) do
+        text.gsub!(/([\w\.!#\$%\-+.\/]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+)/) do
           mail = $1
           if text.match(/<a\b[^>]*>(.*)(#{Regexp.escape(mail)})(.*)<\/a>/)
             mail

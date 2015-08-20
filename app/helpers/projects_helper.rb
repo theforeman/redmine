@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,11 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module ProjectsHelper
-  def link_to_version(version, options = {})
-    return '' unless version && version.is_a?(Version)
-    link_to_if version.visible?, format_version_name(version), version_path(version), options
-  end
-
   def project_settings_tabs
     tabs = [{:name => 'info', :action => :edit_project, :partial => 'projects/edit', :label => :label_information_plural},
             {:name => 'modules', :action => :select_project_modules, :partial => 'projects/settings/modules', :label => :label_module_plural},
@@ -95,5 +90,26 @@ module ProjectsHelper
   def format_version_sharing(sharing)
     sharing = 'none' unless Version::VERSION_SHARINGS.include?(sharing)
     l("label_version_sharing_#{sharing}")
+  end
+
+  def render_api_includes(project, api)
+    api.array :trackers do
+      project.trackers.each do |tracker|
+        api.tracker(:id => tracker.id, :name => tracker.name)
+      end
+    end if include_in_api_response?('trackers')
+
+    api.array :issue_categories do
+      project.issue_categories.each do |category|
+        api.issue_category(:id => category.id, :name => category.name)
+      end
+    end if include_in_api_response?('issue_categories')
+
+    api.array :enabled_modules do
+      project.enabled_modules.each do |enabled_module|
+        api.enabled_module(:id => enabled_module.id, :name => enabled_module.name)
+      end
+    end if include_in_api_response?('enabled_modules')
+
   end
 end

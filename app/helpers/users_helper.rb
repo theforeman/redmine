@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -46,7 +46,7 @@ module UsersHelper
     tabs = [{:name => 'general', :partial => 'users/general', :label => :label_general},
             {:name => 'memberships', :partial => 'users/memberships', :label => :label_project_plural}
             ]
-    if Group.all.any?
+    if Group.givable.any?
       tabs.insert 1, {:name => 'groups', :partial => 'users/groups', :label => :label_group_plural}
     end
     tabs

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -403,6 +403,42 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  def test_password_change_should_destroy_tokens
+    recovery_token = Token.create!(:user_id => 2, :action => 'recovery')
+    autologin_token = Token.create!(:user_id => 2, :action => 'autologin')
+
+    user = User.find(2)
+    user.password, user.password_confirmation = "a new password", "a new password"
+    assert user.save
+
+    assert_nil Token.find_by_id(recovery_token.id)
+    assert_nil Token.find_by_id(autologin_token.id)
+  end
+
+  def test_mail_change_should_destroy_tokens
+    recovery_token = Token.create!(:user_id => 2, :action => 'recovery')
+    autologin_token = Token.create!(:user_id => 2, :action => 'autologin')
+
+    user = User.find(2)
+    user.mail = "user@somwehere.com"
+    assert user.save
+
+    assert_nil Token.find_by_id(recovery_token.id)
+    assert_equal autologin_token, Token.find_by_id(autologin_token.id)
+  end
+
+  def test_change_on_other_fields_should_not_destroy_tokens
+    recovery_token = Token.create!(:user_id => 2, :action => 'recovery')
+    autologin_token = Token.create!(:user_id => 2, :action => 'autologin')
+
+    user = User.find(2)
+    user.firstname = "Bobby"
+    assert user.save
+
+    assert_equal recovery_token, Token.find_by_id(recovery_token.id)
+    assert_equal autologin_token, Token.find_by_id(autologin_token.id)
+  end
+
   def test_validate_login_presence
     @admin.login = ""
     assert !@admin.save
@@ -802,14 +838,54 @@ class UserTest < ActiveSupport::TestCase
     assert_nil membership
   end
 
-  def test_roles_for_project
-    # user with a role
+  def test_roles_for_project_with_member_on_public_project_should_return_roles_and_non_member
     roles = @jsmith.roles_for_project(Project.find(1))
     assert_kind_of Role, roles.first
-    assert_equal "Manager", roles.first.name
+    assert_equal ["Manager"], roles.map(&:name)
+  end
 
-    # user with no role
-    assert_nil @dlopper.roles_for_project(Project.find(2)).detect {|role| role.member?}
+  def test_roles_for_project_with_member_on_private_project_should_return_roles
+    Project.find(1).update_attribute :is_public, false
+
+    roles = @jsmith.roles_for_project(Project.find(1))
+    assert_kind_of Role, roles.first
+    assert_equal ["Manager"], roles.map(&:name)
+  end
+
+  def test_roles_for_project_with_non_member_with_public_project_should_return_non_member
+    roles = User.find(8).roles_for_project(Project.find(1))
+    assert_equal ["Non member"], roles.map(&:name)
+  end
+
+  def test_roles_for_project_with_non_member_with_public_project_should_return_no_roles
+    Project.find(1).update_attribute :is_public, false
+  
+    roles = User.find(8).roles_for_project(Project.find(1))
+    assert_equal [], roles.map(&:name)
+  end
+
+  def test_roles_for_project_with_anonymous_with_public_project_should_return_anonymous
+    roles = User.anonymous.roles_for_project(Project.find(1))
+    assert_equal ["Anonymous"], roles.map(&:name)
+  end
+
+  def test_roles_for_project_with_anonymous_with_public_project_should_return_no_roles
+    Project.find(1).update_attribute :is_public, false
+  
+    roles = User.anonymous.roles_for_project(Project.find(1))
+    assert_equal [], roles.map(&:name)
+  end
+
+  def test_roles_for_project_should_be_unique
+    m = Member.new(:user_id => 1, :project_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.save!
+
+    user = User.find(1)
+    project = Project.find(1)
+    assert_equal 1, user.roles_for_project(project).size
+    assert_equal [1], user.roles_for_project(project).map(&:id)
   end
 
   def test_projects_by_role_for_user_with_role
@@ -847,6 +923,11 @@ class UserTest < ActiveSupport::TestCase
     assert_equal 5, User.valid_notification_options.size
     assert_equal 5, User.valid_notification_options(User.find(7)).size
     assert_equal 6, User.valid_notification_options(User.find(2)).size
+  end
+
+  def test_notified_project_ids_setter_should_coerce_to_unique_integer_array
+    @jsmith.notified_project_ids = ["1", "123", "2u", "wrong", "12", 6, 12, -35, ""]
+    assert_equal [1, 123, 2, 12, 6], @jsmith.notified_projects_ids
   end
 
   def test_mail_notification_all
@@ -1016,6 +1097,19 @@ class UserTest < ActiveSupport::TestCase
         assert_equal false, @anonymous.allowed_to?(:add_issues, nil, :global => true)
         assert_equal true, @anonymous.allowed_to?(:view_issues, nil, :global => true)
       end
+    end
+  end
+
+  # this is just a proxy method, the test only calls it to ensure it doesn't break trivially
+  context "#allowed_to_globally?" do
+    should "proxy to #allowed_to? and reflect global permissions" do
+      @dlopper2 = User.find(5) #only Developper on a project, not Manager anywhere
+      @anonymous = User.find(6)
+      assert_equal true, @jsmith.allowed_to_globally?(:delete_issue_watchers)
+      assert_equal false, @dlopper2.allowed_to_globally?(:delete_issue_watchers)
+      assert_equal true, @dlopper2.allowed_to_globally?(:add_issues)
+      assert_equal false, @anonymous.allowed_to_globally?(:add_issues)
+      assert_equal true, @anonymous.allowed_to_globally?(:view_issues)
     end
   end
 

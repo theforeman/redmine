@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -112,7 +112,7 @@ class IssuesController < ApplicationController
     @journals.reject! {|journal| !journal.notes? && journal.visible_details.empty?}
     @journals.reverse! if User.current.wants_comments_in_reverse_order?
 
-    @changesets = @issue.changesets.visible.all
+    @changesets = @issue.changesets.visible.preload(:repository, :user).to_a
     @changesets.reverse! if User.current.wants_comments_in_reverse_order?
 
     @relations = @issue.relations.select {|r| r.other_issue(@issue) && r.other_issue(@issue).visible? }
@@ -256,12 +256,15 @@ class IssuesController < ApplicationController
   def bulk_update
     @issues.sort!
     @copy = params[:copy].present?
+
     attributes = parse_params_for_bulk_issue_attributes(params)
+    copy_subtasks = (params[:copy_subtasks] == '1')
+    copy_attachments = (params[:copy_attachments] == '1')
 
     unsaved_issues = []
     saved_issues = []
 
-    if @copy && params[:copy_subtasks].present?
+    if @copy && copy_subtasks
       # Descendant issues will be copied with the parent task
       # Don't copy them twice
       @issues.reject! {|issue| @issues.detect {|other| issue.is_descendant_of?(other)}}
@@ -271,8 +274,8 @@ class IssuesController < ApplicationController
       orig_issue.reload
       if @copy
         issue = orig_issue.copy({},
-          :attachments => params[:copy_attachments].present?,
-          :subtasks => params[:copy_subtasks].present?
+          :attachments => copy_attachments,
+          :subtasks => copy_subtasks
         )
       else
         issue = orig_issue

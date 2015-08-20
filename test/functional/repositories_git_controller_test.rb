@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -265,7 +265,7 @@ class RepositoriesGitControllerTest < ActionController::TestCase
 
     def test_diff
       assert_equal true, @repository.is_default
-      assert_nil @repository.identifier
+      assert @repository.identifier.blank?
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
       @project.reload

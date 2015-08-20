@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -596,6 +596,10 @@ module Redmine
 
       def target_class
         @target_class ||= self.class.name[/^(.*::)?(.+)Format$/, 2].constantize rescue nil
+      end
+
+      def reset_target_class
+        @target_class = nil
       end
  
       def possible_custom_value_options(custom_value)

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -1240,7 +1240,7 @@ class QueryTest < ActiveSupport::TestCase
     assert query.available_filters.keys.include?("member_of_group")
     assert_equal :list_optional, query.available_filters["member_of_group"][:type]
     assert query.available_filters["member_of_group"][:values].present?
-    assert_equal Group.all.sort.map {|g| [g.name, g.id.to_s]},
+    assert_equal Group.givable.sort.map {|g| [g.name, g.id.to_s]},
       query.available_filters["member_of_group"][:values].sort
   end
 

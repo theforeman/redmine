@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -247,6 +247,35 @@ class ContextMenusControllerTest < ActionController::TestCase
     assert_response :success
     assert_template 'context_menus/time_entries'
 
+    assert_select 'a:not(.disabled)', :text => 'Edit'
+  end
+
+  def test_time_entries_context_menu_should_include_custom_fields
+    field = TimeEntryCustomField.generate!(:name => "Field", :field_format => "list", :possible_values => ["foo", "bar"])
+
+    @request.session[:user_id] = 2
+    get :time_entries, :ids => [1, 2]
+    assert_response :success
+    assert_select "li.cf_#{field.id}" do
+      assert_select 'a[href=#]', :text => "Field"
+      assert_select 'ul' do
+        assert_select 'a', 3
+        assert_select 'a[href=?]', "/time_entries/bulk_update?ids%5B%5D=1&amp;ids%5B%5D=2&amp;time_entry%5Bcustom_field_values%5D%5B#{field.id}%5D=foo", :text => 'foo'
+        assert_select 'a[href=?]', "/time_entries/bulk_update?ids%5B%5D=1&amp;ids%5B%5D=2&amp;time_entry%5Bcustom_field_values%5D%5B#{field.id}%5D=bar", :text => 'bar'
+        assert_select 'a[href=?]', "/time_entries/bulk_update?ids%5B%5D=1&amp;ids%5B%5D=2&amp;time_entry%5Bcustom_field_values%5D%5B#{field.id}%5D=__none__", :text => 'none'
+      end
+    end
+  end
+
+  def test_time_entries_context_menu_with_edit_own_time_entries_permission
+    @request.session[:user_id] = 2
+    Role.find_by_name('Manager').remove_permission! :edit_time_entries
+    Role.find_by_name('Manager').add_permission! :edit_own_time_entries
+    ids = (0..1).map {TimeEntry.generate!(:user => User.find(2)).id}
+
+    get :time_entries, :ids => ids
+    assert_response :success
+    assert_template 'context_menus/time_entries'
     assert_select 'a:not(.disabled)', :text => 'Edit'
   end
 

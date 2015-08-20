@@ -253,10 +253,38 @@ Vše, co je potřeba, je databázový a webový server.
 
     <p>Redmine obsahuje následující vestavěná makra:</p>
 
-    <p><dl><dt><code>hello_world</code></dt><dd><p>Jednoduché makro.</p></dd><dt><code>include</code></dt><dd><p>Vloží Wiki stránku. Např.:</p>
+    <p>
+    <dl>
+      <dt><code>hello_world</code></dt>
+      <dd><p>Jednoduché makro.</p></dd>
 
-    <pre><code>{{include(Foo)}}</code></pre></dd><dt><code>macro_list</code></dt><dd><p>Zobrazí seznam všech dostupných maker, včetně jejich popisu, existuje-li.</p></dd></dl></p>
+      <dt><code>macro_list</code></dt>
+      <dd><p>Zobrazí seznam všech dostupných maker, včetně jejich popisu, existuje-li.</p></dd>
 
+      <dt><code>child_pages</code></dt>
+      <dd><p>Zobrazí seznam dětských stránek. Bez parametrů zobrazí dětské stránky aktuální wiki stránky. Např.:</p>
+      <pre><code>{{child_pages}} -- lze použít pouze z wiki stránky
+{{child_pages(depth=2)}} -- zobrazí dětské stránky pouze do 2. úrovně</code></pre></dd>
+
+      <dt><code>include</code></dt>
+      <dd><p>Vloží Wiki stránku. Např.:</p>
+      <pre><code>{{include(Foo)}}</code></pre>
+      <p>or to include a page of a specific project wiki:</p>
+      <pre><code>{{include(projectname:Foo)}}</code></pre></dd>
+
+      <dt><code>collapse</code></dt>
+      <dd><p>Vloží sbalený blok textu. Např.:</p>
+      <pre><code>{{collapse(Zobrazit detaily...)
+Toto je blok textu, který je sbalený.
+Pro rozbalení klikněte na odkaz.
+}}</code></pre></dd>
+
+      <dt><code>thumbnail</code></dt>
+      <dd><p>Zobrazí klikací náhled obrázku. Např.:</p>
+      <pre>{{thumbnail(image.png)}}
+{{thumbnail(image.png, size=300, title=Thumbnail)}}</pre></dd>
+    </dl>
+    </p>
 
     <h2><a name="13" class="wiki-page"></a>Zvýrazňování kódu</h2>
 

@@ -253,10 +253,38 @@ To go live, all you need to add is a database and a web server.
 
     <p>Redmineには以下の組み込みマクロが用意されています:</p>
 
-    <p><dl><dt><code>hello_world</code></dt><dd><p>サンプルのマクロです。</p></dd><dt><code>include</code></dt><dd><p>別のWikiページの内容を挿入します。 以下は使用例です:</p>
+    <p>
+    <dl>
+      <dt><code>hello_world</code></dt>
+      <dd><p>サンプルのマクロです。</p></dd>
 
-    <pre><code>{{include(Foo)}}</code></pre></dd><dt><code>macro_list</code></dt><dd><p>上記のマクロを含め、利用可能なマクロの一覧を表示します。</p></dd></dl></p>
+      <dt><code>macro_list</code></dt>
+      <dd><p>上記のマクロを含め、利用可能なマクロの一覧を表示します。</p></dd>
 
+      <dt><code>child_pages</code></dt>
+      <dd><p>子ページの一覧を表示します。引数の指定が無ければ現在のwikiページの子ページを表示します。以下は使用例です:</p>
+      <pre><code>{{child_pages}} -- wikiページでのみ使用可能です
+{{child_pages(depth=2)}} -- 2階層分のみ表示します</code></pre></dd>
+
+      <dt><code>include</code></dt>
+      <dd><p>別のWikiページの内容を挿入します。 以下は使用例です:</p>
+      <pre><code>{{include(Foo)}}</code></pre>
+      <p>プロジェクトを指定することもできます。:</p>
+      <pre><code>{{include(projectname:Foo)}}</code></pre></dd>
+
+      <dt><code>collapse</code></dt>
+      <dd><p>折り畳まれた状態のテキストを挿入します。以下は使用例です:</p>
+      <pre><code>{{collapse(詳細を表示...)
+この部分はデフォルトでは折り畳まれた状態で表示されます。
+リンクをクリックすると展開されます。
+}}</code></pre></dd>
+
+      <dt><code>thumbnail</code></dt>
+      <dd><p>添付ファイルのクリック可能なサムネイル画像を表示します。以下は使用例です:</p>
+      <pre>{{thumbnail(image.png)}}
+{{thumbnail(image.png, size=300, title=Thumbnail)}}</pre></dd>
+    </dl>
+    </p>
 
     <h2><a name="13" class="wiki-page"></a>コードハイライト</h2>
 
@@ -266,7 +294,7 @@ To go live, all you need to add is a database and a web server.
 
 <pre>
 &lt;pre&gt;&lt;code class="ruby"&gt;
-  Place you code here.
+  Place your code here.
 &lt;/code&gt;&lt;/pre&gt;
 </pre>
 
