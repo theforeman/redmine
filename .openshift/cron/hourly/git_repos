@@ -27,6 +27,7 @@ update_repo foreman_salt https://github.com/theforeman/foreman_salt
 update_repo foreman_sam https://github.com/Katello/foreman_sam.git
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
 update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
+update_repo foreman_remote_execution https://github.com/theforeman/foreman_remote_execution
 update_repo foreman-tasks https://github.com/theforeman/foreman-tasks
 update_repo foreman-xen https://github.com/theforeman/foreman-xen
 update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
@@ -55,6 +56,8 @@ update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
 update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
+update_repo smart_proxy_dynflow https://github.com/theforeman/smart_proxy_dynflow
+update_repo smart_proxy_remote_execution_ssh https://github.com/theforeman/smart_proxy_remote_execution_ssh
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
 update_repo foreman_deployments https://github.com/theforeman/foreman_deployments
