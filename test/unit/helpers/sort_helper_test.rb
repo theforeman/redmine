@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -76,6 +76,28 @@ class SortHelperTest < ActionView::TestCase
 
     assert_equal ['table1.attr1', 'table2.attr2'], sort_clause
     assert_equal 'attr1,attr2', @session['foo_bar_sort']
+  end
+
+  def test_sort_css_without_params_should_use_default_sort
+    sort_init 'attr1', 'desc'
+    sort_update(['attr1', 'attr2'])
+
+    assert_equal 'sort-by-attr1 sort-desc', sort_css_classes
+  end
+
+  def test_sort_css_should_use_params
+    @sort_param = 'attr2,attr1'
+    sort_init 'attr1', 'desc'
+    sort_update(['attr1', 'attr2'])
+
+    assert_equal 'sort-by-attr2 sort-asc', sort_css_classes
+  end
+
+  def test_sort_css_should_dasherize_sort_name
+    sort_init 'foo_bar'
+    sort_update(['foo_bar'])
+
+    assert_equal 'sort-by-foo-bar sort-asc', sort_css_classes
   end
 
   private

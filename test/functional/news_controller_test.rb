@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +18,9 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class NewsControllerTest < ActionController::TestCase
-  fixtures :projects, :users, :roles, :members, :member_roles, :enabled_modules, :news, :comments
+  fixtures :projects, :users, :roles, :members, :member_roles,
+           :enabled_modules, :news, :comments,
+           :attachments
 
   def setup
     User.current = nil

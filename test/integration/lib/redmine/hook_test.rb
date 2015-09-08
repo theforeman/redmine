@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,6 +45,15 @@ class HookTest < ActionController::IntegrationTest
 VIEW
   end
 
+  # Hooks that stores the call context
+  class ContextTestHook < Redmine::Hook::ViewListener
+    cattr_accessor :context
+
+    def controller_account_success_authentication_after(context)
+      self.class.context = context
+    end
+  end
+
   def setup
     Redmine::Hook.clear_listeners
   end
@@ -85,5 +94,15 @@ VIEW
       assert_select 'script[src=/plugin_assets/test_plugin/javascripts/test_plugin.js]'
       assert_select 'link[href=/plugin_assets/test_plugin/stylesheets/test_plugin.css]'
     end
+  end
+
+  def test_controller_hook_context_should_include_request
+    Redmine::Hook.add_listener(ContextTestHook)
+    post '/login', :username => 'admin', :password => 'admin'
+    assert_not_nil ContextTestHook.context
+    context = ContextTestHook.context
+    assert_kind_of ActionDispatch::Request, context[:request]
+    assert_kind_of Hash, context[:request].params
+    assert_kind_of AccountController, context[:hook_caller]
   end
 end

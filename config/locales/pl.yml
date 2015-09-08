@@ -308,9 +308,9 @@ pl:
   general_csv_decimal_separator: ','
   general_csv_encoding: UTF-8
   general_csv_separator: ';'
+  general_pdf_fontname: freesans
   general_first_day_of_week: '1'
   general_lang_name: 'Polski'
-  general_pdf_encoding: UTF-8
   general_text_No: 'Nie'
   general_text_Yes: 'Tak'
   general_text_no: 'nie'
@@ -1101,7 +1101,7 @@ pl:
   permission_delete_documents: Usuwanie dokumentów
   label_gantt_progress_line: Linia postępu
   setting_jsonp_enabled: Uaktywnij wsparcie dla JSONP
-  field_inherit_members: Dziedziczenie członków
+  field_inherit_members: Dziedziczenie uczestników
   field_closed_on: Data zamknięcia
   field_generate_password: Wygeneruj hasło
   setting_default_projects_tracker_ids: Domyślne typy zagadnień dla nowych projektów
@@ -1137,3 +1137,5 @@ pl:
   label_latest_compatible_version: Latest compatible version
   label_unknown_plugin: Unknown plugin
   label_radio_buttons: radio buttons
+  label_group_anonymous: Anonymous users
+  label_group_non_member: Non member users

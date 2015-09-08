@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +22,7 @@ class AutoCompletesController < ApplicationController
     @issues = []
     q = (params[:q] || params[:term]).to_s.strip
     if q.present?
-      scope = (params[:scope] == "all" || @project.nil? ? Issue : @project.issues).visible
+      scope = Issue.cross_project_scope(@project, params[:scope]).visible
       if q.match(/\A#?(\d+)\z/)
         @issues << scope.find_by_id($1.to_i)
       end

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,8 +19,11 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class JournalTest < ActiveSupport::TestCase
   fixtures :projects, :issues, :issue_statuses, :journals, :journal_details,
+           :issue_relations, :workflows,
            :users, :members, :member_roles, :roles, :enabled_modules,
-           :projects_trackers, :trackers
+           :groups_users,
+           :enumerations,
+           :projects_trackers, :trackers, :custom_fields
 
   def setup
     @journal = Journal.find 1

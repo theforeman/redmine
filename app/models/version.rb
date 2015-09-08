@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,6 +30,7 @@ class Version < ActiveRecord::Base
   validates_presence_of :name
   validates_uniqueness_of :name, :scope => [:project_id]
   validates_length_of :name, :maximum => 60
+  validates_length_of :description, :maximum => 255
   validates :effective_date, :date => true
   validates_inclusion_of :status, :in => VERSION_STATUSES
   validates_inclusion_of :sharing, :in => VERSION_SHARINGS
@@ -58,6 +59,10 @@ class Version < ActiveRecord::Base
   # Version files have same visibility as project files
   def attachments_visible?(*args)
     project.present? && project.attachments_visible?(*args)
+  end
+
+  def attachments_deletable?(usr=User.current)
+    project.present? && project.attachments_deletable?(usr)
   end
 
   def start_date
@@ -224,6 +229,11 @@ class Version < ActiveRecord::Base
         end
       end
     end
+  end
+
+  # Returns true if the version is shared, otherwise false
+  def shared?
+    sharing != 'none'
   end
 
   private

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@ class Member < ActiveRecord::Base
   belongs_to :user
   belongs_to :principal, :foreign_key => 'user_id'
   has_many :member_roles, :dependent => :destroy
-  has_many :roles, :through => :member_roles
+  has_many :roles, :through => :member_roles, :uniq => true
   belongs_to :project
 
   validates_presence_of :principal, :project
@@ -94,9 +94,9 @@ class Member < ActiveRecord::Base
   end
 
   def set_issue_category_nil
-    if user
+    if user_id && project_id
       # remove category based auto assignments for this member
-      IssueCategory.where(["project_id = ? AND assigned_to_id = ?", project.id, user.id]).
+      IssueCategory.where(["project_id = ? AND assigned_to_id = ?", project_id, user_id]).
         update_all("assigned_to_id = NULL")
     end
   end

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -87,7 +87,7 @@ class AdminControllerTest < ActionController::TestCase
     user.pref.save!
     ActionMailer::Base.deliveries.clear
 
-    get :test_email
+    post :test_email
     assert_redirected_to '/settings?tab=notifications'
     mail = ActionMailer::Base.deliveries.last
     assert_not_nil mail
@@ -97,7 +97,7 @@ class AdminControllerTest < ActionController::TestCase
 
   def test_test_email_failure_should_display_the_error
     Mailer.stubs(:test_email).raises(Exception, 'Some error message')
-    get :test_email
+    post :test_email
     assert_redirected_to '/settings?tab=notifications'
     assert_match /Some error message/, flash[:error]
   end

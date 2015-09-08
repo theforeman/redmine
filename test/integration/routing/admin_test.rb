@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,7 +36,7 @@ class RoutingAdminTest < ActionController::IntegrationTest
         { :controller => 'admin', :action => 'info' }
       )
     assert_routing(
-        { :method => 'get', :path => "/admin/test_email" },
+        { :method => 'post', :path => "/admin/test_email" },
         { :controller => 'admin', :action => 'test_email' }
       )
     assert_routing(

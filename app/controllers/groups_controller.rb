@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,12 +25,16 @@ class GroupsController < ApplicationController
   helper :custom_fields
 
   def index
-    @groups = Group.sorted.all
     respond_to do |format|
       format.html {
+        @groups = Group.sorted.all
         @user_count_by_group_id = user_count_by_group_id
       }
-      format.api
+      format.api {
+        scope = Group.sorted
+        scope = scope.givable unless params[:builtin] == '1'
+        @groups = scope.all
+      }
     end
   end
 
@@ -91,12 +95,18 @@ class GroupsController < ApplicationController
   end
 
   def add_users
-    @users = User.where(:id => (params[:user_id] || params[:user_ids])).all
-    @group.users << @users if request.post?
+    @users = User.not_in_group(@group).where(:id => (params[:user_id] || params[:user_ids])).to_a
+    @group.users << @users
     respond_to do |format|
       format.html { redirect_to edit_group_path(@group, :tab => 'users') }
       format.js
-      format.api { render_api_ok }
+      format.api {
+        if @users.any?
+          render_api_ok
+        else
+          render_api_errors "#{l(:label_user)} #{l('activerecord.errors.messages.invalid')}"
+        end
+      }
     end
   end
 

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,6 +30,7 @@ class Repository < ActiveRecord::Base
 
   serialize :extra_info
 
+  before_validation :normalize_identifier
   before_save :check_default
 
   # Raw SQL to delete changesets and changes in the database
@@ -38,8 +39,7 @@ class Repository < ActiveRecord::Base
 
   validates_length_of :password, :maximum => 255, :allow_nil => true
   validates_length_of :identifier, :maximum => IDENTIFIER_MAX_LENGTH, :allow_blank => true
-  validates_presence_of :identifier, :unless => Proc.new { |r| r.is_default? || r.set_as_default? }
-  validates_uniqueness_of :identifier, :scope => :project_id, :allow_blank => true
+  validates_uniqueness_of :identifier, :scope => :project_id
   validates_exclusion_of :identifier, :in => %w(browse show entry raw changes annotate diff statistics graph revisions revision)
   # donwcase letters, digits, dashes, underscores but not digits only
   validates_format_of :identifier, :with => /\A(?!\d+$)[a-z0-9\-_]*\z/, :allow_blank => true
@@ -405,7 +405,60 @@ class Repository < ActiveRecord::Base
     new_record? && project && Repository.where(:project_id => project.id).empty?
   end
 
+  # Returns a hash with statistics by author in the following form:
+  # {
+  #   "John Smith" => { :commits => 45, :changes => 324 },
+  #   "Bob" => { ... }
+  # }
+  #
+  # Notes:
+  # - this hash honnors the users mapping defined for the repository
+  def stats_by_author
+    commits = Changeset.where("repository_id = ?", id).select("committer, user_id, count(*) as count").group("committer, user_id")
+
+    #TODO: restore ordering ; this line probably never worked
+    #commits.to_a.sort! {|x, y| x.last <=> y.last}
+
+    changes = Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", id).select("committer, user_id, count(*) as count").group("committer, user_id")
+
+    user_ids = changesets.map(&:user_id).compact.uniq
+    authors_names = User.where(:id => user_ids).inject({}) do |memo, user|
+      memo[user.id] = user.to_s
+      memo
+    end
+
+    (commits + changes).inject({}) do |hash, element|
+      mapped_name = element.committer
+      if username = authors_names[element.user_id.to_i]
+        mapped_name = username
+      end
+      hash[mapped_name] ||= { :commits_count => 0, :changes_count => 0 }
+      if element.is_a?(Changeset)
+        hash[mapped_name][:commits_count] += element.count.to_i
+      else
+        hash[mapped_name][:changes_count] += element.count.to_i
+      end
+      hash
+    end
+  end
+
+  # Returns a scope of changesets that come from the same commit as the given changeset
+  # in different repositories that point to the same backend
+  def same_commits_in_scope(scope, changeset)
+    scope = scope.joins(:repository).where(:repositories => {:url => url, :root_url => root_url, :type => type})
+    if changeset.scmid.present?
+      scope = scope.where(:scmid => changeset.scmid)
+    else
+      scope = scope.where(:revision => changeset.revision)
+    end
+    scope
+  end
+
   protected
+
+  def normalize_identifier
+    self.identifier = identifier.to_s.strip
+  end
 
   def check_default
     if !is_default? && set_as_default?

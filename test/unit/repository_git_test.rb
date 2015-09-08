@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -50,6 +50,37 @@ class RepositoryGitTest < ActiveSupport::TestCase
     @char_1        = CHAR_1_HEX.dup
     if @char_1.respond_to?(:force_encoding)
       @char_1.force_encoding('UTF-8')
+    end
+  end
+
+  def test_nondefault_repo_with_blank_identifier_destruction
+    Repository.delete_all
+
+    repo1 = Repository::Git.new(
+                          :project    => @project,
+                          :url        => REPOSITORY_PATH,
+                          :identifier => '',
+                          :is_default => true
+                        )
+    assert repo1.save
+    repo1.fetch_changesets
+
+    repo2 = Repository::Git.new(
+                          :project    => @project,
+                          :url        => REPOSITORY_PATH,
+                          :identifier => 'repo2',
+                          :is_default => true
+                    )
+    assert repo2.save
+    repo2.fetch_changesets
+
+    repo1.reload
+    repo2.reload
+    assert !repo1.is_default?
+    assert  repo2.is_default?
+
+    assert_difference 'Repository.count', -1 do
+      repo1.destroy
     end
   end
 

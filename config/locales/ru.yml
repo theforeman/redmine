@@ -315,7 +315,7 @@ ru:
   field_column_names: Столбцы
   field_comments: Комментарий
   field_comments_sorting: Отображение комментариев
-  field_content: Content
+  field_content: Содержимое
   field_created_on: Создано
   field_default_value: Значение по умолчанию
   field_delay: Отложить
@@ -394,9 +394,9 @@ ru:
   general_csv_decimal_separator: ','
   general_csv_encoding: UTF-8
   general_csv_separator: ';'
+  general_pdf_fontname: freesans
   general_first_day_of_week: '1'
   general_lang_name: 'Russian (Русский)'
-  general_pdf_encoding: UTF-8
   general_text_no: 'нет'
   general_text_No: 'Нет'
   general_text_yes: 'да'
@@ -1177,7 +1177,7 @@ ru:
     few:   "последние %{count} недели"
     many:  "последние %{count} недель"
     other: "последние %{count} недели"
-  setting_cross_project_subtasks: Разрешить подзадачи в между проектами
+  setting_cross_project_subtasks: Разрешить подзадачи между проектами
   label_cross_project_descendants: С подпроектами
   label_cross_project_tree: С деревом проектов
   label_cross_project_hierarchy: С иерархией проектов
@@ -1218,8 +1218,10 @@ ru:
   setting_force_default_language_for_anonymous: Не определять язык для анонимных пользователей
   setting_force_default_language_for_loggedin: Не определять язык для зарегистрированных пользователей
   label_custom_field_select_type: Выберите тип объекта для которого будет создано настраиваемое поле
-  label_issue_assigned_to_updated: Assignee updated
-  label_check_for_updates: Check for updates
-  label_latest_compatible_version: Latest compatible version
-  label_unknown_plugin: Unknown plugin
+  label_issue_assigned_to_updated: Исполнитель обновлен
+  label_check_for_updates: Проверить обновления
+  label_latest_compatible_version: Последняя совместимая версия
+  label_unknown_plugin: Неизвестный плагин
   label_radio_buttons: radio buttons
+  label_group_anonymous: Анонимные пользователи
+  label_group_non_member: Не участвующие пользователи

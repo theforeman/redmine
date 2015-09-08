@@ -285,9 +285,9 @@ nl:
   general_csv_decimal_separator: ','
   general_csv_encoding: ISO-8859-1
   general_csv_separator: ';'
+  general_pdf_fontname: freesans
   general_first_day_of_week: '7'
   general_lang_name: 'Nederlands'
-  general_pdf_encoding: UTF-8
   general_text_No: 'Nee'
   general_text_Yes: 'Ja'
   general_text_no: 'nee'
@@ -1096,3 +1096,5 @@ nl:
   label_latest_compatible_version: Latest compatible version
   label_unknown_plugin: Unknown plugin
   label_radio_buttons: radio buttons
+  label_group_anonymous: Anonymous users
+  label_group_non_member: Non member users

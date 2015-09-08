@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -55,17 +55,11 @@ class PrincipalTest < ActiveSupport::TestCase
   end
 
   def test_sorted_scope_should_sort_users_before_groups
-    scope = Principal.where("type <> ?", 'AnonymousUser')
-    expected_order = scope.all.sort do |a, b|
-      if a.is_a?(User) && b.is_a?(Group)
-        -1
-      elsif a.is_a?(Group) && b.is_a?(User)
-        1
-      else
-        a.name.downcase <=> b.name.downcase
-      end
-    end
-    assert_equal expected_order.map(&:name).map(&:downcase),
+    scope = Principal.where(:type => ['User', 'Group'])
+    users = scope.select {|p| p.is_a?(User)}.sort
+    groups = scope.select {|p| p.is_a?(Group)}.sort
+
+    assert_equal (users + groups).map(&:name).map(&:downcase),
                  scope.sorted.map(&:name).map(&:downcase)
   end
 

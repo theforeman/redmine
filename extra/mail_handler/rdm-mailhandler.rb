@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -129,7 +129,7 @@ class RedmineMailHandler
     debug "Posting to #{uri}..."
     begin
       response = Net::HTTPS.post_form(URI.parse(uri), data, headers, :no_check_certificate => no_check_certificate)
-    rescue SystemCallError => e # connection refused, etc.
+    rescue SystemCallError, IOError => e # connection refused, etc.
       warn "An error occured while contacting your Redmine server: #{e.message}"
       return 75 # temporary failure
     end

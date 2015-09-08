@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -680,6 +680,30 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal 'Feature request', journal.issue.tracker.name
   end
 
+  def test_update_issue_should_accept_issue_id_after_space_inside_brackets
+    journal = submit_email('ticket_reply_with_status.eml') do |email|
+      assert email.sub!(/^Subject:.*$/, "Subject: Re: [Feature request #2] Add ingredients categories")
+    end
+    assert journal.is_a?(Journal)
+    assert_equal Issue.find(2), journal.journalized
+  end
+
+  def test_update_issue_should_accept_issue_id_inside_brackets
+    journal = submit_email('ticket_reply_with_status.eml') do |email|
+      assert email.sub!(/^Subject:.*$/, "Subject: Re: [#2] Add ingredients categories")
+    end
+    assert journal.is_a?(Journal)
+    assert_equal Issue.find(2), journal.journalized
+  end
+
+  def test_update_issue_should_ignore_bogus_issue_ids_in_subject
+    journal = submit_email('ticket_reply_with_status.eml') do |email|
+      assert email.sub!(/^Subject:.*$/, "Subject: Re: [12345#1][bogus#1][Feature request #2] Add ingredients categories")
+    end
+    assert journal.is_a?(Journal)
+    assert_equal Issue.find(2), journal.journalized
+  end
+
   def test_update_issue_with_attribute_changes
     # This email contains: 'Status: Resolved'
     journal = submit_email('ticket_reply_with_status.eml')
@@ -854,6 +878,20 @@ class MailHandlerTest < ActiveSupport::TestCase
     issue = submit_email('ticket_with_long_subject.eml')
     assert issue.is_a?(Issue)
     assert_equal issue.subject, 'New ticket on a given project with a very long subject line which exceeds 255 chars and should not be ignored but chopped off. And if the subject line is still not long enough, we just add more text. And more text. Wow, this is really annoying. Especially, if you have nothing to say...'[0,255]
+  end
+
+  def test_first_keyword_should_be_matched
+    issue = submit_email('ticket_with_duplicate_keyword.eml', :allow_override => 'priority')
+    assert issue.is_a?(Issue)
+    assert_equal 'High', issue.priority.name
+  end
+
+  def test_keyword_after_delimiter_should_be_ignored
+    with_settings :mail_handler_body_delimiters => "== DELIMITER ==" do
+      issue = submit_email('ticket_with_keyword_after_delimiter.eml', :allow_override => 'priority')
+      assert issue.is_a?(Issue)
+      assert_equal 'Normal', issue.priority.name
+    end
   end
 
   def test_new_user_from_attributes_should_return_valid_user

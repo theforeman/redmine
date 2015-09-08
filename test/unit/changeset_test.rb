@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,8 @@ class ChangesetTest < ActiveSupport::TestCase
            :changesets, :changes,
            :enumerations,
            :custom_fields, :custom_values,
-           :users, :members, :member_roles, :trackers,
+           :users, :members, :member_roles,
+           :trackers, :projects_trackers,
            :enabled_modules, :roles
 
   def test_ref_keywords_any
@@ -161,6 +162,30 @@ class ChangesetTest < ActiveSupport::TestCase
     assert_equal [1,2,3], c.issue_ids.sort
   end
 
+  def test_update_keywords_with_changes_should_create_journal
+    issue = Issue.generate!(:project_id => 1, :status_id => 1)
+
+    with_settings :commit_update_keywords => [{'keywords' => 'fixes', 'status_id' => '3'}] do
+      assert_difference 'Journal.count' do
+        c = Changeset.generate!(:repository => Project.find(1).repository,:comments => "Fixes ##{issue.id}")
+        assert_include c.id, issue.reload.changeset_ids
+        journal = Journal.order('id DESC').first
+        assert_equal 1, journal.details.count
+      end
+    end
+  end
+
+  def test_update_keywords_without_change_should_not_create_journal
+    issue = Issue.generate!(:project_id => 1, :status_id => 3)
+
+    with_settings :commit_update_keywords => [{'keywords' => 'fixes', 'status_id' => '3'}] do
+      assert_no_difference 'Journal.count' do
+        c = Changeset.generate!(:repository => Project.find(1).repository,:comments => "Fixes ##{issue.id}")
+        assert_include c.id, issue.reload.changeset_ids
+      end
+    end
+  end
+
   def test_update_keywords_with_multiple_rules
     with_settings :commit_update_keywords => [
       {'keywords' => 'fixes, closes', 'status_id' => '5'},
@@ -294,6 +319,17 @@ class ChangesetTest < ActiveSupport::TestCase
     issue = Issue.find(1)
     assert_equal 1, issue.status_id
     assert_equal 0, issue.done_ratio
+  end
+
+  def test_2_repositories_with_same_backend_should_not_link_issue_multiple_times
+    Setting.commit_ref_keywords = '*'
+    r1 = Repository::Subversion.create!(:project_id => 1, :identifier => 'svn1', :url => 'file:///svn1')
+    r2 = Repository::Subversion.create!(:project_id => 1, :identifier => 'svn2', :url => 'file:///svn1')
+    now = Time.now
+    assert_difference 'Issue.find(1).changesets.count' do
+      c1 = Changeset.create!(:repository => r1, :committed_on => now, :comments => 'Fixes #1', :revision => '12345')
+      c1 = Changeset.create!(:repository => r2, :committed_on => now, :comments => 'Fixes #1', :revision => '12345')
+    end
   end
 
   def test_text_tag_revision

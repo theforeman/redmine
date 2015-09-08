@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -94,6 +94,16 @@ class MemberTest < ActiveSupport::TestCase
     assert !member.save
   end
 
+  def test_set_issue_category_nil_should_handle_nil_values
+    m = Member.new
+    assert_nil m.user
+    assert_nil m.project
+
+    assert_nothing_raised do
+      m.set_issue_category_nil
+    end
+  end
+
   def test_destroy
     category1 = IssueCategory.find(1)
     assert_equal @jsmith.user.id, category1.assigned_to_id
@@ -122,6 +132,16 @@ class MemberTest < ActiveSupport::TestCase
     assert m.destroyed?
   ensure
     Member._destroy_callbacks.reject! {|c| c.filter==:destroy_test_callback}
+  end
+
+  def test_roles_should_be_unique
+    m = Member.new(:user_id => 1, :project_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.save!
+    m.reload
+    assert_equal 1, m.roles.count
+    assert_equal [1], m.roles.map(&:id)
   end
 
   def test_sort_without_roles

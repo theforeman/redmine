@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -84,6 +84,16 @@ class Redmine::ApiTest::MembershipsTest < Redmine::ApiTest::Base
   test "POST /projects/:project_id/memberships.xml should create the membership" do
     assert_difference 'Member.count' do
       post '/projects/1/memberships.xml', {:membership => {:user_id => 7, :role_ids => [2,3]}}, credentials('jsmith')
+
+      assert_response :created
+    end
+  end
+
+  test "POST /projects/:project_id/memberships.xml should create the group membership" do
+    group = Group.find(11)
+
+    assert_difference 'Member.count', 1 + group.users.count do
+      post '/projects/1/memberships.xml', {:membership => {:user_id => 11, :role_ids => [2,3]}}, credentials('jsmith')
 
       assert_response :created
     end

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -196,6 +196,18 @@ class Redmine::I18nTest < ActiveSupport::TestCase
     ja = "Japanese (\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e)"
     ja.force_encoding('UTF-8') if ja.respond_to?(:force_encoding)
     assert_include [ja, "ja"], options
+  end
+
+  def test_languages_options_should_return_strings_with_utf8_encoding
+    if "".respond_to?(:force_encoding)
+      strings = languages_options.flatten
+      assert_equal ["UTF-8"], strings.map(&:encoding).uniq.map(&:name).sort
+    end
+  end
+
+  def test_languages_options_should_ignore_locales_without_general_lang_name_key
+    stubs(:valid_languages).returns([:en, :foo])
+    assert_equal [["English", "en"]], languages_options(:cache => false)
   end
 
   def test_locales_validness

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -219,6 +219,16 @@ class IssueTest < ActiveSupport::TestCase
     assert_visibility_match User.anonymous, issues
   end
 
+  def test_visible_scope_for_anonymous_without_view_issues_permissions_and_membership
+    Role.anonymous.remove_permission!(:view_issues)
+    Member.create!(:project_id => 1, :principal => Group.anonymous, :role_ids => [2])
+
+    issues = Issue.visible(User.anonymous).all
+    assert issues.any?
+    assert_equal [1], issues.map(&:project_id).uniq.sort
+    assert_visibility_match User.anonymous, issues
+  end
+
   def test_anonymous_should_not_see_private_issues_with_issues_visibility_set_to_default
     assert Role.anonymous.update_attribute(:issues_visibility, 'default')
     issue = Issue.generate!(:author => User.anonymous, :assigned_to => User.anonymous, :is_private => true)
@@ -262,6 +272,17 @@ class IssueTest < ActiveSupport::TestCase
     assert user.projects.empty?
     issues = Issue.visible(user).all
     assert issues.empty?
+    assert_visibility_match user, issues
+  end
+
+  def test_visible_scope_for_non_member_without_view_issues_permissions_and_membership
+    Role.non_member.remove_permission!(:view_issues)
+    Member.create!(:project_id => 1, :principal => Group.non_member, :role_ids => [2])
+    user = User.find(9)
+
+    issues = Issue.visible(user).all
+    assert issues.any?
+    assert_equal [1], issues.map(&:project_id).uniq.sort
     assert_visibility_match user, issues
   end
 
@@ -809,6 +830,26 @@ class IssueTest < ActiveSupport::TestCase
     assert issue.save
   end
 
+  def test_required_attribute_that_is_disabled_for_the_tracker_should_not_be_required
+    WorkflowPermission.delete_all
+    WorkflowPermission.create!(:old_status_id => 1, :tracker_id => 1,
+                               :role_id => 1, :field_name => 'start_date',
+                               :rule => 'required')
+    user = User.find(2)
+
+    issue = Issue.new(:project_id => 1, :tracker_id => 1, :status_id => 1,
+                      :subject => 'Required fields', :author => user)
+    assert !issue.save
+    assert_include "Start date can't be blank", issue.errors.full_messages
+
+    tracker = Tracker.find(1)
+    tracker.core_fields -= %w(start_date)
+    tracker.save!
+    issue = Issue.new(:project_id => 1, :tracker_id => 1, :status_id => 1,
+                      :subject => 'Required fields', :author => user)
+    assert issue.save
+  end
+
   def test_required_attribute_names_for_multiple_roles_should_intersect_rules
     WorkflowPermission.delete_all
     WorkflowPermission.create!(:old_status_id => 1, :tracker_id => 1,
@@ -837,7 +878,7 @@ class IssueTest < ActiveSupport::TestCase
     assert_equal [], issue.required_attribute_names(user.reload)
 
     WorkflowPermission.create!(:old_status_id => 1, :tracker_id => 1,
-                               :role_id => 2, :field_name => 'due_date',
+                               :role_id => 3, :field_name => 'due_date',
                                :rule => 'readonly')
     # required + readonly => required
     assert_equal %w(due_date), issue.required_attribute_names(user)
@@ -865,6 +906,44 @@ class IssueTest < ActiveSupport::TestCase
                               :role_id => 2, :field_name => 'due_date',
                               :rule => 'readonly')
     assert_equal %w(due_date), issue.read_only_attribute_names(user)
+  end
+
+  # A field that is not visible by role 2 and readonly by role 1 should be readonly for user with role 1 and 2
+  def test_read_only_attribute_names_should_include_custom_fields_that_combine_readonly_and_not_visible_for_roles
+    field = IssueCustomField.generate!(
+      :is_for_all => true, :trackers => Tracker.all, :visible => false, :role_ids => [1]
+    )
+    WorkflowPermission.delete_all
+    WorkflowPermission.create!(
+      :old_status_id => 1, :tracker_id => 1, :role_id => 1, :field_name => field.id, :rule => 'readonly'
+    )
+    user = User.generate!
+    project = Project.find(1)
+    User.add_to_project(user, project, Role.where(:id => [1, 2]).all)
+
+    issue = Issue.new(:project_id => 1, :tracker_id => 1, :status_id => 1)
+    assert_equal [field.id.to_s], issue.read_only_attribute_names(user)
+  end
+
+  def test_workflow_rules_should_work_for_member_with_duplicate_role
+    WorkflowPermission.delete_all
+    WorkflowPermission.create!(:old_status_id => 1, :tracker_id => 1,
+                               :role_id => 1, :field_name => 'due_date',
+                               :rule => 'required')
+    WorkflowPermission.create!(:old_status_id => 1, :tracker_id => 1,
+                               :role_id => 1, :field_name => 'start_date',
+                               :rule => 'readonly')
+
+    user = User.generate!
+    m = Member.new(:user_id => user.id, :project_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.member_roles.build(:role_id => 1)
+    m.save!
+
+    issue = Issue.new(:project_id => 1, :tracker_id => 1, :status_id => 1)
+
+    assert_equal %w(due_date), issue.required_attribute_names(user)
+    assert_equal %w(start_date), issue.read_only_attribute_names(user)
   end
 
   def test_copy
@@ -1724,6 +1803,16 @@ class IssueTest < ActiveSupport::TestCase
     end
   end
 
+  def test_assignable_users_should_not_include_builtin_groups
+    Member.create!(:project_id => 1, :principal => Group.non_member, :role_ids => [1])
+    Member.create!(:project_id => 1, :principal => Group.anonymous, :role_ids => [1])
+    issue = Issue.new(:project => Project.find(1))
+
+    with_settings :issue_group_assignment => '1' do
+      assert_nil issue.assignable_users.detect {|u| u.is_a?(GroupBuiltin)}
+    end
+  end
+
   def test_create_should_send_email_notification
     ActionMailer::Base.deliveries.clear
     issue = Issue.new(:project_id => 1, :tracker_id => 1,
@@ -2364,5 +2453,13 @@ class IssueTest < ActiveSupport::TestCase
     assert_equal IssueStatus.find(1), issue.status_was
     assert issue.save!
     assert_equal IssueStatus.find(2), issue.status_was
+  end
+
+  def test_assigned_to_was_with_a_group
+    group = Group.find(10)
+
+    issue = Issue.generate!(:assigned_to => group)
+    issue.reload.assigned_to = nil
+    assert_equal group, issue.assigned_to_was
   end
 end

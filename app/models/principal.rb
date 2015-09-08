@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -114,3 +114,6 @@ class Principal < ActiveRecord::Base
     true
   end
 end
+
+require_dependency "user"
+require_dependency "group"

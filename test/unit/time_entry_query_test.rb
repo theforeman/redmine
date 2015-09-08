@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +18,14 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class TimeEntryQueryTest < ActiveSupport::TestCase
-  fixtures :projects, :users, :enumerations
+  fixtures :issues, :projects, :users,
+           :members, :roles, :member_roles,
+           :trackers, :issue_statuses,
+           :projects_trackers,
+           :journals, :journal_details,
+           :issue_categories, :enumerations,
+           :groups_users,
+           :enabled_modules
 
   def test_activity_filter_should_consider_system_and_project_activities
     TimeEntry.delete_all

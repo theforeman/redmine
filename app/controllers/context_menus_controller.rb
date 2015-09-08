@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -71,14 +71,29 @@ class ContextMenusController < ApplicationController
   def time_entries
     @time_entries = TimeEntry.where(:id => params[:ids]).preload(:project).to_a
     (render_404; return) unless @time_entries.present?
+    if (@time_entries.size == 1)
+      @time_entry = @time_entries.first
+    end
 
     @projects = @time_entries.collect(&:project).compact.uniq
     @project = @projects.first if @projects.size == 1
     @activities = TimeEntryActivity.shared.active
-    @can = {:edit   => User.current.allowed_to?(:edit_time_entries, @projects),
-            :delete => User.current.allowed_to?(:edit_time_entries, @projects)
-            }
+
+    edit_allowed = @time_entries.all? {|t| t.editable_by?(User.current)}
+    @can = {:edit => edit_allowed, :delete => edit_allowed}
     @back = back_url
+
+    @options_by_custom_field = {}
+    if @can[:edit]
+      custom_fields = @time_entries.map(&:editable_custom_fields).reduce(:&).reject(&:multiple?)
+      custom_fields.each do |field|
+        values = field.possible_values_options(@projects)
+        if values.present?
+          @options_by_custom_field[field] = values
+        end
+      end
+    end
+
     render :layout => false
   end
 end

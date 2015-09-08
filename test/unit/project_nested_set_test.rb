@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -39,8 +39,6 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
     @b1.set_parent!(@b)
     @b11 = Project.create!(:name => 'B11', :identifier => 'projectb11')
     @b11.set_parent!(@b1)
-
-    @a, @a1, @a2, @b, @b1, @b11, @b2, @c, @c1 = *(Project.all.sort_by(&:name))
   end
 
   def test_valid_tree

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -172,5 +172,11 @@ class Redmine::PluginTest < ActiveSupport::TestCase
         requires_redmine_plugin(:missing, :version => '0.1.0')
       end
     end
+  end
+
+  def test_settings_warns_about_possible_partial_collision
+    @klass.register(:foo) { settings :partial => 'foo/settings' }
+    Rails.logger.expects(:warn)
+    @klass.register(:bar) { settings :partial => 'foo/settings' }
   end
 end

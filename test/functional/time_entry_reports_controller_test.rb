@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -130,13 +130,13 @@ class TimeEntryReportsControllerTest < ActionController::TestCase
   end
 
   def test_report_at_issue_level
-    get :report, :project_id => 1, :issue_id => 1, :columns => 'month', :from => "2007-01-01", :to => "2007-12-31", :criteria => ["user", "activity"]
+    get :report, :issue_id => 1, :columns => 'month', :from => "2007-01-01", :to => "2007-12-31", :criteria => ["user", "activity"]
     assert_response :success
     assert_template 'report'
     assert_not_nil assigns(:report)
     assert_equal "154.25", "%.2f" % assigns(:report).total_hours
     assert_tag :form,
-      :attributes => {:action => "/projects/ecookbook/issues/1/time_entries/report", :id => 'query_form'}
+      :attributes => {:action => "/issues/1/time_entries/report", :id => 'query_form'}
   end
 
   def test_report_by_week_should_use_commercial_year

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -50,6 +50,8 @@ module Redmine #:nodoc:
     self.public_directory = File.join(Rails.root, 'public', 'plugin_assets')
 
     @registered_plugins = {}
+    @used_partials = {}
+
     class << self
       attr_reader :registered_plugins
       private :new
@@ -91,6 +93,15 @@ module Redmine #:nodoc:
       # Adds the app/{controllers,helpers,models} directories of the plugin to the autoload path
       Dir.glob File.expand_path(File.join(p.directory, 'app', '{controllers,helpers,models}')) do |dir|
         ActiveSupport::Dependencies.autoload_paths += [dir]
+      end
+
+      # Warn for potential settings[:partial] collisions
+      if p.configurable?
+        partial = p.settings[:partial]
+        if @used_partials[partial]
+          Rails.logger.warn "WARNING: settings partial '#{partial}' is declared in '#{p.id}' plugin but it is already used by plugin '#{@used_partials[partial]}'. Only one settings view will be used. You may want to contact those plugins authors to fix this."
+        end
+        @used_partials[partial] = p.id
       end
 
       registered_plugins[id] = p
@@ -462,7 +473,7 @@ module Redmine #:nodoc:
           # Delete migrations that don't match .. to_i will work because the number comes first
           ::ActiveRecord::Base.connection.select_values(
             "SELECT version FROM #{schema_migrations_table_name}"
-          ).delete_if{ |v| v.match(/-#{plugin.id}/) == nil }.map(&:to_i).max || 0
+          ).delete_if{ |v| v.match(/-#{plugin.id}$/) == nil }.map(&:to_i).max || 0
         end
       end
 
@@ -470,7 +481,7 @@ module Redmine #:nodoc:
         sm_table = self.class.schema_migrations_table_name
         ::ActiveRecord::Base.connection.select_values(
           "SELECT version FROM #{sm_table}"
-        ).delete_if{ |v| v.match(/-#{current_plugin.id}/) == nil }.map(&:to_i).sort
+        ).delete_if{ |v| v.match(/-#{current_plugin.id}$/) == nil }.map(&:to_i).sort
       end
 
       def record_version_state_after_migrating(version)

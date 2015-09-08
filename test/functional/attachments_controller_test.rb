@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -379,6 +379,16 @@ class AttachmentsControllerTest < ActionController::TestCase
   end
 
   def test_destroy_version_attachment
+    set_tmp_attachments_directory
+    @request.session[:user_id] = 2
+    assert_difference 'Attachment.count', -1 do
+      delete :destroy, :id => 9
+      assert_response 302
+    end
+  end
+
+  def test_destroy_version_attachment_with_issue_tracking_disabled
+    Project.find(1).disable_module! :issue_tracking
     set_tmp_attachments_directory
     @request.session[:user_id] = 2
     assert_difference 'Attachment.count', -1 do

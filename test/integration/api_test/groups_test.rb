@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,15 +29,34 @@ class Redmine::ApiTest::GroupsTest < Redmine::ApiTest::Base
     assert_response 401
   end
 
-  test "GET /groups.xml should return groups" do
+  test "GET /groups.xml should return givable groups" do
     get '/groups.xml', {}, credentials('admin')
     assert_response :success
     assert_equal 'application/xml', response.content_type
 
     assert_select 'groups' do
+      assert_select 'group', Group.givable.count
       assert_select 'group' do
         assert_select 'name', :text => 'A Team'
         assert_select 'id', :text => '10'
+      end
+    end
+  end
+
+  test "GET /groups.xml?builtin=1 should return all groups" do
+    get '/groups.xml?builtin=1', {}, credentials('admin')
+    assert_response :success
+    assert_equal 'application/xml', response.content_type
+
+    assert_select 'groups' do
+      assert_select 'group', Group.givable.count + 2
+      assert_select 'group' do
+        assert_select 'builtin', :text => 'non_member'
+        assert_select 'id', :text => '12'
+      end
+      assert_select 'group' do
+        assert_select 'builtin', :text => 'anonymous'
+        assert_select 'id', :text => '13'
       end
     end
   end
@@ -60,7 +79,7 @@ class Redmine::ApiTest::GroupsTest < Redmine::ApiTest::Base
     assert_equal({'id' => 10, 'name' => 'A Team'}, group)
   end
 
-  test "GET /groups/:id.xml should return the group with its users" do
+  test "GET /groups/:id.xml should return the group" do
     get '/groups/10.xml', {}, credentials('admin')
     assert_response :success
     assert_equal 'application/xml', response.content_type
@@ -68,6 +87,17 @@ class Redmine::ApiTest::GroupsTest < Redmine::ApiTest::Base
     assert_select 'group' do
       assert_select 'name', :text => 'A Team'
       assert_select 'id', :text => '10'
+    end
+  end
+
+  test "GET /groups/:id.xml should return the builtin group" do
+    get '/groups/12.xml', {}, credentials('admin')
+    assert_response :success
+    assert_equal 'application/xml', response.content_type
+
+    assert_select 'group' do
+      assert_select 'builtin', :text => 'non_member'
+      assert_select 'id', :text => '12'
     end
   end
 
@@ -157,6 +187,19 @@ class Redmine::ApiTest::GroupsTest < Redmine::ApiTest::Base
       assert_equal '', @response.body
     end
     assert_include User.find(5), Group.find(10).users
+  end
+
+  test "POST /groups/:id/users.xml should not add the user if already added" do
+    Group.find(10).users << User.find(5)
+
+    assert_no_difference 'Group.find(10).users.count' do
+      post '/groups/10/users.xml', {:user_id => 5}, credentials('admin')
+      assert_response :unprocessable_entity
+    end
+
+    assert_select 'errors' do
+      assert_select 'error', :text => /User is invalid/
+    end
   end
 
   test "DELETE /groups/:id/users/:user_id.xml should remove user from the group" do

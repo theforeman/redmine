@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -107,6 +107,20 @@ class Redmine::WikiFormatting::TextileFormatterTest < ActionView::TestCase
     assert_html_output(
       'this is @some code@'      => 'this is <code>some code</code>',
       '@<Location /redmine>@'    => '<code>&lt;Location /redmine&gt;</code>'
+    )
+  end
+
+  def test_lang_attribute
+    assert_html_output(
+      '*[fr]French*'      => '<strong lang="fr">French</strong>',
+      '*[fr-fr]French*'   => '<strong lang="fr-fr">French</strong>',
+      '*[fr_fr]French*'   => '<strong lang="fr_fr">French</strong>'
+    )
+  end
+
+  def test_lang_attribute_should_ignore_invalid_value
+    assert_html_output(
+      '*[fr3]French*'      => '<strong>[fr3]French</strong>'
     )
   end
 

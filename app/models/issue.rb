@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2015  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -195,6 +195,7 @@ class Issue < ActiveRecord::Base
     @workflow_rule_by_attribute = nil
     @assignable_versions = nil
     @relations = nil
+    @spent_hours = nil
     base_reload(*args)
   end
 
@@ -532,13 +533,29 @@ class Issue < ActiveRecord::Base
     workflow_permissions = WorkflowPermission.where(:tracker_id => tracker_id, :old_status_id => status_id, :role_id => roles.map(&:id))
     if workflow_permissions.any?
       workflow_rules = workflow_permissions.inject({}) do |h, wp|
-        h[wp.field_name] ||= []
-        h[wp.field_name] << wp.rule
+        h[wp.field_name] ||= {}
+        h[wp.field_name][wp.role_id] = wp.rule
         h
+      end
+      fields_with_roles = {}
+      # #pluck with 2 arguments is not supported in Rails 3.2
+      sql = IssueCustomField.where(:visible => false).joins(:roles).select("#{CustomField.table_name}.id, role_id").to_sql
+      self.class.connection.select_rows(sql).each do |field_id, role_id|
+        fields_with_roles[field_id] ||= []
+        fields_with_roles[field_id] << role_id
+      end
+      roles.each do |role|
+        fields_with_roles.each do |field_id, role_ids|
+          unless role_ids.include?(role.id)
+            field_name = field_id.to_s
+            workflow_rules[field_name] ||= {}
+            workflow_rules[field_name][role.id] = 'readonly'
+          end
+        end
       end
       workflow_rules.each do |attr, rules|
         next if rules.size < roles.size
-        uniq_rules = rules.uniq
+        uniq_rules = rules.values.uniq
         if uniq_rules.size == 1
           result[attr] = uniq_rules.first
         else
@@ -624,7 +641,7 @@ class Issue < ActiveRecord::Base
           errors.add :base, v.custom_field.name + ' ' + l('activerecord.errors.messages.blank')
         end
       else
-        if respond_to?(attribute) && send(attribute).blank?
+        if respond_to?(attribute) && send(attribute).blank? && !disabled_core_fields.include?(attribute)
           errors.add attribute, :blank
         end
       end
@@ -783,12 +800,12 @@ class Issue < ActiveRecord::Base
     end
   end
 
-  # Returns the previous assignee if changed
+  # Returns the previous assignee (user or group) if changed
   def assigned_to_was
     # assigned_to_id_was is reset before after_save callbacks
     user_id = @previous_assigned_to_id || assigned_to_id_was
     if user_id && user_id != assigned_to_id
-      @assigned_to_was ||= User.find_by_id(user_id)
+      @assigned_to_was ||= Principal.find_by_id(user_id)
     end
   end
 
@@ -1121,7 +1138,6 @@ class Issue < ActiveRecord::Base
   def parent_issue_id=(arg)
     s = arg.to_s.strip.presence
     if s && (m = s.match(%r{\A#?(\d+)\z})) && (@parent_issue = Issue.find_by_id(m[1]))
-      @parent_issue.id
       @invalid_parent_issue_id = nil
     elsif s.blank?
       @parent_issue = nil
@@ -1158,6 +1174,28 @@ class Issue < ActiveRecord::Base
       issue.project.is_or_is_ancestor_of?(project)
     else
       false
+    end
+  end
+
+  # Returns an issue scope based on project and scope
+  def self.cross_project_scope(project, scope=nil)
+    if project.nil?
+      return Issue
+    end
+    case scope
+    when 'all', 'system'
+      Issue
+    when 'tree'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt)",
+                                  :lft => project.root.lft, :rgt => project.root.rgt)
+    when 'hierarchy'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt) OR (#{Project.table_name}.lft < :lft AND #{Project.table_name}.rgt > :rgt)",
+                                  :lft => project.lft, :rgt => project.rgt)
+    when 'descendants'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt)",
+                                  :lft => project.lft, :rgt => project.rgt)
+    else
+      Issue.where(:project_id => project.id)
     end
   end
 
@@ -1327,8 +1365,6 @@ class Issue < ActiveRecord::Base
         offset = right_most_bound + 1 - lft
         Issue.where(cond).
           update_all(["root_id = ?, lft = lft + ?, rgt = rgt + ?", root_id, offset, offset])
-        self[left_column_name]  = lft + offset
-        self[right_column_name] = rgt + offset
       end
       if @parent_issue
         move_to_child_of(@parent_issue)
