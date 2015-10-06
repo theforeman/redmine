@@ -61,6 +61,7 @@ update_repo smart_proxy_remote_execution_ssh https://github.com/theforeman/smart
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
 update_repo foreman_deployments https://github.com/theforeman/foreman_deployments
+update_repo foreman-discovery-image https://github.com/theforeman/foreman-discovery-image
 
 cd ${OPENSHIFT_REPO_DIR}
 script/rails runner "Repository.fetch_changesets" -e production
