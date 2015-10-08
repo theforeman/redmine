@@ -57,6 +57,7 @@ update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
 update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
+update_repo smart_proxy_discovery_image https://github.com/theforeman/smart_proxy_discovery_image
 update_repo smart_proxy_dynflow https://github.com/theforeman/smart_proxy_dynflow
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
 update_repo smart_proxy_remote_execution_ssh https://github.com/theforeman/smart_proxy_remote_execution_ssh
