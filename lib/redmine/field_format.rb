@@ -366,24 +366,46 @@ module Redmine
 
     class LinkFormat < StringFormat
       add 'link'
+      self.multiple_supported = true
       self.searchable_supported = false
       self.form_partial = 'custom_fields/formats/link'
 
       def formatted_value(view, custom_field, value, customized=nil, html=false)
-        if html && value.present?
-          if custom_field.url_pattern.present?
-            url = url_from_pattern(custom_field, value, customized)
-          else
-            url = value.to_s
-            unless url =~ %r{\A[a-z]+://}i
-              # no protocol found, use http by default
-              url = "http://" + url
+        values = value.is_a?(Array) ? value : [value]
+        links = []
+
+        values.each do |val|
+          if html
+            if custom_field.url_pattern.present?
+              url = url_from_pattern(custom_field, val, customized)
+            else
+              url = val.to_s
+              unless url =~ %r{\A[a-z]+://}i
+                # no protocol found, use http by default
+                url = "http://" + url
+              end
             end
+            links << view.link_to(val.to_s, url)
+          else
+            links << val.to_s
           end
-          view.link_to value.to_s.truncate(40), url
-        else
-          value.to_s
         end
+
+        links.length == 1 ? links[0] : links
+      end
+
+      def edit_tag(view, tag_id, tag_name, custom_value, options={})
+        if custom_value.value.is_a?(String)
+          view_response = view.text_field_tag(tag_name, custom_value.value, options.merge(:id => tag_id, :size => 10))
+        else
+          view_response = view.text_field_tag(tag_name, '', options.merge(:id => tag_id, :size => 10))
+
+          custom_value.value.each do |value|
+            view_response += view.text_field_tag(tag_name, value, options.merge(:id => tag_id, :size => 10))
+          end
+        end
+
+        view_response
       end
     end
 
