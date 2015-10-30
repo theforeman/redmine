@@ -395,7 +395,7 @@ module Redmine
       end
 
       def edit_tag(view, tag_id, tag_name, custom_value, options={})
-        if custom_value.value.is_a?(String)
+        if custom_value.value.nil? || custom_value.value.is_a?(String)
           view_response = view.text_field_tag(tag_name, custom_value.value, options.merge(:id => tag_id, :size => 10))
         else
           view_response = view.text_field_tag(tag_name, '', options.merge(:id => tag_id, :size => 10))
