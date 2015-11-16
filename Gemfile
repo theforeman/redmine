@@ -1,13 +1,14 @@
 source 'https://rubygems.org'
 
 gem "rails", "3.2.22"
-gem "jquery-rails", "~> 3.1.3"
+gem "rack-cache", "1.2" if RUBY_VERSION < "1.9.3"
+gem "jquery-rails", "~> 3.1.4"
 gem "coderay", "~> 1.1.0"
 gem "fastercsv", "~> 1.5.0", :platforms => [:mri_18, :mingw_18, :jruby]
 gem "builder", ">= 3.0.4"
 gem "request_store", "1.0.5"
 gem "mime-types"
-gem "rbpdf", "~> 1.18.6"
+gem "rbpdf", "~> 1.18.7"
 
 gem "i18n", "~> 0.6.11"
 
