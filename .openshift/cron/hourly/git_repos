@@ -2,12 +2,19 @@
 
 update_repo() {
   pushd ${OPENSHIFT_DATA_DIR} >/dev/null
+  dir=$1; shift;
+  repo=$1; shift;
   [ -e git ] || mkdir git
-  if [ -e git/${1} ]; then
-    cd git/${1} && git pull -q
+  if [ -e git/${dir} ]; then
+    cd git/${dir} && git pull -q
   else
-    git clone -q ${2} git/${1}
+    git clone -q ${repo} git/${dir}
+    cd git/${dir}
   fi
+  for branch in $*; do
+    git checkout $branch
+    git pull
+  done
   popd >/dev/null
 }
 
@@ -26,7 +33,7 @@ update_repo foreman https://github.com/theforeman/foreman.git
 update_repo foreman-installer https://github.com/theforeman/foreman-installer.git
 update_repo foreman-one https://github.com/theforeman/foreman-one
 update_repo foreman_remote_execution https://github.com/theforeman/foreman_remote_execution
-update_repo foreman-rpms https://github.com/theforeman/foreman-packaging
+update_repo foreman-rpms https://github.com/theforeman/foreman-packaging deb/develop rpm/develop
 update_repo foreman_salt https://github.com/theforeman/foreman_salt
 update_repo foreman_sam https://github.com/Katello/foreman_sam.git
 update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
