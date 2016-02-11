@@ -49,6 +49,7 @@ update_repo hammer-cli https://github.com/theforeman/hammer-cli
 update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
 update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
 update_repo kafo https://github.com/theforeman/kafo.git
+update_repo kafo_parsers https://github.com/theforeman/kafo_parsers.git
 update_repo katello-agent https://github.com/Katello/katello-agent.git
 update_repo katello https://github.com/Katello/katello.git
 update_repo katello-installer https://github.com/Katello/katello-installer.git
