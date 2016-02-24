@@ -74,6 +74,8 @@ update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_disc
 update_repo smart_proxy_discovery_image https://github.com/theforeman/smart_proxy_discovery_image
 update_repo smart_proxy_dynflow https://github.com/theforeman/smart_proxy_dynflow
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
+update_repo smart_proxy_openscap https://github.com/theforeman/smart_proxy_openscap.git
+update_repo smart-proxy-pulp https://github.com/theforeman/smart-proxy-pulp.git
 update_repo smart_proxy_remote_execution_ssh https://github.com/theforeman/smart_proxy_remote_execution_ssh
 update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
 update_repo stacker https://github.com/ohadlevy/stacker.git
