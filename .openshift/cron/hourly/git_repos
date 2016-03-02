@@ -64,6 +64,7 @@ update_repo puppet-dns https://github.com/theforeman/puppet-dns.git
 update_repo puppet-foreman https://github.com/theforeman/puppet-foreman.git
 update_repo puppet-foreman_proxy https://github.com/theforeman/puppet-foreman_proxy.git
 update_repo puppet-git https://github.com/theforeman/puppet-git.git
+update_repo puppet-katello https://github.com/Katello/puppet-katello.git
 update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
