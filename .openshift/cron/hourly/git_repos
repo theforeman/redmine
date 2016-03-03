@@ -53,10 +53,11 @@ update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
 update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
 update_repo kafo https://github.com/theforeman/kafo.git
 update_repo kafo_parsers https://github.com/theforeman/kafo_parsers.git
-update_repo katello-agent https://github.com/Katello/katello-agent.git
 update_repo katello https://github.com/Katello/katello.git
+update_repo katello-agent https://github.com/Katello/katello-agent.git
 update_repo katello-installer https://github.com/Katello/katello-installer.git
 update_repo katello-packaging https://github.com/Katello/katello-packaging.git
+update_repo katello-selinux https://github.com/Katello/katello-selinux.git
 update_repo katello.org https://github.com/Katello/katello.org.git
 update_repo ofi https://github.com/theforeman/ofi.git
 update_repo puppet-capsule https://github.com/Katello/puppet-capsule.git
