@@ -48,6 +48,7 @@ update_repo hammer_cli_foreman_docker https://github.com/theforeman/hammer_cli_f
 update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
 update_repo hammer-cli-gutterball https://github.com/Katello/hammer-cli-gutterball.git
 update_repo hammer-cli https://github.com/theforeman/hammer-cli
+update_repo hammer-cli-import https://github.com/Katello/hammer-cli-import.git
 update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
 update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
 update_repo kafo https://github.com/theforeman/kafo.git
