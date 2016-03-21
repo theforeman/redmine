@@ -10,3 +10,7 @@
 [submodule "plugins/redmine_vote"]
 	path = plugins/redmine_vote
 	url = https://github.com/ares/redmine_vote.git
+[submodule "plugins/redmine_lightbox2"]
+	path = plugins/redmine_lightbox2
+	url = https://github.com/paginagmbh/redmine_lightbox2.git
+	branch = redmine-2.6
