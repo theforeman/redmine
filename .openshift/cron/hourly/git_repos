@@ -66,6 +66,7 @@ update_repo katello-selinux https://github.com/Katello/katello-selinux.git
 update_repo katello.org https://github.com/Katello/katello.org.git
 update_repo ofi https://github.com/theforeman/ofi.git
 update_repo puppet-capsule https://github.com/Katello/puppet-capsule.git
+update_repo puppet-certs https://github.com/Katello/puppet-certs.git
 update_repo puppet-concat https://github.com/theforeman/puppet-concat.git
 update_repo puppet-dhcp https://github.com/theforeman/puppet-dhcp.git
 update_repo puppet-dns https://github.com/theforeman/puppet-dns.git
