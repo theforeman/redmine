@@ -5,6 +5,7 @@ Disallow: /projects/<%= p.to_param %>/issues
 Disallow: /projects/<%= p.to_param %>/issues.atom
 Disallow: /projects/<%= p.to_param %>/issues.csv
 Disallow: /projects/<%= p.to_param %>/issues.pdf
+Disallow: /projects/<%= p.to_param %>/issues?*sort=*
 Disallow: /projects/<%= p.to_param %>/activity
 <% end -%>
 Disallow: /issues/gantt
@@ -15,6 +16,7 @@ Disallow: /issues.pdf
 Disallow: /issues/*.atom
 Disallow: /issues/*.csv
 Disallow: /issues/*.pdf
+Disallow: /issues?*sort=*
 Disallow: /activity
 Disallow: /search
 Crawl-delay: 30
