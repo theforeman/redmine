@@ -80,6 +80,8 @@ update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
 update_repo smart_proxy_chef https://github.com/theforeman/smart_proxy_chef
 update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
 update_repo smart_proxy_discovery_image https://github.com/theforeman/smart_proxy_discovery_image
+update_repo smart_proxy_dhcp_infoblox https://github.com/theforeman/smart_proxy_dhcp_infoblox
+update_repo smart_proxy_dns_infoblox https://github.com/theforeman/smart_proxy_dns_infoblox
 update_repo smart_proxy_dynflow https://github.com/theforeman/smart_proxy_dynflow
 update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
 update_repo smart_proxy_openscap https://github.com/theforeman/smart_proxy_openscap.git
