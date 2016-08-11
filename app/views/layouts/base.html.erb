@@ -2,7 +2,7 @@
 <html lang="<%= current_language %>">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge"/> 
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <title><%= html_title %></title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="description" content="<%= Redmine::Info.app_name %>" />
@@ -84,7 +84,10 @@
     </div>
     <% end %>
 
-    <h1><%= page_header_title %></h1>
+    <H1>
+      <%= image_tag('foremanlogo.png', :style => 'vertical-align: middle') %>
+      <%= page_header_title %>
+    </h1>
 
     <% if display_main_menu?(@project) %>
     <div id="main-menu">
