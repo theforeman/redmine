@@ -500,6 +500,8 @@ module ApplicationHelper
   def page_header_title
     if @project.nil? || @project.new_record?
       h(Setting.app_title)
+    elsif @project.root? && @project.name == 'Foreman'
+      nil
     else
       b = []
       ancestors = (@project.root? ? [] : @project.ancestors.visible.all)
