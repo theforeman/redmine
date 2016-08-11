@@ -30,7 +30,8 @@ pre, code {font-family: Consolas, Menlo, "Liberation Mono", Courier, monospace;}
 #header a {color:#f8f8f8;}
 #header h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 #header h1 .breadcrumbs { display:block; font-size: .5em; font-weight: normal; }
-
+#header h1 a.ancestor { font-size: 80%; opacity: 0.5; }
+#header h1 a.root { font-size: 80%; opacity: 0.5; }
 #quick-search {float:right;}
 #quick-search #q {width:130px; height:24px; box-sizing:border-box; vertical-align:middle; border:1px solid #ccc; border-radius:3px;}
 
