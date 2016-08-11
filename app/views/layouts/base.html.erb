@@ -85,7 +85,10 @@
     </div>
     <% end %>
 
-    <h1><%= page_header_title %></h1>
+    <H1>
+      <%= image_tag('foremanlogo.png', :style => 'vertical-align: middle') %>
+      <%= page_header_title %>
+    </h1>
 
     <% if display_main_menu?(@project) %>
     <div id="main-menu" class="tabs">
