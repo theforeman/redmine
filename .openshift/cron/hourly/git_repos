@@ -22,6 +22,7 @@ update_repo bastion https://github.com/Katello/bastion.git
 update_repo chef-handler-foreman https://github.com/theforeman/chef-handler-foreman
 update_repo community-templates https://github.com/theforeman/community-templates
 update_repo foreman_abrt https://github.com/theforeman/foreman_abrt
+update_repo foreman_ansible https://github.com/theforeman/foreman_ansible
 update_repo foreman_api https://github.com/theforeman/foreman_api.git
 update_repo foreman_bootdisk https://github.com/theforeman/foreman_bootdisk
 update_repo foreman_chef https://github.com/theforeman/foreman_chef
@@ -77,6 +78,7 @@ update_repo puppet-katello https://github.com/Katello/puppet-katello.git
 update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
 update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
 update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
+update_repo smart_proxy_ansible https://github.com/theforeman/smart_proxy_ansible
 update_repo smart_proxy_chef https://github.com/theforeman/smart_proxy_chef
 update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
 update_repo smart_proxy_discovery_image https://github.com/theforeman/smart_proxy_discovery_image
