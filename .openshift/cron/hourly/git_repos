@@ -18,80 +18,29 @@ update_repo() {
   popd >/dev/null
 }
 
-update_repo bastion https://github.com/Katello/bastion.git
-update_repo chef-handler-foreman https://github.com/theforeman/chef-handler-foreman
-update_repo community-templates https://github.com/theforeman/community-templates
-update_repo foreman_abrt https://github.com/theforeman/foreman_abrt
-update_repo foreman_ansible https://github.com/theforeman/foreman_ansible
-update_repo foreman_api https://github.com/theforeman/foreman_api.git
-update_repo foreman_bootdisk https://github.com/theforeman/foreman_bootdisk
-update_repo foreman_chef https://github.com/theforeman/foreman_chef
-update_repo foreman_content https://github.com/theforeman/foreman_content
-update_repo foreman_deployments https://github.com/theforeman/foreman_deployments
-update_repo foreman-digitalocean https://github.com/theforeman/foreman-digitalocean
-update_repo foreman_discovery https://github.com/theforeman/foreman_discovery
-update_repo foreman-discovery-image https://github.com/theforeman/foreman-discovery-image
-update_repo foreman-docker https://github.com/theforeman/foreman-docker
-update_repo foreman-gutterball https://github.com/Katello/foreman-gutterball.git
-update_repo foreman https://github.com/theforeman/foreman.git
-update_repo foreman-installer https://github.com/theforeman/foreman-installer.git
-update_repo foreman-one https://github.com/theforeman/foreman-one
-update_repo foreman_openscap https://github.com/theforeman/foreman_openscap.git
-update_repo foreman_remote_execution https://github.com/theforeman/foreman_remote_execution
-update_repo foreman-rpms https://github.com/theforeman/foreman-packaging deb/develop rpm/develop
-update_repo foreman_salt https://github.com/theforeman/foreman_salt
-update_repo foreman_sam https://github.com/Katello/foreman_sam.git
-update_repo foreman-selinux https://github.com/theforeman/foreman-selinux
-update_repo foreman_snapshot https://github.com/theforeman/foreman_snapshot
-update_repo foreman-tasks https://github.com/theforeman/foreman-tasks
-update_repo foreman-xen https://github.com/theforeman/foreman-xen
-update_repo hammer-cli-csv https://github.com/Katello/hammer-cli-csv.git
-update_repo hammer_cli_foreman_bootdisk https://github.com/theforeman/hammer_cli_foreman_bootdisk.git
-update_repo hammer-cli-foreman https://github.com/theforeman/hammer-cli-foreman
-update_repo hammer-cli-foreman-discovery https://github.com/theforeman/hammer-cli-foreman-discovery
-update_repo hammer_cli_foreman_docker https://github.com/theforeman/hammer_cli_foreman_docker.git
-update_repo hammer_cli_foreman_remote_execution https://github.com/theforeman/hammer_cli_foreman_remote_execution.git
-update_repo hammer-cli-foreman-tasks https://github.com/inecas/hammer-cli-foreman-tasks.git
-update_repo hammer-cli-gutterball https://github.com/Katello/hammer-cli-gutterball.git
-update_repo hammer-cli https://github.com/theforeman/hammer-cli
-update_repo hammer-cli-import https://github.com/Katello/hammer-cli-import.git
-update_repo hammer-cli-katello https://github.com/Katello/hammer-cli-katello.git
-update_repo hammer-cli-sam https://github.com/Katello/hammer-cli-sam.git
-update_repo kafo https://github.com/theforeman/kafo.git
-update_repo kafo_parsers https://github.com/theforeman/kafo_parsers.git
-update_repo katello https://github.com/Katello/katello.git
-update_repo katello-agent https://github.com/Katello/katello-agent.git
-update_repo katello-installer https://github.com/Katello/katello-installer.git
-update_repo katello-packaging https://github.com/Katello/katello-packaging.git
-update_repo katello-selinux https://github.com/Katello/katello-selinux.git
-update_repo katello.org https://github.com/Katello/katello.org.git
-update_repo ofi https://github.com/theforeman/ofi.git
-update_repo puppet-capsule https://github.com/Katello/puppet-capsule.git
-update_repo puppet-certs https://github.com/Katello/puppet-certs.git
-update_repo puppet-concat https://github.com/theforeman/puppet-concat.git
-update_repo puppet-dhcp https://github.com/theforeman/puppet-dhcp.git
-update_repo puppet-dns https://github.com/theforeman/puppet-dns.git
-update_repo puppet-foreman https://github.com/theforeman/puppet-foreman.git
-update_repo puppet-foreman_proxy https://github.com/theforeman/puppet-foreman_proxy.git
-update_repo puppet-git https://github.com/theforeman/puppet-git.git
-update_repo puppet-katello https://github.com/Katello/puppet-katello.git
-update_repo puppet-puppet https://github.com/theforeman/puppet-puppet.git
-update_repo puppet-tftp https://github.com/theforeman/puppet-tftp.git
-update_repo smart_proxy_abrt https://github.com/theforeman/smart_proxy_abrt
-update_repo smart_proxy_ansible https://github.com/theforeman/smart_proxy_ansible
-update_repo smart_proxy_chef https://github.com/theforeman/smart_proxy_chef
-update_repo smart_proxy_discovery https://github.com/theforeman/smart_proxy_discovery
-update_repo smart_proxy_discovery_image https://github.com/theforeman/smart_proxy_discovery_image
-update_repo smart_proxy_dhcp_infoblox https://github.com/theforeman/smart_proxy_dhcp_infoblox
-update_repo smart_proxy_dns_infoblox https://github.com/theforeman/smart_proxy_dns_infoblox
-update_repo smart_proxy_dynflow https://github.com/theforeman/smart_proxy_dynflow
-update_repo smart-proxy https://github.com/theforeman/smart-proxy.git
-update_repo smart_proxy_openscap https://github.com/theforeman/smart_proxy_openscap.git
-update_repo smart-proxy-pulp https://github.com/theforeman/smart-proxy-pulp.git
-update_repo smart_proxy_remote_execution_ssh https://github.com/theforeman/smart_proxy_remote_execution_ssh
-update_repo smart_proxy_salt https://github.com/theforeman/smart_proxy_salt
-update_repo stacker https://github.com/ohadlevy/stacker.git
-update_repo theforeman.org https://github.com/theforeman/theforeman.org.git
+# Sync repositories for all known git repos
+curl http://prprocessor-theforeman.rhcloud.com/redmine_repos | ruby -rjson -e '
+JSON.load(STDIN).each do |project_name,repos|
+  repos.each do |repo,branches|
+    org_name, repo_name = repo.split("/", 2)
+    repo_path = File.join(ENV["OPENSHIFT_DATA_DIR"], "git", repo_name, ".git")
+    puts "#{repo_name} https://github.com/#{repo} #{branches.nil? ? "" : branches.join(" ")}"
+  end
+end' | while read repo; do
+  update_repo $repo
+done
 
 cd ${OPENSHIFT_REPO_DIR}
+
+# Create repositories in the Redmine projects for all known git repos
+curl http://prprocessor-theforeman.rhcloud.com/redmine_repos | script/rails runner -e production '
+JSON.load(STDIN).each do |project_name,repos|
+  repos.each do |repo,branches|
+    org_name, repo_name = repo.split("/", 2)
+    repo_path = File.join(ENV["OPENSHIFT_DATA_DIR"], "git", repo_name, ".git") + File::SEPARATOR
+    project = Project.find_by_identifier(project_name) or raise("cannot find project #{project_name}")
+    Repository::Git.create!(:identifier => repo_name, :project => project, :url => repo_path) unless Repository.find_by_url(repo_path)
+  end
+end'
+
 script/rails runner "Repository.fetch_changesets" -e production
