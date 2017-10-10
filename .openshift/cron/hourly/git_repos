@@ -29,7 +29,6 @@ curl http://prprocessor-theforeman.rhcloud.com/redmine_repos | ruby -rjson -e '
 JSON.load(STDIN).each do |project_name,repos|
   repos.each do |repo,branches|
     org_name, repo_name = repo.split("/", 2)
-    repo_path = File.join(ENV["OPENSHIFT_DATA_DIR"], "git", repo_name, ".git")
     puts "#{repo_name} https://github.com/#{repo} #{branches.nil? ? "" : branches.join(" ")}"
   end
 end' | while read repo; do
@@ -43,7 +42,7 @@ curl http://prprocessor-theforeman.rhcloud.com/redmine_repos | script/rails runn
 JSON.load(STDIN).each do |project_name,repos|
   repos.each do |repo,branches|
     org_name, repo_name = repo.split("/", 2)
-    repo_path = File.join(ENV["OPENSHIFT_DATA_DIR"], "git", repo_name, ".git") + File::SEPARATOR
+    repo_path = File.join(ENV["OPENSHIFT_DATA_DIR"], "git", "#{repo_name}.git") + File::SEPARATOR
     project = Project.find_by_identifier(project_name) or raise("cannot find project #{project_name}")
     Repository::Git.create!(:identifier => repo_name, :project => project, :url => repo_path) unless Repository.find_by_url(repo_path)
   end
