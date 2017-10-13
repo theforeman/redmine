@@ -1,6 +1,8 @@
 /.project
 /.loadpath
 /.powrc
+/.psql_history
+/.bash_history
 /.rvmrc
 /config/additional_environment.rb
 /config/database.yml
@@ -33,6 +35,8 @@
 /tmp/test/*
 /tmp/thumbnails/*
 /vendor/cache
+/vendor/rails
+/vendor/ruby
 *.rbc
 
 /.bundle
