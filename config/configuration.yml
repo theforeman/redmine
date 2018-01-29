@@ -200,9 +200,9 @@ production:
       enable_starttls_auto: true
       address: "smtp.mailgun.org"
       port: 587
-      domain: "theforeman.org"
+      domain: "projects.theforeman.org"
       authentication: :plain
-      user_name: "nobody@theforeman.org"
+      user_name: "redmine@projects.theforeman.org"
       password: "<%= YAML.load_file('/etc/redmine/secure_config.yaml')['email_password'] %>"
 
 # specific configuration options for development environment
