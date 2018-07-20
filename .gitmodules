@@ -11,3 +11,6 @@
 	path = plugins/redmine_lightbox2
 	url = https://github.com/paginagmbh/redmine_lightbox2.git
 	branch = redmine-2.6
+[submodule "plugins/redmine_issue_field_visibility"]
+	path = plugins/redmine_issue_field_visibility
+	url = https://github.com/planio-gmbh/redmine_issue_field_visibility
