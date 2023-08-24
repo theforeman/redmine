@@ -39,7 +39,5 @@
 *.rbc
 
 /.bundle
-/Gemfile.lock
-/Gemfile.local
 
 /.ruby-version
