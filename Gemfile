@@ -92,7 +92,7 @@ group :development do
 end
 
 group :test do
-  gem "minitest"
+  gem "minitest", "< 5.16.0"
   gem "rails-dom-testing"
   gem "mocha"
   gem "simplecov", "~> 0.9.1", :require => false
