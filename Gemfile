@@ -19,6 +19,7 @@ gem "mimemagic"
 gem "mail", "~> 2.6.4"
 
 gem "nokogiri", (RUBY_VERSION >= "2.1" ? "~> 1.8.1" : "~> 1.6.8")
+gem "loofah", '2.19.1'
 gem "i18n", "~> 0.7.0"
 gem "ffi", "1.9.14", :platforms => :mingw if RUBY_VERSION < "2.0"
 gem "xpath", "< 3.2.0" if RUBY_VERSION < "2.3"
@@ -47,7 +48,7 @@ end
 platforms :mri, :mingw, :x64_mingw do
   # Optional gem for exporting the gantt to a PNG file, not supported with jruby
   group :rmagick do
-    gem "rmagick", "~> 2.16.0"
+    gem "rmagick", ">= 2.16.0"
   end
 
   # Optional Markdown support, not for JRuby
