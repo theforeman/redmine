@@ -1490,6 +1490,12 @@ class QueryTest < ActiveSupport::TestCase
     assert_equal [['id', 'desc']], q.sort_criteria
   end
 
+  def test_sort_criteria_should_remove_blank_keys
+    q = IssueQuery.new
+    q.sort_criteria = [['priority', 'desc'], [nil, 'desc'], ['', 'asc'], ['project', 'asc']]
+    assert_equal [['priority', 'desc'], ['project', 'asc']], q.sort_criteria
+  end
+
   def test_set_sort_criteria_with_hash
     q = IssueQuery.new
     q.sort_criteria = {'0' => ['priority', 'desc'], '2' => ['tracker']}
@@ -1541,6 +1547,39 @@ class QueryTest < ActiveSupport::TestCase
     values = issues.collect {|i| begin; Kernel.Float(i.custom_value_for(c.custom_field).to_s); rescue; nil; end}.compact
     assert !values.empty?
     assert_equal values.sort, values
+  end
+
+  def test_sort_by_total_for_estimated_hours
+    # Prepare issues
+    parent = issues(:issues_001)
+    child = issues(:issues_002)
+    private_child = issues(:issues_003)
+    other = issues(:issues_007)
+
+    User.current = users(:users_001)
+
+    parent.safe_attributes         = {:estimated_hours => 1}
+    child.safe_attributes          = {:estimated_hours => 2, :parent_issue_id => 1}
+    private_child.safe_attributes  = {:estimated_hours => 4, :parent_issue_id => 1, :is_private => true}
+    other.safe_attributes          = {:estimated_hours => 5}
+
+    [parent, child, private_child, other].each(&:save!)
+
+
+    q = IssueQuery.new(
+      :name => '_',
+      :filters => { 'issue_id' => {:operator => '=', :values => ['1,7']} },
+      :sort_criteria => [['total_estimated_hours', 'asc']]
+    )
+
+    # With private_child, `parent' is "bigger" than `other'
+    ids = q.issue_ids
+    assert_equal [7, 1], ids, "Private issue was not used to calculate sort order"
+
+    # Without the invisible private_child, `other' is "bigger" than `parent'
+    User.current = User.anonymous
+    ids = q.issue_ids
+    assert_equal [1, 7], ids, "Private issue was used to calculate sort order"
   end
 
   def test_set_totalable_names
@@ -1913,6 +1952,25 @@ class QueryTest < ActiveSupport::TestCase
     end
   end
 
+  def test_available_columns_should_not_include_total_estimated_hours_when_trackers_disabled_estimated_hours
+    Tracker.visible.each do |tracker|
+      tracker.core_fields = tracker.core_fields.reject{|field| field == 'estimated_hours'}
+      tracker.save!
+    end
+    query = IssueQuery.new
+    available_columns = query.available_columns.map(&:name)
+    assert_not_include :estimated_hours, available_columns
+    assert_not_include :total_estimated_hours, available_columns
+
+    tracker = Tracker.visible.first
+    tracker.core_fields = ['estimated_hours']
+    tracker.save!
+    query = IssueQuery.new
+    available_columns = query.available_columns.map(&:name)
+    assert_include :estimated_hours, available_columns
+    assert_include :total_estimated_hours, available_columns
+  end
+
   def setup_member_of_group
     Group.destroy_all # No fixtures
     @user_in_group = User.generate!
@@ -2155,5 +2213,20 @@ class QueryTest < ActiveSupport::TestCase
     WorkflowTransition.create(:role_id => 1, :tracker_id => 2, :old_status_id => 1, :new_status_id => 3)
 
     assert_equal ['1','2','3','4','5','6'], query.available_filters['status_id'][:values].map(&:second)
+  end
+
+  def test_as_params_should_serialize_query
+    query = IssueQuery.new(name: "_")
+    query.add_filter('subject', '!~', ['asdf'])
+    query.group_by = 'tracker'
+    query.totalable_names = %w(estimated_hours)
+    query.column_names = %w(id subject estimated_hours)
+    assert hsh = query.as_params
+
+    new_query = IssueQuery.build_from_params(hsh)
+    assert_equal query.filters, new_query.filters
+    assert_equal query.group_by, new_query.group_by
+    assert_equal query.column_names, new_query.column_names
+    assert_equal query.totalable_names, new_query.totalable_names
   end
 end

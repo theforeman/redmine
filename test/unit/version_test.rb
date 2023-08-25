@@ -21,6 +21,10 @@ class VersionTest < ActiveSupport::TestCase
   fixtures :projects, :users, :issues, :issue_statuses, :trackers,
            :enumerations, :versions, :projects_trackers
 
+  def setup
+    User.current = nil
+  end
+
   def test_create
     v = Version.new(:project => Project.find(1), :name => '1.1',
                     :effective_date => '2011-03-25')
@@ -273,6 +277,13 @@ class VersionTest < ActiveSupport::TestCase
     version = Version.generate!
     field = IssueCustomField.generate!(:field_format => 'version')
     value = CustomValue.create!(:custom_field => field, :customized => Issue.first, :value => version.id)
+
+    assert_equal false, version.deletable?
+  end
+
+  def test_deletable_should_return_false_when_referenced_by_an_attachment
+    version = Version.generate!
+    Attachment.generate!(:container => version, :filename => 'test.txt')
 
     assert_equal false, version.deletable?
   end

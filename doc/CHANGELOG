@@ -4,6 +4,241 @@ Redmine - project management software
 Copyright (C) 2006-2017  Jean-Philippe Lang
 http://www.redmine.org/
 
+== 2019-12-20 v3.4.13
+
+=== [Attachments]
+
+* Defect #20277: "Couldn't find template for digesting" error in the log when sending a thumbnail or an attachment
+
+=== [Gems support]
+
+* Patch #32592: Require 'mocha/minitest' instead of deprecated 'mocha/setup'
+
+=== [Text formatting]
+
+* Patch #25742: Improper markup sanitization in user content for space separated attribute values and different quoting styles
+
+== 2019-10-19 v3.4.12
+
+=== [Code cleanup/refactoring]
+
+* Defect #32022: IssueSubtaskingTest fails with high probability
+
+=== [Documentation]
+
+* Defect #32170: Text enclosed in pre tag in Wiki formatting reference is not displayed in monospaced font in Chrome
+* Defect #32184: Incorrect headings example in Textile help
+
+=== [Gems support]
+
+* Defect #32300: Don't use sprockets 4.0.0 in order to avoid Sprockets::Railtie::ManifestNeededError
+* Patch #32294: Update ruby-openid to 2.9.2
+
+=== [Issues]
+
+* Defect #31778: Total estimated time issue query column and issue field might leak information
+
+=== [Issues list]
+
+* Defect #31779: Total estimated time column shown even when estimated time field is deactivated
+
+=== [Translations]
+
+* Defect #32290: Typo in Russian translation for label_in_the_next_days
+
+=== [UI]
+
+* Defect #32012: Broken JavaScript icon in the repository view
+* Defect #32024: Broken gzip icon in the repository view
+
+== 2019-06-10 v3.4.11
+
+=== [Administration]
+
+* Defect #31125: Don't output ImageMagick version information to stdout
+
+=== [Code cleanup/refactoring]
+
+* Defect #30811: "rake db:fixtures:load" does not work
+
+=== [Email receiving]
+
+* Defect #30457: MailHandler.safe_receive does not output any error log
+* Defect #31503: Undefined local variable sender_email in MailHandler#receive_message_reply
+
+=== [Issues filter]
+
+* Patch #31276: Serialize group_by and totalable_names in Query#as_params
+
+=== [SCM]
+
+* Defect #31120: Garbage lines in the output of 'git branch' break git adapter
+
+=== [Security]
+
+* Defect #31520: Persistent XSS in textile formatting
+
+=== [Translations]
+
+* Defect #31264: Conflicting translation between "track" and "watch" in Simplified Chinese
+
+=== [UI - Responsive]
+
+* Defect #31153: Display horizontal scroll bar of files table when overflow occurs on small screen
+* Defect #31311: admin/info page: text cut off in pre tag on mobile
+
+=== [Wiki]
+
+* Patch #31334: Do not lose content when updating a wiki page that has been renamed in the meantime
+
+== 2019-03-31 v3.4.10
+
+=== [Administration]
+
+* Defect #30939: Timeout for "Check for updates" on Plugins page is too short
+
+=== [Files]
+
+* Defect #31087: Deleting a version silently deletes its attachments
+
+=== [Issues filter]
+
+* Defect #30367: "Last updated by" filter causes an SQL error with MariaDB
+
+=== [REST API]
+
+* Defect #29055: Searching for issue number with REST API redirects to issue HTML page
+
+=== [Rails support]
+
+* Feature #31027: Upgrade to Rails 4.2.11.1
+
+=== [Search engine]
+
+* Defect #30923: Project search should select subprojects scope when the project has subprojects
+
+=== [UI]
+
+* Defect #30872: Copyright is outdated
+
+== 2019-02-21 v3.4.9
+
+=== [Gems support]
+
+* Defect #30114: Installing xpath with Bundler fails in Ruby <=2.2
+* Patch #30821: Stay in RMagick 2.16.0 and don't update to 3.0.0
+
+=== [UI]
+
+* Patch #30818: Issues autocomplete should respond with content type json
+
+== 2019-01-20 v3.4.8
+
+=== [Code cleanup/refactoring]
+
+* Patch #30413: Add ".ruby-version" to svn:ignore, .git:ignore, and .hgignore
+
+=== [Database]
+
+* Defect #30171: Decrypting LDAP and SCM passwords fail if the plaintext password is longer than 31 bytes
+
+=== [Gems support]
+
+* Defect #30353: Installing rails with Bundler 2.0 fails in 3.x
+
+=== [Importers]
+
+* Patch #30412: Import UTF-8 issue CSV files with BOM and quoted strings
+
+=== [Translations]
+
+* Patch #30293: Ukrainian translation update for 3.4-stable
+
+=== [UI]
+
+* Defect #30426: Table rows are not highlighted on mouseover on some pages
+* Patch #29951: Quick design fix/proposals for projects index page
+
+== 2018-12-09 v3.4.7
+
+=== [Custom fields]
+
+* Defect #8317: Strip whitespace from integer custom field
+* Defect #28925: Custom field values for enumerations not saved
+* Patch #29674: Missing validation for custom field formats based on RecordList
+
+=== [Email receiving]
+
+* Defect #28576: Attachments are added even if validation fails when updating an issue via email
+* Defect #29191: Cannot set no_notification option when receiving emails via  IMAP or POP3
+
+=== [Importers]
+
+* Defect #30001: CSV importer ignores shared version names of other projects
+
+=== [Issues]
+
+* Defect #28946: If assignee is locked subtasks don't get copied
+* Defect #30009: Empty sort criteria for issue query gives error
+* Defect #30027: Some styles (for ex: borders for tables) in a custom field with text formatting enabled are not displayed
+
+=== [Issues filter]
+
+* Defect #26785: Wrong columns after CSV export
+
+=== [PDF export]
+
+* Defect #28125: PNG images on a wiki page don't appear in exported PDF
+* Defect #28565: PDF export has too many whitespaces
+
+=== [REST API]
+
+* Defect #20788: REST API with JSON content missing attributes with false values
+
+=== [Rails support]
+
+* Feature #30043: Update Rails to 4.2.11
+
+=== [SCM]
+
+* Defect #29413: Mercurial 4.7 compatibility
+
+=== [Search engine]
+
+* Defect #28636: Cannot find an issue from a closed subproject when search scope is Project and its subprojects
+
+=== [Text formatting]
+
+* Defect #8395: Tags start with 'pre' are handled as 'pre' tag in Textile
+* Defect #29038: Thumbnail macro causes attachment file not found and broken filename and link
+* Defect #29247: Textile phrase modifiers break wiki macros
+* Defect #29756: \f or \v character in Textile markup may cause RegexpError exception
+
+=== [Time tracking]
+
+* Patch #29308: Time entry creation: preserve 'spent on' value when using 'Create and Continue'
+
+=== [Translations]
+
+* Patch #29702: Brazilian wiki help translation update
+* Patch #29703: Brazilian translation (jstoolbar-pt-br.js) update
+* Patch #29718: Brazilian translation update for 3.4-stable
+* Patch #29735: Galician translation fix for the words empty, blank, and key
+* Patch #29736: Galician translation update for 3.4-stable
+
+=== [UI]
+
+* Defect #29918: Related issues section ignores the date format setting
+* Defect #29950: Fix list rendering inside project description in projects#index
+
+=== [UI - Responsive]
+
+* Defect #24309: Setting page for repository does not scroll horizontally on small screens
+
+=== [Wiki]
+
+* Feature #29791: Hide "Files" section in wiki pages when printing
+
 == 2018-06-10 v3.4.6
 
 === [Issues]

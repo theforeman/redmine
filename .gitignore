@@ -5,6 +5,7 @@
 /.psql_history
 /.bash_history
 /.rvmrc
+/.ruby-version
 /config/additional_environment.rb
 /config/database.yml
 /config/email.yml

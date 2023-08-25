@@ -343,7 +343,7 @@ class RedCloth3 < String
     A_VLGN = /[\-^~]/
     C_CLAS = '(?:\([^")]+\))'
     C_LNGE = '(?:\[[a-z\-_]+\])'
-    C_STYL = '(?:\{[^"}]+\})'
+    C_STYL = '(?:\{[^{][^"}]+\})'
     S_CSPN = '(?:\\\\\d+)'
     S_RSPN = '(?:/\d+)'
     A = "(?:#{A_HLGN}?#{A_VLGN}?|#{A_VLGN}?#{A_HLGN}?)"
@@ -1034,7 +1034,7 @@ class RedCloth3 < String
     def flush_left( text )
         indt = 0
         if text =~ /^ /
-            while text !~ /^ {#{indt}}\S/
+            while text !~ /^ {#{indt}}[^ ]/
                 indt += 1
             end unless text.empty?
             if indt.nonzero?
@@ -1049,7 +1049,7 @@ class RedCloth3 < String
     end
     
     OFFTAGS = /(code|pre|kbd|notextile)/
-    OFFTAG_MATCH = /(?:(<\/#{ OFFTAGS }>)|(<#{ OFFTAGS }[^>]*>))(.*?)(?=<\/?#{ OFFTAGS }\W|\Z)/mi
+    OFFTAG_MATCH = /(?:(<\/#{ OFFTAGS }\b>)|(<#{ OFFTAGS }\b[^>]*>))(.*?)(?=<\/?#{ OFFTAGS }\b\W|\Z)/mi
     OFFTAG_OPEN = /<#{ OFFTAGS }/
     OFFTAG_CLOSE = /<\/?#{ OFFTAGS }/
     HASTAG_MATCH = /(<\/?\w[^\n]*?>)/m
@@ -1213,7 +1213,13 @@ class RedCloth3 < String
     
     ALLOWED_TAGS = %w(redpre pre code kbd notextile)
     def escape_html_tags(text)
-      text.gsub!(%r{<(\/?([!\w]+)[^<>\n]*)(>?)}) {|m| ALLOWED_TAGS.include?($2) ? "<#{$1}#{$3}" : "&lt;#{$1}#{'&gt;' unless $3.blank?}" }
+        text.gsub!(%r{<(\/?([!\w]+)[^<>\n]*)(>?)}) do |m|
+            if ALLOWED_TAGS.include?($2) && $3.present?
+                "<#{$1}#{$3}"
+            else
+                "&lt;#{$1}#{'&gt;' unless $3.blank?}"
+            end
+        end
     end
 end
 

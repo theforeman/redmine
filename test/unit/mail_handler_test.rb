@@ -866,6 +866,21 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal 'Paella.jpg', detail.value
   end
 
+  def test_update_issue_should_discard_all_changes_on_validation_failure
+    Issue.any_instance.stubs(:valid?).returns(false)
+    assert_no_difference 'Journal.count' do
+      assert_no_difference 'JournalDetail.count' do
+        assert_no_difference 'Attachment.count' do
+          assert_no_difference 'Issue.count' do
+            journal = submit_email('ticket_with_attachment.eml') do |raw|
+              raw.gsub! /^Subject: .*$/, 'Subject: Re: [Cookbook - Feature #2] (New) Add ingredients categories'
+            end
+          end
+        end
+      end
+    end
+  end
+
   def test_update_issue_should_send_email_notification
     journal = submit_email('ticket_reply.eml')
     assert journal.is_a?(Journal)
@@ -938,6 +953,17 @@ class MailHandlerTest < ActiveSupport::TestCase
     m.reload
     assert_equal 'Reply to the first post', m.subject
     assert_equal Message.find(1), m.parent
+  end
+
+  def test_reply_to_a_locked_topic
+    # Lock the topic
+    topic = Message.find(2).parent
+    topic.update_attribute :locked, true
+
+    assert_no_difference('topic.replies_count') do
+      m = submit_email('message_reply_by_subject.eml')
+      assert_not_kind_of Message, m
+    end
   end
 
   def test_should_convert_tags_of_html_only_emails

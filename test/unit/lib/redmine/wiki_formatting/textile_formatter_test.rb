@@ -536,9 +536,17 @@ STR
   def test_should_not_allow_arbitrary_class_attribute_on_offtags
     %w(code pre kbd).each do |tag|
       assert_html_output({"<#{tag} class=\"foo\">test</#{tag}>" => "<#{tag}>test</#{tag}>"}, false)
+      assert_html_output({"<#{tag} class='foo'>test</#{tag}>" => "<#{tag}>test</#{tag}>"}, false)
+      assert_html_output({"<#{tag} class=\"ruby foo\">test</#{tag}>" => "<#{tag}>test</#{tag}>"}, false)
+      assert_html_output({"<#{tag} class='ruby foo'>test</#{tag}>" => "<#{tag}>test</#{tag}>"}, false)
+      assert_html_output({"<#{tag} class=\"ruby \"foo\" bar\">test</#{tag}>" => "<#{tag}>test</#{tag}>"}, false)
     end
 
     assert_html_output({"<notextile class=\"foo\">test</notextile>" => "test"}, false)
+    assert_html_output({"<notextile class='foo'>test</notextile>" => "test"}, false)
+    assert_html_output({"<notextile class=\"ruby foo\">test</notextile>" => "test"}, false)
+    assert_html_output({"<notextile class='ruby foo'>test</notextile>" => "test"}, false)
+    assert_html_output({"<notextile class=\"ruby \"foo\" bar\">test</notextile>" => "test"}, false)
   end
 
   def test_should_allow_valid_language_class_attribute_on_code_tags
@@ -578,6 +586,28 @@ STR
     assert_html_output({
       '!(wiki-class-foo#wiki-id-bar)test.png!' => "<p><img src=\"test.png\" class=\"wiki-class-foo\" id=\"wiki-id-bar\" alt=\"\" /></p>",
     }, false)
+  end
+
+  # TODO: Remove this test after migrating to RedCloth 4
+  def test_should_not_crash_with_special_input
+    assert_nothing_raised { to_html(" \f") }
+    assert_nothing_raised { to_html(" \v") }
+  end
+
+  def test_should_not_handle_as_preformatted_text_tags_that_starts_with_pre
+    text = <<-STR
+<pree>
+  This is some text
+</pree>
+STR
+
+    expected = <<-EXPECTED
+<p>&lt;pree&gt;<br />
+  This is some text<br />
+&lt;/pree&gt;</p>
+EXPECTED
+
+    assert_equal expected.gsub(%r{[\r\n\t]}, ''), to_html(text).gsub(%r{[\r\n\t]}, '')
   end
 
   private

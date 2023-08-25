@@ -37,8 +37,8 @@ class IssueQuery < Query
     QueryColumn.new(:due_date, :sortable => "#{Issue.table_name}.due_date"),
     QueryColumn.new(:estimated_hours, :sortable => "#{Issue.table_name}.estimated_hours", :totalable => true),
     QueryColumn.new(:total_estimated_hours,
-      :sortable => "COALESCE((SELECT SUM(estimated_hours) FROM #{Issue.table_name} subtasks" +
-        " WHERE subtasks.root_id = #{Issue.table_name}.root_id AND subtasks.lft >= #{Issue.table_name}.lft AND subtasks.rgt <= #{Issue.table_name}.rgt), 0)",
+      :sortable => -> { "COALESCE((SELECT SUM(estimated_hours) FROM #{Issue.table_name} subtasks" +
+        " WHERE #{Issue.visible_condition(User.current).gsub(/\bissues\b/, 'subtasks')} AND subtasks.root_id = #{Issue.table_name}.root_id AND subtasks.lft >= #{Issue.table_name}.lft AND subtasks.rgt <= #{Issue.table_name}.rgt), 0)" },
       :default_order => 'desc'),
     QueryColumn.new(:done_ratio, :sortable => "#{Issue.table_name}.done_ratio", :groupable => true),
     QueryColumn.new(:created_on, :sortable => "#{Issue.table_name}.created_on", :default_order => 'desc'),
@@ -221,6 +221,7 @@ class IssueQuery < Query
     end
 
     disabled_fields = Tracker.disabled_core_fields(trackers).map {|field| field.sub(/_id$/, '')}
+    disabled_fields << "total_estimated_hours" if disabled_fields.include?("estimated_hours")
     @available_columns.reject! {|column|
       disabled_fields.include?(column.name.to_s)
     }
@@ -373,7 +374,7 @@ class IssueQuery < Query
     neg = (operator == '!' ? 'NOT' : '')
     subquery = "SELECT 1 FROM #{Journal.table_name} sj" +
       " WHERE sj.journalized_type='Issue' AND sj.journalized_id=#{Issue.table_name}.id AND (#{sql_for_field field, '=', value, 'sj', 'user_id'})" +
-      " AND sj.id = (SELECT MAX(#{Journal.table_name}.id) FROM #{Journal.table_name}" +
+      " AND sj.id IN (SELECT MAX(#{Journal.table_name}.id) FROM #{Journal.table_name}" +
       "   WHERE #{Journal.table_name}.journalized_type='Issue' AND #{Journal.table_name}.journalized_id=#{Issue.table_name}.id" +
       "   AND (#{Journal.visible_notes_condition(User.current, :skip_pre_condition => true)}))"
 
