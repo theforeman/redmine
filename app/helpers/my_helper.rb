@@ -37,7 +37,7 @@ module MyHelper
       handle = content_tag('span', '', :class => 'sort-handle', :title => l(:button_move))
       close = link_to(l(:button_delete),
                       {:action => "remove_block", :block => block},
-                      :remote => true, :method => 'post',
+                      :remote => true, :method => 'post', 
                       :class => "icon-only icon-close", :title => l(:button_delete))
       content = content_tag('div', handle + close, :class => 'contextual') + content
 
@@ -78,7 +78,7 @@ module MyHelper
   def render_calendar_block(block, settings)
     calendar = Redmine::Helpers::Calendar.new(User.current.today, current_language, :week)
     calendar.events = Issue.visible.
-      where(:project_id => User.current.projects.map(&:id)).
+      where(:project_id => User.current.projects.pluck(:id)).
       where("(start_date>=? and start_date<=?) or (due_date>=? and due_date<=?)", calendar.startdt, calendar.enddt, calendar.startdt, calendar.enddt).
       includes(:project, :tracker, :priority, :assigned_to).
       references(:project, :tracker, :priority, :assigned_to).
@@ -96,6 +96,7 @@ module MyHelper
   def render_issuesassignedtome_block(block, settings)
     query = IssueQuery.new(:name => l(:label_assigned_to_me_issues), :user => User.current)
     query.add_filter 'assigned_to_id', '=', ['me']
+    query.add_filter 'project.status', '=', ["#{Project::STATUS_ACTIVE}"]
     query.column_names = settings[:columns].presence || ['project', 'tracker', 'status', 'subject']
     query.sort_criteria = settings[:sort].presence || [['priority', 'desc'], ['updated_on', 'desc']]
     issues = query.issues(:limit => 10)
@@ -106,6 +107,7 @@ module MyHelper
   def render_issuesreportedbyme_block(block, settings)
     query = IssueQuery.new(:name => l(:label_reported_issues), :user => User.current)
     query.add_filter 'author_id', '=', ['me']
+    query.add_filter 'project.status', '=', ["#{Project::STATUS_ACTIVE}"]
     query.column_names = settings[:columns].presence || ['project', 'tracker', 'status', 'subject']
     query.sort_criteria = settings[:sort].presence || [['updated_on', 'desc']]
     issues = query.issues(:limit => 10)
@@ -116,6 +118,7 @@ module MyHelper
   def render_issueswatched_block(block, settings)
     query = IssueQuery.new(:name => l(:label_watched_issues), :user => User.current)
     query.add_filter 'watcher_id', '=', ['me']
+    query.add_filter 'project.status', '=', ["#{Project::STATUS_ACTIVE}"]
     query.column_names = settings[:columns].presence || ['project', 'tracker', 'status', 'subject']
     query.sort_criteria = settings[:sort].presence || [['updated_on', 'desc']]
     issues = query.issues(:limit => 10)
@@ -139,7 +142,7 @@ module MyHelper
 
   def render_news_block(block, settings)
     news = News.visible.
-      where(:project_id => User.current.projects.map(&:id)).
+      where(:project_id => User.current.projects.pluck(:id)).
       limit(10).
       includes(:project, :author).
       references(:project, :author).
@@ -163,5 +166,11 @@ module MyHelper
     entries_by_day = entries.group_by(&:spent_on)
 
     render :partial => 'my/blocks/timelog', :locals => {:block => block, :entries => entries, :entries_by_day => entries_by_day, :days => days}
+  end
+
+  def render_activity_block(block, settings)
+    events_by_day = Redmine::Activity::Fetcher.new(User.current, :author => User.current).events(nil, nil, :limit => 10).group_by {|event| User.current.time_to_date(event.event_datetime)}
+
+    render :partial => 'my/blocks/activity', :locals => {:events_by_day => events_by_day}
   end
 end

@@ -53,7 +53,8 @@ module ApplicationHelper
     if user.is_a?(User)
       name = h(user.name(options[:format]))
       if user.active? || (User.current.admin? && user.logged?)
-        link_to name, user_path(user), :class => user.css_classes
+        only_path = options[:only_path].nil? ? true : options[:only_path]
+        link_to name, user_url(user, :only_path => only_path), :class => user.css_classes
       else
         name
       end
@@ -97,10 +98,17 @@ module ApplicationHelper
   # * :download - Force download (default: false)
   def link_to_attachment(attachment, options={})
     text = options.delete(:text) || attachment.filename
-    route_method = options.delete(:download) ? :download_named_attachment_url : :named_attachment_url
-    html_options = options.slice!(:only_path)
+    if options.delete(:download)
+      route_method = :download_named_attachment_url
+      options[:filename] = attachment.filename
+    else
+      route_method = :attachment_url
+      # make sure we don't have an extraneous :filename in the options
+      options.delete(:filename)
+    end
+    html_options = options.slice!(:only_path, :filename)
     options[:only_path] = true unless options.key?(:only_path)
-    url = send(route_method, attachment, attachment.filename, options)
+    url = send(route_method, attachment, options)
     link_to text, url, html_options
   end
 
@@ -169,6 +177,40 @@ module ApplicationHelper
     link_to_if version.visible?, format_version_name(version), version_path(version), options
   end
 
+  RECORD_LINK = {
+    'CustomValue'  => -> (custom_value) { link_to_record(custom_value.customized) },
+    'Document'     => -> (document)     { link_to(document.title, document_path(document)) },
+    'Group'        => -> (group)        { link_to(group.name, group_path(group)) },
+    'Issue'        => -> (issue)        { link_to_issue(issue, :subject => false) },
+    'Message'      => -> (message)      { link_to_message(message) },
+    'News'         => -> (news)         { link_to(news.title, news_path(news)) },
+    'Project'      => -> (project)      { link_to_project(project) },
+    'User'         => -> (user)         { link_to_user(user) },
+    'Version'      => -> (version)      { link_to_version(version) },
+    'WikiPage'     => -> (wiki_page)    { link_to(wiki_page.pretty_title, project_wiki_page_path(wiki_page.project, wiki_page.title)) }
+  }
+
+  def link_to_record(record)
+    if link = RECORD_LINK[record.class.name]
+      self.instance_exec(record, &link)
+    end
+  end
+
+  ATTACHMENT_CONTAINER_LINK = {
+    # Custom list, since project/version attachments are listed in the files
+    # view and not in the project/milestone view
+    'Project'      => -> (project)      { link_to(l(:project_module_files), project_files_path(project)) },
+    'Version'      => -> (version)      { link_to(l(:project_module_files), project_files_path(version.project)) },
+  }
+
+  def link_to_attachment_container(attachment_container)
+    if link = ATTACHMENT_CONTAINER_LINK[attachment_container.class.name] ||
+              RECORD_LINK[attachment_container.class.name]
+      self.instance_exec(attachment_container, &link)
+    end
+  end
+
+
   # Helper that formats object for html or text rendering
   def format_object(object, html=true, &block)
     if block_given?
@@ -228,9 +270,8 @@ module ApplicationHelper
         :srcset => "#{thumbnail_path(attachment, :size => thumbnail_size * 2)} 2x",
         :style => "max-width: #{thumbnail_size}px; max-height: #{thumbnail_size}px;"
       ),
-      named_attachment_path(
-        attachment,
-        attachment.filename
+      attachment_path(
+        attachment
       ),
       :title => attachment.filename
     )
@@ -471,7 +512,7 @@ module ApplicationHelper
   end
 
   def anchor(text)
-    text.to_s.gsub(' ', '_')
+    text.to_s.tr(' ', '_')
   end
 
   def html_hours(text)
@@ -504,24 +545,6 @@ module ApplicationHelper
     str.blank? ? nil : str
   end
 
-  def reorder_links(name, url, method = :post)
-    # TODO: remove associated styles from application.css too
-    ActiveSupport::Deprecation.warn "Application#reorder_links will be removed in Redmine 4."
-
-    link_to(l(:label_sort_highest),
-            url.merge({"#{name}[move_to]" => 'highest'}), :method => method,
-            :title => l(:label_sort_highest), :class => 'icon-only icon-move-top') +
-    link_to(l(:label_sort_higher),
-            url.merge({"#{name}[move_to]" => 'higher'}), :method => method,
-            :title => l(:label_sort_higher), :class => 'icon-only icon-move-up') +
-    link_to(l(:label_sort_lower),
-            url.merge({"#{name}[move_to]" => 'lower'}), :method => method,
-            :title => l(:label_sort_lower), :class => 'icon-only icon-move-down') +
-    link_to(l(:label_sort_lowest),
-            url.merge({"#{name}[move_to]" => 'lowest'}), :method => method,
-            :title => l(:label_sort_lowest), :class => 'icon-only icon-move-bottom')
-  end
-
   def reorder_handle(object, options={})
     data = {
       :reorder_url => options[:url] || url_for(object),
@@ -547,8 +570,6 @@ module ApplicationHelper
   def page_header_title
     if @project.nil? || @project.new_record?
       h(Setting.app_title)
-    elsif @project.root? && @project.name == 'Foreman'
-      nil
     else
       b = []
       ancestors = (@project.root? ? [] : @project.ancestors.visible.to_a)
@@ -602,6 +623,17 @@ module ApplicationHelper
     end
   end
 
+  def actions_dropdown(&block)
+    content = capture(&block)
+    if content.present?
+      trigger = content_tag('span', l(:button_actions), :class => 'icon-only icon-actions', :title => l(:button_actions))
+      trigger = content_tag('span', trigger, :class => 'drdn-trigger')
+      content = content_tag('div', content, :class => 'drdn-items')
+      content = content_tag('div', content, :class => 'drdn-content')
+      content_tag('span', trigger + content, :class => 'drdn')
+    end
+  end
+
   # Returns the theme, controller name, and action as css classes for the
   # HTML body.
   def body_css_classes
@@ -611,8 +643,10 @@ module ApplicationHelper
     end
 
     css << 'project-' + @project.identifier if @project && @project.identifier.present?
+    css << 'has-main-menu' if display_main_menu?(@project)
     css << 'controller-' + controller_name
     css << 'action-' + action_name
+    css << 'avatars-' + (Setting.gravatar_enabled? ? 'on' : 'off')
     if UserPreference::TEXTAREA_FONT_OPTIONS.include?(User.current.pref.textarea_font)
       css << "textarea-#{User.current.pref.textarea_font}"
     end
@@ -726,7 +760,7 @@ module ApplicationHelper
     attachments += obj.attachments if obj.respond_to?(:attachments)
     if attachments.present?
       text.gsub!(/src="([^\/"]+\.(bmp|gif|jpg|jpe|jpeg|png))"(\s+alt="([^"]*)")?/i) do |m|
-        filename, ext, alt, alttext = $1.downcase, $2, $3, $4
+        filename, ext, alt, alttext = $1, $2, $3, $4
         # search for the picture in attachments
         if found = Attachment.latest_attach(attachments, CGI.unescape(filename))
           image_url = download_named_attachment_url(found, found.filename, :only_path => only_path)
@@ -753,10 +787,17 @@ module ApplicationHelper
   #   [[project:mypage]]
   #   [[project:mypage|mytext]]
   def parse_wiki_links(text, project, obj, attr, only_path, options)
-    text.gsub!(/(!)?(\[\[([^\]\n\|]+)(\|([^\]\n\|]+))?\]\])/) do |m|
+    text.gsub!(/(!)?(\[\[([^\n\|]+?)(\|([^\n\|]+?))?\]\])/) do |m|
       link_project = project
       esc, all, page, title = $1, $2, $3, $5
       if esc.nil?
+        page = CGI.unescapeHTML(page)
+        if page =~ /^\#(.+)$/
+          anchor = sanitize_anchor_name($1)
+          url = "##{anchor}"
+          next link_to(title.present? ? title.html_safe : h(page), url, :class => 'wiki-page')
+        end
+
         if page =~ /^([^\:]+)\:(.*)$/
           identifier, page = $1, $2
           link_project = Project.find_by_identifier(identifier) || Project.find_by_name(identifier)
@@ -801,6 +842,7 @@ module ApplicationHelper
   # Examples:
   #   Issues:
   #     #52 -> Link to issue #52
+  #     ##52 -> Link to issue #52, including the issue's subject
   #   Changesets:
   #     r52 -> Link to revision 52
   #     commit:a85130f -> Link to scmid starting with a85130f
@@ -888,17 +930,25 @@ module ApplicationHelper
                                :title => truncate_single_line_raw(changeset.comments, 100))
               end
             end
-          elsif sep == '#'
+          elsif sep == '#' || sep == '##'
             oid = identifier.to_i
             case prefix
             when nil
               if oid.to_s == identifier &&
                 issue = Issue.visible.find_by_id(oid)
                 anchor = comment_id ? "note-#{comment_id}" : nil
-                link = link_to("##{oid}#{comment_suffix}",
-                               issue_url(issue, :only_path => only_path, :anchor => anchor),
-                               :class => issue.css_classes,
-                               :title => "#{issue.tracker.name}: #{issue.subject.truncate(100)} (#{issue.status.name})")
+                url = issue_url(issue, :only_path => only_path, :anchor => anchor)
+                link = if sep == '##'
+                  link_to("#{issue.tracker.name} ##{oid}#{comment_suffix}",
+                          url,
+                          :class => issue.css_classes,
+                          :title => "#{issue.tracker.name}: #{issue.subject.truncate(100)} (#{issue.status.name})") + ": #{issue.subject}"
+                else
+                  link_to("##{oid}#{comment_suffix}",
+                          url,
+                          :class => issue.css_classes,
+                          :title => "#{issue.tracker.name}: #{issue.subject.truncate(100)} (#{issue.status.name})")
+                end
               end
             when 'document'
               if document = Document.visible.find_by_id(oid)
@@ -925,8 +975,8 @@ module ApplicationHelper
                 link = link_to_project(p, {:only_path => only_path}, :class => 'project')
               end
             when 'user'
-              u = User.visible.where(:id => oid, :type => 'User').first
-              link = link_to_user(u) if u
+              u = User.visible.find_by(:id => oid, :type => 'User')
+              link = link_to_user(u, :only_path => only_path) if u
             end
           elsif sep == ':'
             name = remove_double_quotes(identifier)
@@ -986,13 +1036,13 @@ module ApplicationHelper
                 link = link_to_project(p, {:only_path => only_path}, :class => 'project')
               end
             when 'user'
-              u = User.visible.where(:login => name, :type => 'User').first
-              link = link_to_user(u) if u
+              u = User.visible.find_by("LOWER(login) = :s AND type = 'User'", :s => name.downcase)
+              link = link_to_user(u, :only_path => only_path) if u
             end
           elsif sep == "@"
             name = remove_double_quotes(identifier)
-            u = User.visible.where(:login => name, :type => 'User').first
-            link = link_to_user(u) if u
+            u = User.visible.find_by("LOWER(login) = :s AND type = 'User'", :s => name.downcase)
+            link = link_to_user(u, :only_path => only_path) if u
           end
         end
         (leading + (link || "#{project_prefix}#{prefix}#{repo_prefix}#{sep}#{identifier}#{comment_suffix}"))
@@ -1009,7 +1059,7 @@ module ApplicationHelper
             (?<prefix>attachment|document|version|forum|news|message|project|commit|source|export|user)?
             (
               (
-                (?<sep1>\#)|
+                (?<sep1>\#\#?)|
                 (
                   (?<repo_prefix>(?<repo_identifier>[a-z0-9\-_]+)\|)?
                   (?<sep2>r)
@@ -1028,7 +1078,7 @@ module ApplicationHelper
               )|
               (
               (?<sep4>@)
-              (?<identifier3>[a-z0-9_\-@\.]*)
+              (?<identifier3>[A-Za-z0-9_\-@\.]*)
               )
             )
             (?=
@@ -1229,16 +1279,12 @@ module ApplicationHelper
     link_to l(:button_delete), url, options
   end
 
-  def preview_link(url, form, target='preview', options={})
-    content_tag 'a', l(:label_preview), {
-        :href => "#",
-        :onclick => %|submitPreview("#{escape_javascript url_for(url)}", "#{escape_javascript form}", "#{escape_javascript target}"); return false;|,
-        :accesskey => accesskey(:preview)
-      }.merge(options)
-  end
-
   def link_to_function(name, function, html_options={})
     content_tag(:a, name, {:href => '#', :onclick => "#{function}; return false;"}.merge(html_options))
+  end
+
+  def link_to_context_menu
+    link_to l(:button_actions), '#', title: l(:button_actions), class: 'icon-only icon-actions js-contextmenu'
   end
 
   # Helper to render JSON in views
@@ -1246,22 +1292,14 @@ module ApplicationHelper
     arg.to_json.to_s.gsub('/', '\/').html_safe
   end
 
-  def back_url
-    url = params[:back_url]
-    if url.nil? && referer = request.env['HTTP_REFERER']
-      url = CGI.unescape(referer.to_s)
-      # URLs that contains the utf8=[checkmark] parameter added by Rails are
-      # parsed as invalid by URI.parse so the redirect to the back URL would
-      # not be accepted (ApplicationController#validate_back_url would return
-      # false)
-      url.gsub!(/(\?|&)utf8=\u2713&?/, '\1')
-    end
-    url
+  def back_url_hidden_field_tag
+    url = validate_back_url(back_url)
+    hidden_field_tag('back_url', url, :id => nil) unless url.blank?
   end
 
-  def back_url_hidden_field_tag
-    url = back_url
-    hidden_field_tag('back_url', url, :id => nil) unless url.blank?
+  def cancel_button_tag(fallback_url)
+    url = validate_back_url(back_url) || fallback_url
+    link_to l(:button_cancel), url
   end
 
   def check_all_links(form_name)
@@ -1426,7 +1464,6 @@ module ApplicationHelper
       if email.present?
         gravatar(email.to_s.downcase, options) rescue nil
       elsif user.is_a?(AnonymousUser)
-        options[:size] &&= options[:size].to_s
         image_tag 'anonymous.png',
                   GravatarHelper::DEFAULT_OPTIONS
                     .except(:default, :rating, :ssl).merge(options)
@@ -1452,7 +1489,7 @@ module ApplicationHelper
 
   # Returns the javascript tags that are included in the html layout head
   def javascript_heads
-    tags = javascript_include_tag('jquery-1.11.1-ui-1.11.0-ujs-3.1.4', 'application', 'responsive')
+    tags = javascript_include_tag('jquery-1.11.1-ui-1.11.0-ujs-5.2.4.5', 'application', 'responsive')
     unless User.current.pref.warn_on_leaving_unsaved == '0'
       tags << "\n".html_safe + javascript_tag("$(window).load(function(){ warnLeavingUnsaved('#{escape_javascript l(:text_warn_on_leaving_unsaved)}'); });")
     end
@@ -1506,6 +1543,33 @@ module ApplicationHelper
   def generate_csv(&block)
     decimal_separator = l(:general_csv_decimal_separator)
     encoding = l(:general_csv_encoding)
+  end
+
+  def export_csv_encoding_select_tag
+    return if l(:general_csv_encoding).casecmp('UTF-8') == 0
+    options = [l(:general_csv_encoding), 'UTF-8']
+    content_tag(:p) do
+      concat(
+        content_tag(:label) do
+          concat l(:label_encoding) + ' '
+          concat select_tag('encoding', options_for_select(options, l(:general_csv_encoding)))
+        end
+      )
+    end
+  end
+
+  # Returns an array of error messages for bulk edited items (issues, time entries)
+  def bulk_edit_error_messages(items)
+    messages = {}
+    items.each do |item|
+      item.errors.full_messages.each do |message|
+        messages[message] ||= []
+        messages[message] << item
+      end
+    end
+    messages.map { |message, items|
+      "#{message}: " + items.map {|i| "##{i.id}"}.join(', ')
+    }
   end
 
   private

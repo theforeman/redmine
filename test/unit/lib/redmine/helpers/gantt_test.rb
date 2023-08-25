@@ -39,6 +39,12 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
   def gantt_start
     @gantt.date_from
   end
+  private :gantt_start
+
+  def gantt_end
+    @gantt.date_to
+  end
+  private :gantt_end
 
   # Creates a Gantt chart for a 4 week span
   def create_gantt(project=Project.generate!, options={})
@@ -314,7 +320,7 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
     version = Version.generate!(:name => 'Foo', :project => @project)
     version.stubs(:start_date).returns(today - 7)
     version.stubs(:due_date).returns(today + 7)
-    version.stubs(:completed_percent).returns(30)
+    version.stubs(:visible_fixed_issues => stub(:completed_percent => 30))
     @output_buffer = @gantt.line_for_version(version, :format => :html)
     assert_select "div.version.label", :text => /Foo/
     assert_select "div.version.label", :text => /30%/
@@ -335,6 +341,26 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
     assert_select 'div.task_todo[style*="left:28px"]', 1
   end
 
+  test "#line todo line should appear if it ends on the leftmost date in the gantt" do
+    create_gantt
+    [gantt_start - 1, gantt_start].each do |start_date|
+      @output_buffer = @gantt.line(start_date, gantt_start, 30, false, 'line', :format => :html, :zoom => 4)
+      # the leftmost date (Date.today - 14 days)
+      assert_select 'div.task_todo[style*="left:0px"]', 1, @output_buffer
+      assert_select 'div.task_todo[style*="width:2px"]', 1, @output_buffer
+    end
+  end
+
+  test "#line todo line should appear if it starts on the rightmost date in the gantt" do
+    create_gantt
+    [gantt_end, gantt_end + 1].each do |end_date|
+      @output_buffer = @gantt.line(gantt_end, end_date, 30, false, 'line', :format => :html, :zoom => 4)
+      # the rightmost date (Date.today + 14 days)
+      assert_select 'div.task_todo[style*="left:112px"]', 1, @output_buffer
+      assert_select 'div.task_todo[style*="width:2px"]', 1, @output_buffer
+    end
+  end
+
   test "#line todo line should be the total width" do
     create_gantt
     @output_buffer = @gantt.line(today - 7, today + 7, 30, false, 'line', :format => :html, :zoom => 4)
@@ -351,6 +377,20 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
     create_gantt
     @output_buffer = @gantt.line(today - 7, today + 7, 30, false, 'line', :format => :html, :zoom => 4)
     assert_select 'div.task_late[style*="width:30px"]', 1
+  end
+
+  test "#line late line should be the same width as task_todo if start date and end date are the same day" do
+    create_gantt
+    @output_buffer = @gantt.line(today - 7, today - 7, 0, false, 'line', :format => :html, :zoom => 4)
+    assert_select 'div.task_late[style*="width:2px"]', 1
+    assert_select 'div.task_todo[style*="width:2px"]', 1
+  end
+
+  test "#line late line should be the same width as task_todo if start date and today are the same day" do
+    create_gantt
+    @output_buffer = @gantt.line(today, today, 0, false, 'line', :format => :html, :zoom => 4)
+    assert_select 'div.task_late[style*="width:2px"]', 1
+    assert_select 'div.task_todo[style*="width:2px"]', 1
   end
 
   test "#line done line should start from the starting point on the left" do
@@ -391,6 +431,9 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
     @output_buffer = @gantt.line(today - 7, today + 7, 30, true, 'line', :format => :html, :zoom => 4)
     assert_select "div.starting", 1
     assert_select 'div.starting[style*="left:28px"]', 1
+    # starting marker on the leftmost boundary of the gantt
+    @output_buffer = @gantt.line(gantt_start, today + 7, 30, true, 'line', :format => :html, :zoom => 4)
+    assert_select 'div.starting[style*="left:0px"]', 1
   end
 
   test "#line starting marker should not appear if the start date is before gantt start date" do
@@ -404,6 +447,9 @@ class Redmine::Helpers::GanttHelperTest < Redmine::HelperTest
     @output_buffer = @gantt.line(today - 7, today + 7, 30, true, 'line', :format => :html, :zoom => 4)
     assert_select "div.ending", 1
     assert_select 'div.ending[style*="left:88px"]', 1
+    # ending marker on the rightmost boundary of the gantt
+    @output_buffer = @gantt.line(today - 7, gantt_end, 30, true, 'line', :format => :html, :zoom => 4)
+    assert_select 'div.ending[style*="left:116px"]', 1
   end
 
   test "#line ending marker should not appear if the end date is before gantt start date" do

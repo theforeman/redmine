@@ -27,7 +27,7 @@ module Redmine
           return if self.included_modules.include?(Redmine::Acts::Customizable::InstanceMethods)
           cattr_accessor :customizable_options
           self.customizable_options = options
-          has_many :custom_values, lambda {includes(:custom_field).order("#{CustomField.table_name}.position")},
+          has_many :custom_values, lambda {includes(:custom_field)},
                                    :as => :customized,
                                    :inverse_of => :customized,
                                    :dependent => :delete_all,
@@ -102,6 +102,12 @@ module Redmine
 
         def custom_field_values_changed?
           @custom_field_values_changed == true
+        end
+
+        # Should the default custom field value be set for the given custom_value?
+        # By default, default custom field value is set for new objects only
+        def set_custom_field_default?(custom_value)
+          new_record?
         end
 
         def custom_value_for(c)

@@ -69,7 +69,6 @@ class Issue < ActiveRecord::Base
   validates :start_date, :date => true
   validates :due_date, :date => true
   validate :validate_issue, :validate_required_fields, :validate_permissions
-  attr_protected :id
 
   scope :visible, lambda {|*args|
     joins(:project).
@@ -108,14 +107,14 @@ class Issue < ActiveRecord::Base
   before_validation :default_assign, on: :create
   before_validation :clear_disabled_fields
   before_save :close_duplicates, :update_done_ratio_from_issue_status,
-              :force_updated_on_change, :update_closed_on, :set_assigned_to_was
-  after_save {|issue| issue.send :after_project_change if !issue.id_changed? && issue.project_id_changed?}
+              :force_updated_on_change, :update_closed_on
+  after_save {|issue| issue.send :after_project_change if !issue.saved_change_to_id? && issue.saved_change_to_project_id?}
   after_save :reschedule_following_issues, :update_nested_set_attributes,
              :update_parent_attributes, :delete_selected_attachments, :create_journal
   # Should be after_create but would be called before previous after_save callbacks
   after_save :after_create_from_copy
   after_destroy :update_parent_attributes
-  after_create :send_notification
+  after_create_commit :send_notification
 
   # Returns a SQL conditions string used to find all issues visible by the specified user
   def self.visible_condition(user, options={})
@@ -125,10 +124,10 @@ class Issue < ActiveRecord::Base
         when 'all'
           '1=1'
         when 'default'
-          user_ids = [user.id] + user.groups.map(&:id).compact
+          user_ids = [user.id] + user.groups.pluck(:id).compact
           "(#{table_name}.is_private = #{connection.quoted_false} OR #{table_name}.author_id = #{user.id} OR #{table_name}.assigned_to_id IN (#{user_ids.join(',')}))"
         when 'own'
-          user_ids = [user.id] + user.groups.map(&:id).compact
+          user_ids = [user.id] + user.groups.pluck(:id).compact
           "(#{table_name}.author_id = #{user.id} OR #{table_name}.assigned_to_id IN (#{user_ids.join(',')}))"
         else
           '1=0'
@@ -206,7 +205,7 @@ class Issue < ActiveRecord::Base
     end
   end
 
-  def create_or_update
+  def create_or_update(*args)
     super
   ensure
     @status_was = nil
@@ -258,6 +257,11 @@ class Issue < ActiveRecord::Base
     custom_field_values.select do |value|
       value.custom_field.visible_by?(project, user_real)
     end
+  end
+
+  # Overrides Redmine::Acts::Customizable::InstanceMethods#set_custom_field_default?
+  def set_custom_field_default?(custom_value)
+    new_record? || project_id_changed?|| tracker_id_changed?
   end
 
   # Copies attributes from another issue, arg can be an id or an Issue
@@ -461,7 +465,6 @@ class Issue < ActiveRecord::Base
     'custom_field_values',
     'custom_fields',
     'lock_version',
-    'notes',
     :if => lambda {|issue, user| issue.new_record? || issue.attributes_editable?(user) }
 
   safe_attributes 'notes',
@@ -511,6 +514,10 @@ class Issue < ActiveRecord::Base
   # attr_accessible is too rough because we still want things like
   # Issue.new(:project => foo) to work
   def safe_attributes=(attrs, user=User.current)
+    if attrs.respond_to?(:to_unsafe_hash)
+      attrs = attrs.to_unsafe_hash
+    end
+
     @attributes_set_by = user
     return unless attrs.is_a?(Hash)
 
@@ -527,7 +534,7 @@ class Issue < ActiveRecord::Base
         self.project_id = p_id
       end
 
-      if project_id_changed? && attrs['category_id'].to_s == category_id_was.to_s
+      if project_id_changed? && attrs['category_id'].present? && attrs['category_id'].to_s == category_id_was.to_s
         # Discard submitted category on previous project
         attrs.delete('category_id')
       end
@@ -585,8 +592,7 @@ class Issue < ActiveRecord::Base
       attrs['custom_fields'].select! {|c| editable_custom_field_ids.include?(c['id'].to_s)}
     end
 
-    # mass-assignment security bypass
-    assign_attributes attrs, :without_protection => true
+    assign_attributes attrs
   end
 
   def disabled_core_fields
@@ -1006,32 +1012,26 @@ class Issue < ActiveRecord::Base
     statuses
   end
 
-  # Returns the previous assignee (user or group) if changed
-  def assigned_to_was
-    # assigned_to_id_was is reset before after_save callbacks
-    user_id = @previous_assigned_to_id || assigned_to_id_was
-    if user_id && user_id != assigned_to_id
-      @assigned_to_was ||= Principal.find_by_id(user_id)
-    end
-  end
-
   # Returns the original tracker
   def tracker_was
-    Tracker.find_by_id(tracker_id_was)
+    Tracker.find_by_id(tracker_id_in_database)
+  end
+
+  # Returns the previous assignee whenever we're before the save
+  # or in after_* callbacks
+  def previous_assignee
+    if previous_assigned_to_id = assigned_to_id_change_to_be_saved.nil? ? assigned_to_id_before_last_save : assigned_to_id_in_database
+      Principal.find_by_id(previous_assigned_to_id)
+    end
   end
 
   # Returns the users that should be notified
   def notified_users
-    notified = []
     # Author and assignee are always notified unless they have been
     # locked or don't want to be notified
-    notified << author if author
-    if assigned_to
-      notified += (assigned_to.is_a?(Group) ? assigned_to.users : [assigned_to])
-    end
-    if assigned_to_was
-      notified += (assigned_to_was.is_a?(Group) ? assigned_to_was.users : [assigned_to_was])
-    end
+    notified = [author, assigned_to, previous_assignee].compact.uniq
+    notified = notified.map {|n| n.is_a?(Group) ? n.users : n}.flatten
+    notified.uniq!
     notified = notified.select {|u| u.active? && u.notify_about?(self)}
 
     notified += project.notified_users
@@ -1044,21 +1044,6 @@ class Issue < ActiveRecord::Base
   # Returns the email addresses that should be notified
   def recipients
     notified_users.collect(&:mail)
-  end
-
-  def each_notification(users, &block)
-    if users.any?
-      if custom_field_values.detect {|value| !value.custom_field.visible?}
-        users_by_custom_field_visibility = users.group_by do |user|
-          visible_custom_field_values(user).map(&:custom_field_id).sort
-        end
-        users_by_custom_field_visibility.values.each do |users|
-          yield(users)
-        end
-      else
-        yield(users)
-      end
-    end
   end
 
   def notify?
@@ -1387,7 +1372,7 @@ class Issue < ActiveRecord::Base
   # Unassigns issues from versions that are no longer shared
   # after +project+ was moved
   def self.update_versions_from_hierarchy_change(project)
-    moved_project_ids = project.self_and_descendants.reload.collect(&:id)
+    moved_project_ids = project.self_and_descendants.reload.pluck(:id)
     # Update issues of the moved projects and issues assigned to a version of a moved project
     Issue.update_versions(
             ["#{Version.table_name}.project_id IN (?) OR #{Issue.table_name}.project_id IN (?)",
@@ -1463,28 +1448,28 @@ class Issue < ActiveRecord::Base
     end
   end
 
-  def self.by_tracker(project)
-    count_and_group_by(:project => project, :association => :tracker)
+  def self.by_tracker(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :tracker, :with_subprojects => with_subprojects)
   end
 
-  def self.by_version(project)
-    count_and_group_by(:project => project, :association => :fixed_version)
+  def self.by_version(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :fixed_version, :with_subprojects => with_subprojects)
   end
 
-  def self.by_priority(project)
-    count_and_group_by(:project => project, :association => :priority)
+  def self.by_priority(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :priority, :with_subprojects => with_subprojects)
   end
 
-  def self.by_category(project)
-    count_and_group_by(:project => project, :association => :category)
+  def self.by_category(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :category, :with_subprojects => with_subprojects)
   end
 
-  def self.by_assigned_to(project)
-    count_and_group_by(:project => project, :association => :assigned_to)
+  def self.by_assigned_to(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :assigned_to, :with_subprojects => with_subprojects)
   end
 
-  def self.by_author(project)
-    count_and_group_by(:project => project, :association => :author)
+  def self.by_author(project, with_subprojects=false)
+    count_and_group_by(:project => project, :association => :author, :with_subprojects => with_subprojects)
   end
 
   def self.by_subproject(project)
@@ -1521,8 +1506,15 @@ class Issue < ActiveRecord::Base
   end
 
   # Returns a scope of projects that user can assign the issue to
-  def allowed_target_projects(user=User.current)
-    current_project = new_record? ? nil : project
+  def allowed_target_projects(user=User.current, context=nil)
+    if new_record? && context.is_a?(Project) && !copy?
+      current_project = context.self_and_descendants
+    elsif new_record?
+      current_project = nil
+    else
+      current_project = project
+    end
+
     self.class.allowed_target_projects(user, current_project)
   end
 
@@ -1530,8 +1522,10 @@ class Issue < ActiveRecord::Base
   # If current_project is given, it will be included in the scope
   def self.allowed_target_projects(user=User.current, current_project=nil)
     condition = Project.allowed_to_condition(user, :add_issues)
-    if current_project
+    if current_project.is_a?(Project)
       condition = ["(#{condition}) OR #{Project.table_name}.id = ?", current_project.id]
+    elsif current_project
+      condition = ["(#{condition}) AND #{Project.table_name}.id IN (?)", current_project.map(&:id)]
     end
     Project.where(condition).having_trackers
   end
@@ -1589,7 +1583,7 @@ class Issue < ActiveRecord::Base
 
     # Move subtasks that were in the same project
     children.each do |child|
-      next unless child.project_id == project_id_was
+      next unless child.project_id == project_id_before_last_save
       # Change project and keep project
       child.send :project=, project, true
       unless child.save
@@ -1648,7 +1642,7 @@ class Issue < ActiveRecord::Base
   end
 
   def update_nested_set_attributes
-    if parent_id_changed?
+    if saved_change_to_parent_id?
       update_nested_set_attributes_on_parent_change
     end
     remove_instance_variable(:@parent_issue) if instance_variable_defined?(:@parent_issue)
@@ -1656,7 +1650,7 @@ class Issue < ActiveRecord::Base
 
   # Updates the nested set for when an existing issue is moved
   def update_nested_set_attributes_on_parent_change
-    former_parent_id = parent_id_was
+    former_parent_id = parent_id_before_last_save
     # delete invalid relations of all descendants
     self_and_descendants.each do |issue|
       issue.relations.each do |relation|
@@ -1702,18 +1696,18 @@ class Issue < ActiveRecord::Base
           if children.any?
             child_with_total_estimated_hours = children.select {|c| c.total_estimated_hours.to_f > 0.0}
             if child_with_total_estimated_hours.any?
-              average = child_with_total_estimated_hours.map(&:total_estimated_hours).sum.to_f / child_with_total_estimated_hours.count
+              average = child_with_total_estimated_hours.map(&:total_estimated_hours).sum.to_d / child_with_total_estimated_hours.count
             else
-              average = 1.0
+              average = 1.0.to_d
             end
             done = children.map {|c|
-              estimated = c.total_estimated_hours.to_f
+              estimated = (c.total_estimated_hours || 0.0).to_d
               estimated = average unless estimated > 0.0
               ratio = c.closed? ? 100 : (c.done_ratio || 0)
               estimated * ratio
             }.sum
             progress = done / (average * children.count)
-            p.done_ratio = progress.round
+            p.done_ratio = progress.floor
           end
         end
       end
@@ -1793,7 +1787,7 @@ class Issue < ActiveRecord::Base
 
   # Updates start/due dates of following issues
   def reschedule_following_issues
-    if start_date_changed? || due_date_changed?
+    if saved_change_to_start_date? || saved_change_to_due_date?
       relations_from.each do |relation|
         relation.set_issue_to_dates(@current_journal)
       end
@@ -1802,7 +1796,7 @@ class Issue < ActiveRecord::Base
 
   # Closes duplicates if the issue is being closed
   def close_duplicates
-    if closing?
+    if Setting.close_duplicate_issues? && closing?
       duplicates.each do |duplicate|
         # Reload is needed in case the duplicate was updated by a previous duplicate
         duplicate.reload
@@ -1850,18 +1844,6 @@ class Issue < ActiveRecord::Base
     if notify? && Setting.notified_events.include?('issue_added')
       Mailer.deliver_issue_add(self)
     end
-  end
-
-  # Stores the previous assignee so we can still have access
-  # to it during after_save callbacks (assigned_to_id_was is reset)
-  def set_assigned_to_was
-    @previous_assigned_to_id = assigned_to_id_was
-  end
-
-  # Clears the previous assignee at the end of after_save callbacks
-  def clear_assigned_to_was
-    @assigned_to_was = nil
-    @previous_assigned_to_id = nil
   end
 
   def clear_disabled_fields

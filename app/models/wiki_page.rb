@@ -40,19 +40,18 @@ class WikiPage < ActiveRecord::Base
                      :permission => :view_wiki_pages,
                      :project_key => "#{Wiki.table_name}.project_id"
 
-  attr_accessor :redirect_existing_links
+  attr_accessor :redirect_existing_links, :deleted_attachment_ids
 
   validates_presence_of :title
   validates_format_of :title, :with => /\A[^,\.\/\?\;\|\s]*\z/
   validates_uniqueness_of :title, :scope => :wiki_id, :case_sensitive => false
   validates_length_of :title, maximum: 255
   validates_associated :content
-  attr_protected :id
 
   validate :validate_parent_title
   before_destroy :delete_redirects
-  before_save :handle_rename_or_move
-  after_save :handle_children_move
+  before_save :handle_rename_or_move, :update_wiki_start_page
+  after_save :handle_children_move, :delete_selected_attachments
 
   # eager load information about last updates, without loading text
   scope :with_updated_on, lambda { preload(:content_without_text) }
@@ -62,6 +61,12 @@ class WikiPage < ActiveRecord::Base
 
   safe_attributes 'parent_id', 'parent_title', 'title', 'redirect_existing_links', 'wiki_id',
     :if => lambda {|page, user| page.new_record? || user.allowed_to?(:rename_wiki_pages, page.project)}
+
+  safe_attributes 'is_start_page',
+    :if => lambda {|page, user| user.allowed_to?(:manage_wiki, page.project)}
+
+  safe_attributes 'deleted_attachment_ids',
+    :if => lambda {|page, user| page.attachments_deletable?(user)}
 
   def initialize(attributes=nil, *args)
     super
@@ -80,6 +85,10 @@ class WikiPage < ActiveRecord::Base
   end
 
   def safe_attributes=(attrs, user=User.current)
+    if attrs.respond_to?(:to_unsafe_hash)
+      attrs = attrs.to_unsafe_hash
+    end
+
     return unless attrs.is_a?(Hash)
     attrs = attrs.deep_dup
 
@@ -122,7 +131,7 @@ class WikiPage < ActiveRecord::Base
 
   # Moves child pages if page was moved
   def handle_children_move
-    if !new_record? && wiki_id_changed?
+    if !new_record? && saved_change_to_wiki_id?
       children.each do |child|
         child.wiki_id = wiki_id
         child.redirect_existing_links = redirect_existing_links
@@ -209,6 +218,24 @@ class WikiPage < ActiveRecord::Base
     self.parent = parent_page
   end
 
+  def is_start_page
+    if @is_start_page.nil?
+      @is_start_page = wiki.try(:start_page) == title_was
+    end
+    @is_start_page
+  end
+
+  def is_start_page=(arg)
+    @is_start_page = arg == '1' || arg == true
+  end
+
+  def update_wiki_start_page
+    if is_start_page
+      wiki.update_attribute :start_page, title
+    end
+  end
+  private :update_wiki_start_page
+
   # Saves the page and its content if text was changed
   # Return true if the page was saved
   def save_with_content(content)
@@ -218,7 +245,6 @@ class WikiPage < ActiveRecord::Base
       if content.text_changed?
         begin
           self.content = content
-          ret = ret && content.changed?
         rescue ActiveRecord::RecordNotSaved
           ret = false
         end
@@ -226,6 +252,17 @@ class WikiPage < ActiveRecord::Base
       raise ActiveRecord::Rollback unless ret
     end
     ret
+  end
+
+  def deleted_attachment_ids
+    Array(@deleted_attachment_ids).map(&:to_i)
+  end
+
+  def delete_selected_attachments
+    if deleted_attachment_ids.present?
+      objects = attachments.where(:id => deleted_attachment_ids.map(&:to_i))
+      attachments.delete(objects)
+    end
   end
 
   protected

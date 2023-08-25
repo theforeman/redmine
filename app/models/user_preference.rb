@@ -15,13 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+require 'redmine/my_page'
+
 class UserPreference < ActiveRecord::Base
   include Redmine::SafeAttributes
 
   belongs_to :user
   serialize :others
-
-  attr_protected :others, :user_id
 
   before_save :set_others_hash, :clear_unused_block_settings
 
@@ -122,7 +122,7 @@ class UserPreference < ActiveRecord::Base
   #   preferences.remove_block('news')
   def remove_block(block)
     block = block.to_s.underscore
-    my_page_layout.keys.each do |group|
+    my_page_layout.each_key do |group|
       my_page_layout[group].delete(block)
     end
     my_page_layout

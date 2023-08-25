@@ -369,7 +369,6 @@ lt:
   field_remote_ip: IP adresas
 
   setting_app_title: Programos pavadinimas
-  setting_app_subtitle: Programos paantraštė
   setting_welcome_text: Pasveikinimas
   setting_default_language: Numatytoji kalba
   setting_login_required: Reikalingas autentiškumo nustatymas
@@ -470,7 +469,6 @@ lt:
   permission_edit_own_issue_notes: Redaguoti savo pastabas
   permission_view_private_notes:  Matyti privačias pastabas
   permission_set_notes_private: Nustatyti pastabas privačiomis
-  permission_move_issues: Perkelti darbus
   permission_delete_issues: Pašalinti darbus
   permission_manage_public_queries: Valdyti viešas užklausas
   permission_save_queries: Išsaugoti užklausas
@@ -1137,7 +1135,7 @@ lt:
   text_turning_multiple_off: "Jei jūs išjungsite kelių reikšmių pasirinkimą, visos išvardintos reikšmės bus pašalintos ir palikta tik viena reikšmė kiekvienam laukui."
 
   default_role_manager: Vadovas
-  default_role_developer: Projektuotojas
+  default_role_developer: Plėtotojas
   default_role_reporter: Pranešėjas
   default_tracker_bug: Klaida
   default_tracker_feature: Ypatybė
@@ -1197,8 +1195,8 @@ lt:
   setting_timespan_format: Laiko tarpo formatas
   label_table_of_contents: Turinio lentelė
   setting_commit_logs_formatting: Pritaikyti teksto formatavimą patvirtinimo žinutėms
-  setting_mail_handler_enable_regex_delimiters: Įjungti reguliariuosius reiškinius
-  error_move_of_child_not_possible: 'Darbo dalis %{child} negali būti perkelta į naują 
+  setting_mail_handler_enable_regex: Įjungti reguliariuosius reiškinius
+  error_move_of_child_not_possible: 'Darbo dalis %{child} negali būti perkelta į naują
     projektą: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Dirbtas laikas negali būti
     iš naujo paskirtas darbui, kuris bus ištrintas
@@ -1218,3 +1216,32 @@ lt:
   permission_view_news: Žiūrėti naujienas
   label_no_preview_alternative_html: Peržiūra neprieinama. Naudokite failą %{link}.
   label_no_preview_download: Atsisiųsti
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.

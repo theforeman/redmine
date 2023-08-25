@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SearchController < ApplicationController
-  before_action :find_optional_project
+  before_action :find_optional_project_by_id, :authorize_global
   accept_api_auth :index
 
   def index
@@ -62,13 +62,13 @@ class SearchController < ApplicationController
       @object_types = @object_types.select {|o| User.current.allowed_to?("view_#{o}".to_sym, projects_to_search)}
     end
 
-    @scope = @object_types.select {|t| params[t]}
+    @scope = @object_types.select {|t| params[t].present?}
     @scope = @object_types if @scope.empty?
 
     fetcher = Redmine::Search::Fetcher.new(
       @question, User.current, @scope, projects_to_search,
       :all_words => @all_words, :titles_only => @titles_only, :attachments => @search_attachments, :open_issues => @open_issues,
-      :cache => params[:page].present?, :params => params
+      :cache => params[:page].present?, :params => params.to_unsafe_hash
     )
 
     if fetcher.tokens.present?
@@ -86,14 +86,5 @@ class SearchController < ApplicationController
       format.html { render :layout => false if request.xhr? }
       format.api  { @results ||= []; render :layout => false }
     end
-  end
-
-private
-  def find_optional_project
-    return true unless params[:id]
-    @project = Project.find(params[:id])
-    check_project_privacy
-  rescue ActiveRecord::RecordNotFound
-    render_404
   end
 end

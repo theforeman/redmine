@@ -166,6 +166,7 @@ class EnumerationTest < ActiveSupport::TestCase
 
   def test_destroying_override_should_not_update_positions
     Enumeration.delete_all
+    Issue.delete_all
 
     a = IssuePriority.create!(:name => 'A')
     b = IssuePriority.create!(:name => 'B')

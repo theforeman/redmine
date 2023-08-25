@@ -15,6 +15,97 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+module FixedIssuesExtension
+  # Returns the total estimated time for this version
+  # (sum of leaves estimated_hours)
+  def estimated_hours
+    @estimated_hours ||= sum(:estimated_hours).to_f
+  end
+  #
+  # Returns the total amount of open issues for this version.
+  def open_count
+    load_counts
+    @open_count
+  end
+
+  # Returns the total amount of closed issues for this version.
+  def closed_count
+    load_counts
+    @closed_count
+  end
+
+  # Returns the completion percentage of this version based on the amount of open/closed issues
+  # and the time spent on the open issues.
+  def completed_percent
+    if count == 0
+      0
+    elsif open_count == 0
+      100
+    else
+      issues_progress(false) + issues_progress(true)
+    end
+  end
+
+  # Returns the percentage of issues that have been marked as 'closed'.
+  def closed_percent
+    if count == 0
+      0
+    else
+      issues_progress(false)
+    end
+  end
+
+  private
+
+  def load_counts
+    unless @open_count
+      @open_count = 0
+      @closed_count = 0
+      self.group(:status).count.each do |status, count|
+        if status.is_closed?
+          @closed_count += count
+        else
+          @open_count += count
+        end
+      end
+    end
+  end
+
+  # Returns the average estimated time of assigned issues
+  # or 1 if no issue has an estimated time
+  # Used to weight unestimated issues in progress calculation
+  def estimated_average
+    if @estimated_average.nil?
+      average = average(:estimated_hours).to_f
+      if average == 0
+        average = 1
+      end
+      @estimated_average = average
+    end
+    @estimated_average
+  end
+
+  # Returns the total progress of open or closed issues.  The returned percentage takes into account
+  # the amount of estimated time set for this version.
+  #
+  # Examples:
+  # issues_progress(true)   => returns the progress percentage for open issues.
+  # issues_progress(false)  => returns the progress percentage for closed issues.
+  def issues_progress(open)
+    @issues_progress ||= {}
+    @issues_progress[open] ||= begin
+      progress = 0
+      if count > 0
+        ratio = open ? 'done_ratio' : 100
+
+        done = open(open).sum("COALESCE(estimated_hours, #{estimated_average}) * #{ratio}").to_f
+        progress = done / (estimated_average * count)
+      end
+      progress
+    end
+  end
+end
+
 class Version < ActiveRecord::Base
   include Redmine::SafeAttributes
 
@@ -23,7 +114,8 @@ class Version < ActiveRecord::Base
   before_destroy :nullify_projects_default_version
 
   belongs_to :project
-  has_many :fixed_issues, :class_name => 'Issue', :foreign_key => 'fixed_version_id', :dependent => :nullify
+  has_many :fixed_issues, :class_name => 'Issue', :foreign_key => 'fixed_version_id', :dependent => :nullify, :extend => FixedIssuesExtension
+
   acts_as_customizable
   acts_as_attachable :view_permission => :view_files,
                      :edit_permission => :manage_files,
@@ -39,7 +131,6 @@ class Version < ActiveRecord::Base
   validates :effective_date, :date => true
   validates_inclusion_of :status, :in => VERSION_STATUSES
   validates_inclusion_of :sharing, :in => VERSION_SHARINGS
-  attr_protected :id
 
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
   scope :like, lambda {|arg|
@@ -87,6 +178,7 @@ class Version < ActiveRecord::Base
   alias :base_reload :reload
   def reload(*args)
     @default_project_version = nil
+    @visible_fixed_issues = nil
     base_reload(*args)
   end
 
@@ -105,7 +197,7 @@ class Version < ActiveRecord::Base
   # Returns the total estimated time for this version
   # (sum of leaves estimated_hours)
   def estimated_hours
-    @estimated_hours ||= fixed_issues.sum(:estimated_hours).to_f
+    fixed_issues.estimated_hours
   end
 
   # Returns the total reported time for this version
@@ -140,22 +232,12 @@ class Version < ActiveRecord::Base
   # Returns the completion percentage of this version based on the amount of open/closed issues
   # and the time spent on the open issues.
   def completed_percent
-    if issues_count == 0
-      0
-    elsif open_issues_count == 0
-      100
-    else
-      issues_progress(false) + issues_progress(true)
-    end
+    fixed_issues.completed_percent
   end
 
   # Returns the percentage of issues that have been marked as 'closed'.
   def closed_percent
-    if issues_count == 0
-      0
-    else
-      issues_progress(false)
-    end
+    fixed_issues.closed_percent
   end
 
   # Returns true if the version is overdue: due date reached and some open issues
@@ -165,20 +247,21 @@ class Version < ActiveRecord::Base
 
   # Returns assigned issues count
   def issues_count
-    load_issue_counts
-    @issue_count
+    fixed_issues.count
   end
 
   # Returns the total amount of open issues for this version.
   def open_issues_count
-    load_issue_counts
-    @open_issues_count
+    fixed_issues.open_count
   end
 
   # Returns the total amount of closed issues for this version.
   def closed_issues_count
-    load_issue_counts
-    @closed_issues_count
+    fixed_issues.closed_count
+  end
+
+  def visible_fixed_issues
+    @visible_fixed_issues ||= fixed_issues.visible
   end
 
   def wiki_page
@@ -236,7 +319,7 @@ class Version < ActiveRecord::Base
 
   def self.fields_for_order_statement(table=nil)
     table ||= table_name
-    ["(CASE WHEN #{table}.effective_date IS NULL THEN 1 ELSE 0 END)", "#{table}.effective_date", "#{table}.name", "#{table}.id"]
+    [Arel.sql("(CASE WHEN #{table}.effective_date IS NULL THEN 1 ELSE 0 END)"), "#{table}.effective_date", "#{table}.name", "#{table}.id"]
   end
 
   scope :sorted, lambda { order(fields_for_order_statement) }
@@ -285,27 +368,12 @@ class Version < ActiveRecord::Base
 
   private
 
-  def load_issue_counts
-    unless @issue_count
-      @open_issues_count = 0
-      @closed_issues_count = 0
-      fixed_issues.group(:status).count.each do |status, count|
-        if status.is_closed?
-          @closed_issues_count += count
-        else
-          @open_issues_count += count
-        end
-      end
-      @issue_count = @open_issues_count + @closed_issues_count
-    end
-  end
-
   # Update the issue's fixed versions. Used if a version's sharing changes.
   def update_issues_from_sharing_change
-    if sharing_changed?
-      if VERSION_SHARINGS.index(sharing_was).nil? ||
+    if saved_change_to_sharing?
+      if VERSION_SHARINGS.index(sharing_before_last_save).nil? ||
           VERSION_SHARINGS.index(sharing).nil? ||
-          VERSION_SHARINGS.index(sharing_was) > VERSION_SHARINGS.index(sharing)
+          VERSION_SHARINGS.index(sharing_before_last_save) > VERSION_SHARINGS.index(sharing)
         Issue.update_versions_from_sharing_change self
       end
     end
@@ -314,40 +382,6 @@ class Version < ActiveRecord::Base
   def update_default_project_version
     if @default_project_version && project.present?
       project.update_columns :default_version_id => id
-    end
-  end
-
-  # Returns the average estimated time of assigned issues
-  # or 1 if no issue has an estimated time
-  # Used to weight unestimated issues in progress calculation
-  def estimated_average
-    if @estimated_average.nil?
-      average = fixed_issues.average(:estimated_hours).to_f
-      if average == 0
-        average = 1
-      end
-      @estimated_average = average
-    end
-    @estimated_average
-  end
-
-  # Returns the total progress of open or closed issues.  The returned percentage takes into account
-  # the amount of estimated time set for this version.
-  #
-  # Examples:
-  # issues_progress(true)   => returns the progress percentage for open issues.
-  # issues_progress(false)  => returns the progress percentage for closed issues.
-  def issues_progress(open)
-    @issues_progress ||= {}
-    @issues_progress[open] ||= begin
-      progress = 0
-      if issues_count > 0
-        ratio = open ? 'done_ratio' : 100
-
-        done = fixed_issues.open(open).sum("COALESCE(estimated_hours, #{estimated_average}) * #{ratio}").to_f
-        progress = done / (estimated_average * issues_count)
-      end
-      progress
     end
   end
 

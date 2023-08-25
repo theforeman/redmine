@@ -70,7 +70,7 @@ class WikiController < ApplicationController
       @page.title = '' unless editable?
       @page.validate
       if @page.errors[:title].blank?
-        path = project_wiki_page_path(@project, @page.title)
+        path = project_wiki_page_path(@project, @page.title, :parent => params[:parent])
         respond_to do |format|
           format.html { redirect_to path }
           format.js   { render :js => "window.location = #{path.to_json}" }
@@ -323,7 +323,7 @@ class WikiController < ApplicationController
       @attachments += page.attachments
       @previewed = page.content
     end
-    @text = params[:content][:text]
+    @text = params[:content].present? ? params[:content][:text] : params[:text]
     render :partial => 'common/preview'
   end
 

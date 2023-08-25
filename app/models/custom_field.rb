@@ -35,7 +35,6 @@ class CustomField < ActiveRecord::Base
   validates_length_of :regexp, maximum: 255
   validates_inclusion_of :field_format, :in => Proc.new { Redmine::FieldFormat.available_formats }
   validate :validate_custom_field
-  attr_protected :id
 
   before_validation :set_searchable
   before_save do |field|
@@ -43,7 +42,7 @@ class CustomField < ActiveRecord::Base
   end
   after_save :handle_multiplicity_change
   after_save do |field|
-    if field.visible_changed? && field.visible
+    if field.saved_change_to_visible? && field.visible
       field.roles.clear
     end
   end
@@ -225,19 +224,6 @@ class CustomField < ActiveRecord::Base
     end
   end
 
-  def self.visibility_condition
-    if user.admin?
-      "1=1"
-    elsif user.anonymous?
-      "#{table_name}.visible"
-    else
-      "#{project_key} IN (SELECT DISTINCT m.project_id FROM #{Member.table_name} m" +
-        " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" +
-        " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr ON cfr.role_id = mr.role_id" +
-        " WHERE m.user_id = #{user.id} AND cfr.custom_field_id = #{id})"
-    end
-  end
-
   def <=>(field)
     position <=> field.position
   end
@@ -316,7 +302,7 @@ class CustomField < ActiveRecord::Base
   # Removes multiple values for the custom field after setting the multiple attribute to false
   # We kepp the value with the highest id for each customized object
   def handle_multiplicity_change
-    if !new_record? && multiple_was && !multiple
+    if !new_record? && multiple_before_last_save && !multiple
       ids = custom_values.
         where("EXISTS(SELECT 1 FROM #{CustomValue.table_name} cve WHERE cve.custom_field_id = #{CustomValue.table_name}.custom_field_id" +
           " AND cve.customized_type = #{CustomValue.table_name}.customized_type AND cve.customized_id = #{CustomValue.table_name}.customized_id" +

@@ -19,7 +19,6 @@
 require 'redmine/scm/adapters/git_adapter'
 
 class Repository::Git < Repository
-  attr_protected :root_url
   validates_presence_of :url
 
   safe_attributes 'report_last_commit'
@@ -46,7 +45,7 @@ class Repository::Git < Repository
     return false if v.nil?
     v.to_s != '0'
   end
- 
+
   def report_last_commit=(arg)
     merge_extra_info "extra_report_last_commit" => arg
   end
@@ -90,7 +89,7 @@ class Repository::Git < Repository
 
   def find_changeset_by_name(name)
     if name.present?
-      changesets.where(:revision => name.to_s).first ||
+      changesets.find_by(:revision => name.to_s) ||
         changesets.where('scmid LIKE ?', "#{name}%").first
     end
   end

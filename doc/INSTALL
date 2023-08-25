@@ -7,14 +7,14 @@ http://www.redmine.org/
 
 == Requirements
 
-* Ruby >= 1.9.3
+* Ruby 2.3, 2.4, 2.5, 2.6
 * RubyGems
 * Bundler >= 1.5.0
 
 * A database:
-  * MySQL (tested with MySQL 5.1)
-  * PostgreSQL (tested with PostgreSQL 9.1)
-  * SQLite3 (tested with SQLite 3.7)
+  * MySQL (tested with MySQL 5.7)
+  * PostgreSQL (tested with PostgreSQL 9.5)
+  * SQLite3 (tested with SQLite 3.11)
   * SQLServer (tested with SQLServer 2012)
 
 Optional:
@@ -29,7 +29,7 @@ Optional:
 2. Create an empty utf8 encoded database: "redmine" for example
 
 3. Configure the database parameters in config/database.yml
-   for the "production" environment (default database is MySQL and ruby1.9)
+   for the "production" environment (default database is MySQL)
 
 4. Install the required gems by running:
      bundle install --without development test
@@ -74,12 +74,12 @@ Optional:
      sudo chown -R redmine:redmine files log tmp public/plugin_assets
      sudo chmod -R 755 files log tmp public/plugin_assets
 
-8. Test the installation by running the WEBrick web server
+8. Test the installation by running the Puma web server
    
    Under the main application directory run:
      ruby bin/rails server -e production
    
-   Once WEBrick has started, point your browser to http://localhost:3000/
+   Once Puma has started, point your browser to http://localhost:3000/
    You should now see the application welcome page.
 
 9. Use the default administrator account to log in:

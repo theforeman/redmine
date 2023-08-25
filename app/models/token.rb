@@ -18,7 +18,6 @@
 class Token < ActiveRecord::Base
   belongs_to :user
   validates_uniqueness_of :value
-  attr_protected :id
 
   before_create :delete_previous_tokens, :generate_new_token
 
@@ -113,12 +112,14 @@ class Token < ActiveRecord::Base
     key = key.to_s
     return nil unless action.present? && key =~ /\A[a-z0-9]+\z/i
 
-    token = Token.where(:action => action, :value => key).first
-    if token && (token.action == action) && (token.value == key) && token.user
-      if validity_days.nil? || (token.created_on > validity_days.days.ago)
-        token
-      end
-    end
+    token = Token.find_by(:action => action, :value => key)
+    return unless token
+    return unless token.action == action
+    return unless ActiveSupport::SecurityUtils.secure_compare(token.value.to_s, key)
+    return unless token.user
+    return unless validity_days.nil? || (token.created_on > validity_days.days.ago)
+
+    token
   end
 
   def self.generate_token_value

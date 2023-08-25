@@ -5,7 +5,7 @@ var contextMenuObserving;
 
 function contextMenuRightClick(event) {
   var target = $(event.target);
-  if (target.is('a')) {return;}
+  if (target.is('a:not(.js-contextmenu)')) {return;}
   var tr = target.closest('.hascontextmenu').first();
   if (tr.length < 1) {return;}
   event.preventDefault();
@@ -30,7 +30,12 @@ function contextMenuClick(event) {
   if (event.which == 1 || (navigator.appVersion.match(/\bMSIE\b/))) {
     var tr = target.closest('.hascontextmenu').first();
     if (tr.length > 0) {
-      // a row was clicked, check if the click was on checkbox
+      // a row was clicked
+      if (target.is('td.checkbox')) {
+    	// the td containing the checkbox was clicked, toggle the checkbox
+    	target = target.find('input').first();
+    	target.prop("checked", !target.prop("checked"));
+      }
       if (target.is('input')) {
         // a checkbox may be clicked
         if (target.prop('checked')) {
@@ -218,6 +223,7 @@ function contextMenuInit() {
   if (!contextMenuObserving) {
     $(document).click(contextMenuClick);
     $(document).contextmenu(contextMenuRightClick);
+    $(document).on('click', '.js-contextmenu', contextMenuRightClick);
     contextMenuObserving = true;
   }
 }

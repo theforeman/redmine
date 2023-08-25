@@ -26,7 +26,7 @@ END_DESC
 
     task :read => :environment do
       Mailer.with_synched_deliveries do
-        MailHandler.receive(STDIN.read, MailHandler.extract_options_from_env(ENV))
+        MailHandler.safe_receive(STDIN.read, MailHandler.extract_options_from_env(ENV))
       end
     end
 
@@ -56,10 +56,14 @@ User and permissions options:
   no_permission_check=1    disable permission checking when receiving
                            the email
   no_account_notice=1      disable new user account notification
+  no_notification=1        disable email notification to new user
   default_group=foo,bar    adds created user to foo and bar groups
 
 Issue attributes control options:
   project=PROJECT          identifier of the target project
+  project_from_subaddress=ADDR
+                           select project from subaddress of ADDR found
+                           in To, Cc, Bcc headers
   status=STATUS            name of the target status
   tracker=TRACKER          name of the target tracker
   category=CATEGORY        name of the target category
@@ -157,11 +161,8 @@ END_DESC
       user = User.find_by_login(args[:login])
       abort l(:notice_email_error, "User #{args[:login]} not found") unless user && user.logged?
 
-      ActionMailer::Base.raise_delivery_errors = true
       begin
-        Mailer.with_synched_deliveries do
-          Mailer.test_email(user).deliver
-        end
+        Mailer.deliver_test_email(user)
         puts l(:notice_email_sent, user.mail)
       rescue Exception => e
         abort l(:notice_email_error, e.message)

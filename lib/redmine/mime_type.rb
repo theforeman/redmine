@@ -15,8 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require 'mime/types'
-
 module Redmine
   module MimeType
 
@@ -46,6 +44,7 @@ module Redmine
       'image/x-ms-bmp' => 'bmp',
       'application/javascript' => 'js',
       'application/pdf' => 'pdf',
+      'video/mp4' => 'mp4',
     }.freeze
 
     EXTENSIONS = MIME_TYPES.inject({}) do |map, (type, exts)|
@@ -60,15 +59,11 @@ module Redmine
 
     # returns mime type for name or nil if unknown
     def self.of(name)
-      return nil unless name.present?
-      if m = name.to_s.match(/(^|\.)([^\.]+)$/)
-        extension = m[2].downcase
-        @known_types ||= Hash.new do |h, ext|
-          type = EXTENSIONS[ext]
-          type ||= MIME::Types.type_for(ext).first.to_s.presence
-          h[ext] = type
-        end
-        @known_types[extension]
+      ext = File.extname(name.to_s)[1..-1]
+      if ext
+        ext.downcase!
+        EXTENSIONS[ext] ||
+          ((mi = MiniMime.lookup_by_extension(ext)) && mi.content_type)
       end
     end
 
@@ -76,7 +71,7 @@ module Redmine
     # the mime type of name
     def self.css_class_of(name)
       mime = of(name)
-      mime && mime.gsub('/', '-')
+      mime && mime.tr('/', '-')
     end
 
     def self.main_mimetype_of(name)

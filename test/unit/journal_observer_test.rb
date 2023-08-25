@@ -37,7 +37,7 @@ class JournalObserverTest < ActiveSupport::TestCase
     with_settings :notified_events => %w(issue_updated) do
       assert journal.save
     end
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_create_should_not_send_email_notification_with_notify_set_to_false
@@ -72,7 +72,7 @@ class JournalObserverTest < ActiveSupport::TestCase
     with_settings :notified_events => %w(issue_note_added) do
       assert journal.save
     end
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_create_should_not_send_email_notification_without_issue_note_added
@@ -96,7 +96,7 @@ class JournalObserverTest < ActiveSupport::TestCase
     with_settings :notified_events => %w(issue_status_updated) do
       assert issue.save
     end
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_create_should_not_send_email_notification_without_issue_status_updated
@@ -133,7 +133,7 @@ class JournalObserverTest < ActiveSupport::TestCase
     with_settings :notified_events => %w(issue_assigned_to_updated) do
       assert issue.save
     end
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_create_should_not_send_email_notification_without_issue_assignee_updated
@@ -158,7 +158,7 @@ class JournalObserverTest < ActiveSupport::TestCase
     with_settings :notified_events => %w(issue_priority_updated) do
       assert issue.save
     end
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_create_should_not_send_email_notification_without_issue_priority_updated

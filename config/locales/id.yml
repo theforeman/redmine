@@ -292,7 +292,6 @@ id:
   field_sharing: Berbagi
 
   setting_app_title: Judul aplikasi
-  setting_app_subtitle: Subjudul aplikasi
   setting_welcome_text: Teks sambutan
   setting_default_language: Bahasa Default
   setting_login_required: Butuhkan otentikasi
@@ -348,7 +347,6 @@ id:
   permission_add_issue_notes: Tambahkan catatan
   permission_edit_issue_notes: Sunting catatan
   permission_edit_own_issue_notes: Sunting catatan saya
-  permission_move_issues: Pindahkan masalah
   permission_delete_issues: Hapus masalah
   permission_manage_public_queries: Atur query publik
   permission_save_queries: Simpan query
@@ -680,8 +678,6 @@ id:
   label_user_mail_option_all: "Untuk semua kejadian pada semua proyek saya"
   label_user_mail_option_selected: "Hanya untuk semua kejadian pada proyek yang saya pilih ..."
   label_user_mail_no_self_notified: "Saya tak ingin diberitahu untuk perubahan yang saya buat sendiri"
-  label_user_mail_assigned_only_mail_notification: "Kirim email hanya bila saya ditugaskan untuk masalah terkait"
-  label_user_mail_block_mail_notification: "Saya tidak ingin menerima email. Terima kasih."
   label_registration_activation_by_email: aktivasi akun melalui email
   label_registration_manual_activation: aktivasi akun secara manual
   label_registration_automatic_activation: aktivasi akun secara otomatis
@@ -1211,7 +1207,7 @@ id:
   setting_timespan_format: Time span format
   label_table_of_contents: Table of contents
   setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  setting_mail_handler_enable_regex: Enable regular expressions
   error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
@@ -1232,3 +1228,32 @@ id:
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
   label_no_preview_download: Download
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.

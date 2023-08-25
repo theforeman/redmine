@@ -23,6 +23,7 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
     User.current = nil
     Project.delete_all
     Tracker.delete_all
+    EnabledModule.delete_all
 
     @a = Project.create!(:name => 'A', :identifier => 'projecta')
     @a1 = Project.create!(:name => 'A1', :identifier => 'projecta1')

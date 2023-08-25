@@ -146,7 +146,7 @@ de:
         circular_dependency: "Diese Beziehung würde eine zyklische Abhängigkeit erzeugen"
         cant_link_an_issue_with_a_descendant: "Ein Ticket kann nicht mit einer Ihrer Unteraufgaben verlinkt werden"
         earlier_than_minimum_start_date: "kann wegen eines Vorgängertickets nicht vor %{date} liegen"
-        not_a_regexp: "Ist kein korrekter regulärer Ausdruck"
+        not_a_regexp: "ist kein gültiger regulärer Ausdruck"
         open_issue_with_closed_parent: "Ein offenes Ticket kann nicht an einen geschlossenen Vater gehängt werden"
 
   actionview_instancetag_blank_option: Bitte auswählen
@@ -203,6 +203,7 @@ de:
   button_update: Aktualisieren
   button_view: Anzeigen
   button_watch: Beobachten
+  button_actions: Aktionen
 
   default_activity_design: Design
   default_activity_development: Entwicklung
@@ -263,6 +264,7 @@ de:
   error_scm_command_failed: "Beim Zugriff auf das Repository ist ein Fehler aufgetreten: %{value}"
   error_scm_not_found: Eintrag und/oder Revision existiert nicht im Repository.
   error_session_expired: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
+  error_token_expired: "Dieser Link zum Passwort zurücksetzen ist nicht mehr gültig. Bitte versuchen Sie es erneut."
   error_unable_delete_issue_status: "Der Ticket-Status konnte nicht gelöscht werden."
   error_unable_to_connect: Fehler beim Verbinden (%{value})
   error_workflow_copy_source: Bitte wählen Sie einen Quell-Tracker und eine Quell-Rolle.
@@ -607,7 +609,11 @@ de:
   label_latest_compatible_version: Letzte kompatible Version
   label_latest_revision: Aktuellste Revision
   label_latest_revision_plural: Aktuellste Revisionen
+  label_ldap: LDAP
   label_ldap_authentication: LDAP-Authentifizierung
+  label_ldaps_verify_none: LDAPS (ohne Zertifikatsprüfung)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Es wird empfohlen, eine verschlüsselte LDAPS-Verbindung mit Zertifikatsprüfung zu verwenden, um Manipulationen während der Authentifizierung zu verhindern.
   label_less_or_equal: "<="
   label_less_than_ago: vor weniger als
   label_link: Link
@@ -787,6 +793,7 @@ de:
   label_version: Version
   label_version_new: Neue Version
   label_version_plural: Versionen
+  label_version_and_files: Versionen (%{count}) und Dateien
   label_version_sharing_descendants: Mit Unterprojekten
   label_version_sharing_hierarchy: Mit Projekthierarchie
   label_version_sharing_none: Nicht gemeinsam verwenden
@@ -836,6 +843,7 @@ de:
   mail_body_account_information: Ihre Konto-Informationen
   mail_body_account_information_external: "Sie können sich mit Ihrem Konto %{value} anmelden."
   mail_body_lost_password: 'Benutzen Sie den folgenden Link, um Ihr Passwort zu ändern:'
+  mail_body_lost_password_validity: 'Bitte beachten Sie, dass mit Hilfe dieses Links das Passwort nur einmalig geändert werden kann.'
   mail_body_register: 'Um Ihr Konto zu aktivieren, benutzen Sie folgenden Link:'
   mail_body_reminder: "%{count} Tickets, die Ihnen zugewiesen sind, müssen in den nächsten %{days} Tagen abgegeben werden:"
   mail_body_wiki_content_added: "Die Wiki-Seite '%{id}' wurde von %{author} hinzugefügt."
@@ -875,7 +883,7 @@ de:
   notice_failed_to_save_members: "Benutzer konnte nicht gespeichert werden: %{errors}."
   notice_failed_to_save_time_entries: "%{count} von %{total} ausgewählten Zeiteinträgen konnte(n) nicht gespeichert werden: %{ids}"
   notice_feeds_access_key_reseted: Ihr Atom-Zugriffsschlüssel wurde zurückgesetzt.
-  notice_file_not_found: Anhang existiert nicht oder ist gelöscht worden.
+  notice_file_not_found: Die angefragte Seite existiert nicht oder wurde entfernt.
   notice_gantt_chart_truncated: Die Grafik ist unvollständig, da das Maximum der anzeigbaren Aufgaben überschritten wurde (%{max})
   notice_issue_done_ratios_updated: Der Ticket-Fortschritt wurde aktualisiert.
   notice_issue_successful_create: Ticket %{id} erstellt.
@@ -937,7 +945,6 @@ de:
   permission_manage_subtasks: Unteraufgaben verwalten
   permission_manage_versions: Versionen verwalten
   permission_manage_wiki: Wiki verwalten
-  permission_move_issues: Tickets verschieben
   permission_protect_wiki_pages: Wiki-Seiten schützen
   permission_rename_wiki_pages: Wiki-Seiten umbenennen
   permission_save_queries: Filter speichern
@@ -973,7 +980,6 @@ de:
   project_status_closed: geschlossen
 
   setting_activity_days_default: Anzahl Tage pro Seite der Projekt-Aktivität
-  setting_app_subtitle: Applikationsuntertitel
   setting_app_title: Applikationstitel
   setting_attachment_max_size: Max. Dateigröße
   setting_autofetch_changesets: Changesets automatisch abrufen
@@ -1215,7 +1221,7 @@ de:
   label_font_monospace: Nichtproportionale Schrift
   label_font_proportional: Proportionale Schrift
   setting_commit_logs_formatting: Textformatierung für Commit Nachrichten
-  setting_mail_handler_enable_regex_delimiters: Reguläre Ausdrücke erlauben
+  setting_mail_handler_enable_regex: Reguläre Ausdrücke verwenden
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Zeitbuchungen für Tickets, die gelöscht werden sind nicht möglich
   setting_timelog_required_fields: Erforderliche Felder für Zeitbuchungen
   label_attribute_of_object: '%{object_name}''s %{name}'
@@ -1227,3 +1233,16 @@ de:
   field_full_width_layout: Layout mit voller Breite
   label_last_notes: Letzte Kommentare
   field_digest: Checksumme
+  setting_close_duplicate_issues: Duplikate automatisch schließen
+  error_exceeds_maximum_hours_per_day: Es können nicht mehr als %{max_hours} Stunden am selben Tag gebucht werden (%{logged_hours} Stunden wurden bereits gebucht)
+  setting_time_entry_list_defaults: Standard-Spalten in der Zeiten-Auflistung
+  setting_timelog_accept_0_hours: Akzeptiere Buchungen mit 0 Stunden
+  setting_timelog_max_hours_per_day: Maximale Anzahl der täglich buchbaren Stunden pro Benutzer
+  label_x_revisions: "%{count} Revisionen"
+  error_can_not_delete_auth_source: Diese Authentifizierungsmethode ist in Verwendung und kann nicht gelöscht werden.
+  text_login_required_html: Ohne erforderliche Authentifizierung sind öffentlichen Projekte und deren Inhalte ohne Anmeldung frei zugänglich. Sie können die <a href="%{anonymous_role_path}">verwendeten Berechtigungen anpassen</a>.
+  label_login_required_yes: "Ja"
+  label_login_required_no: "Nein, anonymen Zugriff auf öffentliche Projekte erlauben"
+  text_project_is_public_non_member: Öffentliche Projekte und deren Inhalte sind für alle angemeldeten Benutzer zugänglich.
+  text_project_is_public_anonymous: Öffentliche Projekte und deren Inhalte sind ohne Anmeldung frei zugänglich.
+  label_nothing_to_preview: Keine Vorschau vorhanden

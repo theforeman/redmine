@@ -86,7 +86,7 @@ class RedmineMailHandler
                                               "user") { |v| self.no_notification = '1'}
       opts.separator("")
       opts.separator("Issue attributes control options:")
-      opts.on(      "--project-from-subaddress ADDR", "select project from subadress of ADDR found",
+      opts.on(      "--project-from-subaddress ADDR", "select project from subaddress of ADDR found",
                                               "in To, Cc, Bcc headers") {|v| self.project_from_subaddress = v}
       opts.on("-p", "--project PROJECT",      "identifier of the target project") {|v| self.issue_attributes['project'] = v}
       opts.on("-s", "--status STATUS",        "name of the target status") {|v| self.issue_attributes['status'] = v}
@@ -186,7 +186,7 @@ END_DESC
         warn "Failed to contact your Redmine server (#{response.code})."
         return 75
       when 201
-        debug "Proccessed successfully"
+        debug "Processed successfully"
         return 0
       else
         return 1

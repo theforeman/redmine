@@ -259,7 +259,11 @@ class ApplicationController < ActionController::Base
       true
     else
       if @project && @project.archived?
+        @archived_project = @project
         render_403 :message => :notice_not_authorized_archived_project
+      elsif @project && !@project.allows_to?(:controller => ctrl, :action => action)
+        # Project module is disabled
+        render_403
       else
         deny_access
       end
@@ -272,27 +276,31 @@ class ApplicationController < ActionController::Base
   end
 
   # Find project of id params[:id]
-  def find_project
-    @project = Project.find(params[:id])
+  def find_project(project_id=params[:id])
+    @project = Project.find(project_id)
   rescue ActiveRecord::RecordNotFound
     render_404
   end
 
   # Find project of id params[:project_id]
   def find_project_by_project_id
-    @project = Project.find(params[:project_id])
-  rescue ActiveRecord::RecordNotFound
-    render_404
+    find_project(params[:project_id])
+  end
+
+  # Find project of id params[:id] if present
+  def find_optional_project_by_id
+    if params[:id].present?
+      find_project(params[:id])
+    end
   end
 
   # Find a project based on params[:project_id]
-  # TODO: some subclasses override this, see about merging their logic
+  # and authorize the user for the requested action
   def find_optional_project
-    @project = Project.find(params[:project_id]) unless params[:project_id].blank?
-    allowed = User.current.allowed_to?({:controller => params[:controller], :action => params[:action]}, @project, :global => true)
-    allowed ? true : deny_access
-  rescue ActiveRecord::RecordNotFound
-    render_404
+    if params[:project_id].present?
+      find_project(params[:project_id])
+    end
+    authorize_global
   end
 
   # Finds and sets @project based on @object.project
@@ -389,14 +397,19 @@ class ApplicationController < ActionController::Base
     url = params[:back_url]
     if url.nil? && referer = request.env['HTTP_REFERER']
       url = CGI.unescape(referer.to_s)
+      # URLs that contains the utf8=[checkmark] parameter added by Rails are
+      # parsed as invalid by URI.parse so the redirect to the back URL would
+      # not be accepted (ApplicationController#validate_back_url would return
+      # false)
+      url.gsub!(/(\?|&)utf8=\u2713&?/, '\1')
     end
     url
   end
+  helper_method :back_url
 
   def redirect_back_or_default(default, options={})
-    back_url = params[:back_url].to_s
-    if back_url.present? && valid_url = validate_back_url(back_url)
-      redirect_to(valid_url)
+    if back_url = validate_back_url(params[:back_url].to_s)
+      redirect_to(back_url)
       return
     elsif options[:referer]
       redirect_to_referer_or default
@@ -409,6 +422,8 @@ class ApplicationController < ActionController::Base
   # Returns a validated URL string if back_url is a valid url for redirection,
   # otherwise false
   def validate_back_url(back_url)
+    return false if back_url.blank?
+
     if CGI.unescape(back_url).include?('..')
       return false
     end
@@ -446,11 +461,13 @@ class ApplicationController < ActionController::Base
     return path
   end
   private :validate_back_url
+  helper_method :validate_back_url
 
   def valid_back_url?(back_url)
     !!validate_back_url(back_url)
   end
   private :valid_back_url?
+  helper_method :valid_back_url?
 
   # Redirects to the request referer if present, redirects to args or call block otherwise.
   def redirect_to_referer_or(*args, &block)
@@ -495,8 +512,8 @@ class ApplicationController < ActionController::Base
   end
 
   # Handler for ActionView::MissingTemplate exception
-  def missing_template
-    logger.warn "Missing template, responding with 404"
+  def missing_template(exception)
+    logger.warn "Missing template, responding with 404: #{exception}"
     @project = nil
     render_404
   end

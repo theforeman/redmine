@@ -222,6 +222,7 @@ bg:
   error_move_of_child_not_possible: 'Подзадача %{child} не беше преместена в новия проект: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Употребеното време не може да бъде прехвърлено на задача, която ще бъде изтрита
   warning_fields_cleared_on_bulk_edit: Промените ще предизвикат автоматично изтриване на стойности от едно или повече полета на избраните обекти
+  error_exceeds_maximum_hours_per_day: Не можете да запишете повече от %{max_hours} часа на един ден (%{logged_hours} часове вече са записани)
 
   mail_subject_lost_password: "Вашата парола (%{value})"
   mail_body_lost_password: 'За да смените паролата си, използвайте следния линк:'
@@ -379,7 +380,6 @@ bg:
   field_default_assigned_to: Назначение по подразбиране
 
   setting_app_title: Заглавие
-  setting_app_subtitle: Описание
   setting_welcome_text: Допълнителен текст
   setting_default_language: Език по подразбиране
   setting_login_required: Изискване за вход в Redmine
@@ -416,7 +416,7 @@ bg:
   setting_display_subprojects_issues: Задачите от подпроектите по подразбиране се показват в главните проекти
   setting_enabled_scm: Разрешена SCM
   setting_mail_handler_body_delimiters: Отрязване на e-mail-ите след един от тези редове
-  setting_mail_handler_enable_regex_delimiters: Разрешаванен на регулярни изрази
+  setting_mail_handler_enable_regex: Разрешаванен на регулярни изрази
   setting_mail_handler_api_enabled: Разрешаване на WS за входящи e-mail-и
   setting_mail_handler_api_key: API ключ за входящи e-mail-и
   setting_sys_api_key: API ключ за хранилища
@@ -464,6 +464,10 @@ bg:
   setting_new_item_menu_tab: Меню-елемент за добавяне на нови обекти (+)
   setting_commit_logs_formatting: Прилагане на форматиране за съобщенията при поверяване
   setting_timelog_required_fields: Задължителни полета за записи за изразходваното време
+  setting_close_duplicate_issues: Затваряне на дублираните задачи автоматично
+  setting_time_entry_list_defaults: Конфигурация по подразбиране за записите за изразходваното време
+  setting_timelog_accept_0_hours: Приемане на записи с 0 часа
+  setting_timelog_max_hours_per_day: Максимум часове, които могат да бъдат записани за ден и за потребител
 
   permission_add_project: Създаване на проект
   permission_add_subprojects: Създаване на подпроекти
@@ -486,7 +490,6 @@ bg:
   permission_edit_own_issue_notes: Редактиране на собствени бележки
   permission_view_private_notes: Разглеждане на лични бележки
   permission_set_notes_private: Установяване на бележките лични
-  permission_move_issues: Преместване на задачи
   permission_delete_issues: Изтриване на задачи
   permission_manage_public_queries: Управление на публичните заявки
   permission_save_queries: Запис на запитвания (queries)
@@ -622,10 +625,10 @@ bg:
   label_new: Нов
   label_logged_as: Здравейте,
   label_environment: Среда
-  label_authentication: Оторизация
-  label_auth_source: Начин на оторозация
-  label_auth_source_new: Нов начин на оторизация
-  label_auth_source_plural: Начини на оторизация
+  label_authentication: Удостоверяване
+  label_auth_source: Начин на удостоверяване
+  label_auth_source_new: Нов начин на удостоверяване
+  label_auth_source_plural: Начини на удостоверяване
   label_subproject_plural: Подпроекти
   label_subproject_new: Нов подпроект
   label_and_its_subprojects: "%{value} и неговите подпроекти"
@@ -653,7 +656,7 @@ bg:
   label_report: Справка
   label_report_plural: Справки
   label_news: Новини
-  label_news_new: Добави
+  label_news_new: Нова новина
   label_news_plural: Новини
   label_news_latest: Последни новини
   label_news_view_all: Виж всички
@@ -664,6 +667,7 @@ bg:
   label_version: Версия
   label_version_new: Нова версия
   label_version_plural: Версии
+  label_version_and_files: Версии (%{count}) и файлове
   label_close_versions: Затваряне на завършените версии
   label_confirmation: Одобрение
   label_export_to: Експорт към
@@ -772,6 +776,7 @@ bg:
   label_latest_revision_plural: Последни ревизии
   label_view_revisions: Виж ревизиите
   label_view_all_revisions: Разглеждане на всички ревизии
+  label_x_revisions: "%{count} ревизии"
   label_max_size: Максимална големина
   label_sort_highest: Премести най-горе
   label_sort_higher: Премести по-горе
@@ -887,7 +892,7 @@ bg:
   label_general: Основни
   label_scm: SCM (Система за контрол на версиите)
   label_plugins: Плъгини
-  label_ldap_authentication: LDAP оторизация
+  label_ldap_authentication: LDAP удостоверяване
   label_downloads_abbr: D/L
   label_optional_description: Незадължително описание
   label_add_another_file: Добавяне на друг файл
@@ -1021,6 +1026,7 @@ bg:
   label_font_monospace: Monospaced шрифт
   label_font_proportional: Пропорционален шрифт
   label_last_notes: Последни коментари
+  label_nothing_to_preview: Няма нищо за предварителен преглед
 
   button_login: Вход
   button_submit: Изпращане
@@ -1212,3 +1218,17 @@ bg:
   description_wiki_subpages_reassign: Изберете нова родителска страница
   description_all_columns: Всички колони
   text_repository_identifier_info: 'Позволени са малки букви (a-z), цифри, тирета и _.<br />Промяна след създаването му не е възможна.'
+  error_can_not_delete_auth_source: Този режим за идентификация се използва и не може да бъде премахнат.
+  button_actions: Действия
+  mail_body_lost_password_validity: Моля имайте предвид, че можете да използвате тази връзка само един път, за да промените паролата.
+  text_login_required_html: Когато не се изисква удостоверяване, публичните проекти и тяхното съдържание са видими без ограничения в мрежата.
+    Вие можете да <a href="%{anonymous_role_path}">редактирате приложимите права</a>.
+  label_login_required_yes: 'Да'
+  label_login_required_no: Не, разрешаване на анонимен достъп до публичните проекти.
+  text_project_is_public_non_member: Публичните проекти са достъпни за всички влезли в Redmine потребители.
+  text_project_is_public_anonymous: Публичните проекти са достъпнии тяхното съдържание са видими без ограничения в мрежата.
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAP удостоверяване
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: препоръчително е да се използва криптирана LDAPS връзка със сертификат за предотвратяване на намеса по време на процеса на удостоверяване.
+  error_token_expired: Връзката за възстановяване на паролата вече е невалидна. Опитайте отново.

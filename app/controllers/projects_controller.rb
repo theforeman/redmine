@@ -176,8 +176,7 @@ class ProjectsController < ApplicationController
 
     @version_status = params[:version_status] || 'open'
     @version_name = params[:version_name]
-    @versions = @project.shared_versions.status(@version_status).like(@version_name)
-    @wiki ||= @project.wiki || Wiki.new(:project => @project)
+    @versions = @project.shared_versions.status(@version_status).like(@version_name).sorted
   end
 
   def edit
@@ -189,7 +188,7 @@ class ProjectsController < ApplicationController
       respond_to do |format|
         format.html {
           flash[:notice] = l(:notice_successful_update)
-          redirect_to settings_project_path(@project)
+          redirect_to settings_project_path(@project, params[:tab])
         }
         format.api  { render_api_ok }
       end
@@ -202,12 +201,6 @@ class ProjectsController < ApplicationController
         format.api  { render_validation_errors(@project) }
       end
     end
-  end
-
-  def modules
-    @project.enabled_module_names = params[:enabled_module_names]
-    flash[:notice] = l(:notice_successful_update)
-    redirect_to settings_project_path(@project, :tab => 'modules')
   end
 
   def archive

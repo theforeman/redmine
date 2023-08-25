@@ -270,7 +270,6 @@ th:
   field_comments_sorting: แสดงความเห็น
 
   setting_app_title: ชื่อโปรแกรม
-  setting_app_subtitle: ชื่อโปรแกรมรอง
   setting_welcome_text: ข้อความต้อนรับ
   setting_default_language: ภาษาเริ่มต้น
   setting_login_required: ต้องป้อนผู้ใช้-รหัสผ่าน
@@ -373,7 +372,6 @@ th:
   label_registered_on: ลงทะเบียนเมื่อ
   label_activity: กิจกรรม
   label_activity_plural: กิจกรรม
-  label_activity_latest: กิจกรรมล่าสุด
   label_overall_activity: กิจกรรมโดยรวม
   label_new: ใหม่
   label_logged_as: เข้าระบบในชื่อ
@@ -743,7 +741,6 @@ th:
   permission_edit_wiki_pages: Edit wiki pages
   permission_add_issue_watchers: Add watchers
   permission_view_gantt: View gantt chart
-  permission_move_issues: Move issues
   permission_manage_issue_relations: Manage issue relations
   permission_delete_wiki_pages: Delete wiki pages
   permission_manage_boards: Manage boards
@@ -1204,7 +1201,7 @@ th:
   setting_timespan_format: Time span format
   label_table_of_contents: Table of contents
   setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  setting_mail_handler_enable_regex: Enable regular expressions
   error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
@@ -1225,3 +1222,32 @@ th:
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
   label_no_preview_download: Download
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.

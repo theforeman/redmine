@@ -32,6 +32,14 @@ class AttachmentsController < ApplicationController
   def show
     respond_to do |format|
       format.html {
+        if @attachment.container.respond_to?(:attachments)
+          @attachments = @attachment.container.attachments.to_a
+          if index = @attachments.index(@attachment)
+            @paginator = Redmine::Pagination::Paginator.new(
+              @attachments.size, 1, index+1
+            )
+          end
+        end
         if @attachment.is_diff?
           @diff = File.read(@attachment.diskfile, :mode => "rb")
           @diff_type = params[:type] || User.current.pref[:diff_type] || 'inline'
@@ -229,7 +237,7 @@ class AttachmentsController < ApplicationController
     if content_type.blank? || content_type == "application/octet-stream"
       content_type = Redmine::MimeType.of(attachment.filename)
     end
-    content_type.to_s
+    content_type.presence || "application/octet-stream"
   end
 
   def disposition(attachment)

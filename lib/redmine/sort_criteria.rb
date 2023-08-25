@@ -89,8 +89,7 @@ module Redmine
     def normalize!
       self.reject! {|s| s.first.blank? }
       self.collect! {|s| s = Array(s); [s.first, (s.last == false || s.last.to_s == 'desc') ? 'desc' : 'asc']}
-      self.slice!(3)
-      self
+      self.replace self.first(3)
     end
 
     # Appends ASC/DESC to the sort criterion unless it has a fixed order
@@ -98,7 +97,7 @@ module Redmine
       if criterion =~ / (asc|desc)$/i
         criterion
       else
-        "#{criterion} #{order.to_s.upcase}"
+        Arel.sql "#{criterion} #{order.to_s.upcase}"
       end
     end
   end

@@ -1,23 +1,52 @@
+.jstBlock .hidden {
+    display: none;
+}
 .jstEditor {
     padding-left: 0px;
 }
 .jstEditor textarea, .jstEditor iframe {
     margin: 0;
 }
-
 .jstHandle {
     height: 10px;
     font-size: 0.1em;
     cursor: s-resize;
     /*background: transparent url(img/resizer.png) no-repeat 45% 50%;*/
 }
-
-.jstElements {
-    padding: 3px 3px 3px 0;
+#content .jstTabs.tabs {
+    margin-bottom: -1px;
 }
+#content .jstTabs.tabs ul {border-bottom:0;}
+#content .jstTabs.tabs li {
+    height: 42px;
+}
+#content .jstTabs.tabs li:before{
+    content: '';
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+}
+#content .jstTabs.tabs li a {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 19px;
+  border-bottom: 1px solid transparent;
+}
+.jstElements {
+    display: inline-block;
+    vertical-align: bottom;
+    padding-left: 6px;
+    padding-bottom:2px;
+    height: 26px;
+}
+.wiki-preview {
+    background-color: #ffffff;
+    border: 1px solid #bbbbbb;
+}
+.wiki-preview p.empty-preview {color:#999; font-style:italic; margin-top:1em; text-align:center;}
 
 .jstElements button {
-    margin-right: 4px;
+    margin-right: 2px;
     width : 24px;
     height: 24px;
     padding: 4px;
@@ -27,10 +56,13 @@
     background-color : #f7f7f7;
     background-position : 50% 50%;
     background-repeat: no-repeat;
+    cursor:pointer;
+    opacity:0.7;
 }
 .jstElements button:hover {
     border-color: #bbb;
-  background-color: #e5e5e5;
+    background-color: #e5e5e5;
+    opacity:1;
 }
 .jstElements button span {
     display : none;

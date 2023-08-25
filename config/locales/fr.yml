@@ -240,6 +240,7 @@ fr:
   error_move_of_child_not_possible: "La sous-tâche %{child} n'a pas pu être déplacée dans le nouveau projet : %{errors}"
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: "Le temps passé ne peut pas être réaffecté à une demande qui va être supprimée"
   warning_fields_cleared_on_bulk_edit: "Les changements apportés entraîneront la suppression automatique des valeurs d'un ou plusieurs champs sur les objets sélectionnés"
+  error_exceeds_maximum_hours_per_day: "Impossible de saisir plus de %{max_hours} heures pour le même jour (%{logged_hours} heures ont déjà été saisies)"
 
   mail_subject_lost_password: "Votre mot de passe %{value}"
   mail_body_lost_password: 'Pour changer votre mot de passe, cliquez sur le lien suivant :'
@@ -389,7 +390,6 @@ fr:
   field_default_assigned_to: Assigné par défaut
 
   setting_app_title: Titre de l'application
-  setting_app_subtitle: Sous-titre de l'application
   setting_welcome_text: Texte d'accueil
   setting_default_language: Langue par défaut
   setting_login_required: Authentification obligatoire
@@ -426,7 +426,7 @@ fr:
   setting_display_subprojects_issues: Afficher par défaut les demandes des sous-projets sur les projets principaux
   setting_enabled_scm: SCM activés
   setting_mail_handler_body_delimiters: "Tronquer les emails après l'une de ces lignes"
-  setting_mail_handler_enable_regex_delimiters: "Utiliser les expressions regulières"
+  setting_mail_handler_enable_regex: "Utiliser les expressions regulières"
   setting_mail_handler_api_enabled: "Activer le WS pour la réception d'emails"
   setting_mail_handler_api_key: Clé de protection de l'API
   setting_sequential_project_identifiers: Générer des identifiants de projet séquentiels
@@ -474,6 +474,10 @@ fr:
   setting_new_item_menu_tab: Onglet de création d'objets dans le menu du project
   setting_commit_logs_formatting: Appliquer le formattage de texte aux messages de commit
   setting_timelog_required_fields: Champs obligatoire pour les temps passés
+  setting_close_duplicate_issues: Fermer les doublons automatiquement
+  setting_time_entry_list_defaults: Affichage par défaut de la liste des temps passés
+  setting_timelog_accept_0_hours: Autoriser la saisie de temps avec 0 heure
+  setting_timelog_max_hours_per_day: Maximum d'heures pouvant être saisies par un utilisateur sur un jour
 
   permission_add_project: Créer un projet
   permission_add_subprojects: Créer des sous-projets
@@ -496,7 +500,6 @@ fr:
   permission_edit_own_issue_notes: Modifier ses propres notes
   permission_view_private_notes: Voir les notes privées
   permission_set_notes_private: Rendre les notes privées
-  permission_move_issues: Déplacer les demandes
   permission_delete_issues: Supprimer les demandes
   permission_manage_public_queries: Gérer les requêtes publiques
   permission_save_queries: Sauvegarder les requêtes
@@ -779,6 +782,7 @@ fr:
   label_latest_revision_plural: Dernières révisions
   label_view_revisions: Voir les révisions
   label_view_all_revisions: Voir toutes les révisions
+  label_x_revisions: "%{count} révisions"
   label_max_size: Taille maximale
   label_sort_highest: Remonter en premier
   label_sort_higher: Remonter
@@ -1113,7 +1117,7 @@ fr:
   text_caracters_maximum: "%{count} caractères maximum."
   text_caracters_minimum: "%{count} caractères minimum."
   text_length_between: "Longueur comprise entre %{min} et %{max} caractères."
-  text_tracker_no_workflow: Aucun worflow n'est défini pour ce tracker
+  text_tracker_no_workflow: Aucun workflow n'est défini pour ce tracker
   text_unallowed_characters: Caractères non autorisés
   text_comma_separated: Plusieurs valeurs possibles (séparées par des virgules).
   text_line_separated: Plusieurs valeurs possibles (une valeur par ligne).
@@ -1227,5 +1231,20 @@ fr:
   label_no_preview: Aucun aperçu disponible
   label_no_preview_alternative_html: Aucun aperçu disponible. Veuillez %{link} le fichier.
   label_no_preview_download: télécharger
-  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
-  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
+  label_user_mail_option_only_assigned: Seulement pour ce que je surveille ou qui m'est assigné
+  label_user_mail_option_only_owner: Seulement pour ce que je surveille ou que j'ai créé
+  error_can_not_delete_auth_source: "Ce mode d'authentification est utilisé par des comptes utilisateurs et ne peut pas être supprimé"
+  button_actions: Actions
+  mail_body_lost_password_validity: "Ce lien ne vous permettra de changer de mot de passe qu'une seule fois."
+  text_login_required_html: "En désactivant l'authentification obligatoire, les projets publics et leurs contenus sont librement accessibles à toute personne sur le réseau. Vous pouvez <a href='%{anonymous_role_path}'>éditer les permissions applicables</a>."
+  label_login_required_yes: Oui
+  label_login_required_no: Non, autoriser l'accès anonyme aux projets publics
+  text_project_is_public_non_member: "Les projets publics et leurs contenus sont accessibles à tout utilisateur authentifié."
+  text_project_is_public_anonymous: "Les projets publics et leurs contenus sont librement accessibles à toute personne sur le réseau."
+  label_version_and_files: Versions (%{count}) et fichiers
+  label_ldap: LDAP
+  label_ldaps_verify_none: "LDAPS (sans vérification du certificat)"
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: "Il est recommandé d'utiliser une connexion LDPAS avec vérification du certificat pour empêcher toute interception des données durant la procédure d'authentification."
+  label_nothing_to_preview: "Aucun texte à prévisualiser"
+  error_token_expired: This password recovery link has expired, please try again.

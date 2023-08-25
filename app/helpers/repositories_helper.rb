@@ -32,6 +32,15 @@ module RepositoriesHelper
     end
   end
 
+  def render_pagination
+    pagination_links_each @paginator do |text, parameters, options|
+      if entry = @entries[parameters[:page] - 1]
+        ent_path = Redmine::CodesetUtil.replace_invalid_utf8(entry.path)
+        link_to text, {action: 'entry', id: @project, repository_id: @repository.identifier_param, path: to_path_param(ent_path), rev: @rev}
+      end
+    end if @paginator
+  end
+
   def render_properties(properties)
     unless properties.nil? || properties.empty?
       content = ''
@@ -157,15 +166,6 @@ module RepositoriesHelper
                             :onchange => "this.name='repository[password]';"))
   end
 
-  def darcs_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                     :url, :label => l(:field_path_to_repository),
-                     :size => 60, :required => true,
-                     :disabled => !repository.safe_attribute?('url')) +
-                     scm_path_info_tag(repository)) +
-    scm_log_encoding_tag(form, repository)
-  end
-
   def mercurial_field_tags(form, repository)
     content_tag('p', form.text_field(
                        :url, :label => l(:field_path_to_repository),
@@ -278,8 +278,8 @@ module RepositoriesHelper
         :href  => block_given? ? yield(commit.scmid) : commit.scmid
       }
     end
-    heads.sort! { |head1, head2| head1.to_s <=> head2.to_s }
-    space = nil  
+    heads.sort_by!(&:to_s)
+    space = nil
     heads.each do |head|
       if commits_by_scmid.include? head.scmid
         space = index_head((space || -1) + 1, head, commits_by_scmid)

@@ -26,7 +26,6 @@ class Wiki < ActiveRecord::Base
   validates_presence_of :start_page
   validates_format_of :start_page, :with => /\A[^,\.\/\?\;\|\:]*\z/
   validates_length_of :start_page, maximum: 255
-  attr_protected :id
 
   before_destroy :delete_redirects
 
@@ -54,7 +53,7 @@ class Wiki < ActiveRecord::Base
     @page_found_with_redirect = false
     title = start_page if title.blank?
     title = Wiki.titleize(title)
-    page = pages.where("LOWER(title) = LOWER(?)", title).first
+    page = pages.find_by("LOWER(title) = LOWER(?)", title)
     if page.nil? && options[:with_redirect] != false
       # search for a redirect
       redirect = redirects.where("LOWER(title) = LOWER(?)", title).first

@@ -31,9 +31,8 @@ class Document < ActiveRecord::Base
 
   validates_presence_of :project, :title, :category
   validates_length_of :title, :maximum => 255
-  attr_protected :id
 
-  after_create :send_notification
+  after_create_commit :send_notification
 
   scope :visible, lambda {|*args|
     joins(:project).
@@ -69,7 +68,7 @@ class Document < ActiveRecord::Base
 
   def send_notification
     if Setting.notified_events.include?('document_added')
-      Mailer.document_added(self).deliver
+      Mailer.deliver_document_added(self, User.current)
     end
   end
 end

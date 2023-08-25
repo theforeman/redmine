@@ -23,12 +23,14 @@ class TimeEntryQuery < Query
   self.available_columns = [
     QueryColumn.new(:project, :sortable => "#{Project.table_name}.name", :groupable => true),
     QueryColumn.new(:spent_on, :sortable => ["#{TimeEntry.table_name}.spent_on", "#{TimeEntry.table_name}.created_on"], :default_order => 'desc', :groupable => true),
+    QueryColumn.new(:created_on, :sortable => "#{TimeEntry.table_name}.created_on", :default_order => 'desc'),
     QueryColumn.new(:tweek, :sortable => ["#{TimeEntry.table_name}.spent_on", "#{TimeEntry.table_name}.created_on"], :caption => :label_week),
     QueryColumn.new(:user, :sortable => lambda {User.fields_for_order_statement}, :groupable => true),
     QueryColumn.new(:activity, :sortable => "#{TimeEntryActivity.table_name}.position", :groupable => true),
     QueryColumn.new(:issue, :sortable => "#{Issue.table_name}.id"),
     QueryAssociationColumn.new(:issue, :tracker, :caption => :field_tracker, :sortable => "#{Tracker.table_name}.position"),
     QueryAssociationColumn.new(:issue, :status, :caption => :field_status, :sortable => "#{IssueStatus.table_name}.position"),
+    QueryAssociationColumn.new(:issue, :category, :caption => :field_category, :sortable => "#{IssueCategory.table_name}.name"),
     QueryColumn.new(:comments),
     QueryColumn.new(:hours, :sortable => "#{TimeEntry.table_name}.hours", :totalable => true),
   ]
@@ -64,6 +66,10 @@ class TimeEntryQuery < Query
       :type => :list,
       :name => l("label_attribute_of_issue", :name => l(:field_fixed_version)),
       :values => lambda { fixed_version_values })
+    add_available_filter "issue.category_id",
+      :type => :list_optional,
+      :name => l("label_attribute_of_issue", :name => l(:field_category)),
+      :values => lambda { project.issue_categories.collect{|s| [s.name, s.id.to_s] } } if project
 
     add_available_filter("user_id",
       :type => :list_optional, :values => lambda { author_values }
@@ -73,6 +79,12 @@ class TimeEntryQuery < Query
     add_available_filter("activity_id",
       :type => :list, :values => activities.map {|a| [a.name, a.id.to_s]}
     )
+
+    add_available_filter("project.status",
+      :type => :list,
+      :name => l(:label_attribute_of_project, :name => l(:field_status)),
+      :values => lambda { project_statuses_values }
+    ) if project.nil? || !project.leaf?
 
     add_available_filter "comments", :type => :text
     add_available_filter "hours", :type => :float
@@ -97,14 +109,13 @@ class TimeEntryQuery < Query
 
   def default_columns_names
     @default_columns_names ||= begin
-      default_columns = [:spent_on, :user, :activity, :issue, :comments, :hours]
-
+      default_columns = Setting.time_entry_list_defaults.symbolize_keys[:column_names].map(&:to_sym)
       project.present? ? default_columns : [:project] | default_columns
     end
   end
 
   def default_totalable_names
-    [:hours]
+    Setting.time_entry_list_defaults.symbolize_keys[:totalable_names].map(&:to_sym)
   end
 
   def default_sort_criteria
@@ -196,8 +207,16 @@ class TimeEntryQuery < Query
     sql_for_field("status_id", operator, value, Issue.table_name, "status_id")
   end
 
+  def sql_for_issue_category_id_field(field, operator, value)
+    sql_for_field("category_id", operator, value, Issue.table_name, "category_id")
+  end
+
+  def sql_for_project_status_field(field, operator, value, options={})
+    sql_for_field(field, operator, value, Project.table_name, "status")
+  end
+
   # Accepts :from/:to params as shortcut filters
-  def build_from_params(params)
+  def build_from_params(params, defaults={})
     super
     if params[:from].present? && params[:to].present?
       add_filter('spent_on', '><', [params[:from], params[:to]])
@@ -218,6 +237,9 @@ class TimeEntryQuery < Query
       end
       if order_options.include?('trackers')
         joins << "LEFT OUTER JOIN #{Tracker.table_name} ON #{Tracker.table_name}.id = #{Issue.table_name}.tracker_id"
+      end
+      if order_options.include?('issue_categories')
+        joins << "LEFT OUTER JOIN #{IssueCategory.table_name} ON #{IssueCategory.table_name}.id = #{Issue.table_name}.category_id"
       end
     end
 

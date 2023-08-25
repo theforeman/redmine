@@ -176,7 +176,6 @@ uk:
   notice_successful_connection: Підключення успішно встановлене.
   notice_file_not_found: Сторінка, на яку ви намагаєтеся зайти, не існує або видалена.
   notice_locking_conflict: Дані оновлено іншим користувачем.
-  notice_scm_error: Запису та/або виправлення немає в репозиторії.
   notice_not_authorized: У вас немає прав для відвідини даної сторінки.
   notice_email_sent: "Відправлено листа %{value}"
   notice_email_error: "Під час відправки листа відбулася помилка (%{value})"
@@ -278,7 +277,6 @@ uk:
   field_searchable: Вживається у пошуку
 
   setting_app_title: Назва додатку
-  setting_app_subtitle: Підзаголовок додатку
   setting_welcome_text: Текст привітання
   setting_default_language: Стандартна мова
   setting_login_required: Необхідна аутентифікація
@@ -561,7 +559,6 @@ uk:
   label_registration_activation_by_email: активація облікового запису електронною поштою
   label_registration_manual_activation: ручна активація облікового запису
   label_registration_automatic_activation: автоматична активація облыкового
-  label_my_time_report: Мій звіт витраченого часу
 
   button_login: Вхід
   button_submit: Відправити
@@ -759,7 +756,6 @@ uk:
   permission_edit_wiki_pages: Редагування wiki-сторінок
   permission_add_issue_watchers: Додати спостерігачів
   permission_view_gantt: Перегляд діаграми Ганта
-  permission_move_issues: Перенесення задач
   permission_manage_issue_relations: Управління зв'язуванням задач
   permission_delete_wiki_pages: Видалення wiki-сторінок
   permission_manage_boards: Управління форумами
@@ -1206,7 +1202,7 @@ uk:
   setting_timespan_format: Формат часового діапазону
   label_table_of_contents: Зміст
   setting_commit_logs_formatting: Застосувати форматування тексту для повідомлення
-  setting_mail_handler_enable_regex_delimiters: Використовувати регулярні вирази
+  setting_mail_handler_enable_regex: Використовувати регулярні вирази
   error_move_of_child_not_possible: 'Підзадача %{child} не може бути перенесена в новий проект: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Витрачений час не можна перенести на задачу, яка має бути видалена
   setting_timelog_required_fields: Обов'язкові поля для журналу часу
@@ -1224,3 +1220,27 @@ uk:
   permission_view_news: Переглядати новини
   label_no_preview_alternative_html: Попередній перегляд недоступний. %{link} файл натомість.
   label_no_preview_download: Завантажити
+  setting_close_duplicate_issues: Закривати дублі задач автоматично
+  error_exceeds_maximum_hours_per_day: Неможливо зареєструвати більше ніж %{max_hours} годин за один день
+    (%{logged_hours} годин вже зареєстровано)
+  setting_time_entry_list_defaults: Перелік трудозатрат по замовчуванню
+  setting_timelog_accept_0_hours: Приймати порожні трудозатрати із 0 годин
+  setting_timelog_max_hours_per_day: Максимальна кількість годин що можна зазвітувати користувачеві на дешь
+  label_x_revisions: "%{count} версій"
+  error_can_not_delete_auth_source: Цей метод аутентифікації використовується і не може бути видалений.
+  button_actions: Actions
+  mail_body_lost_password_validity: Ви можете змінити пароль лише один раз використовуючи це посилання.
+  text_login_required_html: Без вимоги аутентифікації, публічні проекти та їх вміст вільно доступні в мережі. Ви можете <a href="%{anonymous_role_path}">змінити
+    необхідні права</a>.
+  label_login_required_yes: 'Так'
+  label_login_required_no: Ні, дозволити анонімний доступ до публічних проектів
+  text_project_is_public_non_member: Публічні проекти та їх вміст доступні всім зареєстрованим користувачам.
+  text_project_is_public_anonymous: Публічні проекти та їх вміст вільно доступні в мережі.
+  label_version_and_files: Версій (%{count}) і Файлів
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (без перевірки сертифікату)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Рекомендовано використовувати шифроване LDAPS з'єднання з перевіркою сертифікату
+    щоби попередити маніпуляції під час процесу аутентифікації.
+  label_nothing_to_preview: Нічого не має для перегляду
+  error_token_expired: Це посилання відновлення паролю застаріло, буль ласка спробуйте заново.

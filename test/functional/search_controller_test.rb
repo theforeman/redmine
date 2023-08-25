@@ -42,10 +42,10 @@ class SearchControllerTest < Redmine::ControllerTest
     assert_select '#search-results dt.project a', :text => /eCookbook/
   end
 
-  def test_search_on_archived_project_should_return_404
+  def test_search_on_archived_project_should_return_403
     Project.find(3).archive
     get :index, :params => {:id => 3}
-    assert_response 404
+    assert_response 403
   end
 
   def test_search_on_invisible_project_by_user_should_be_denied
@@ -425,5 +425,20 @@ class SearchControllerTest < Redmine::ControllerTest
       assert_select 'dt.issue a span.highlight', :text => 'highlighted'
       assert_select 'dd span.highlight', :text => 'highlighted'
     end
+  end
+
+  def test_search_should_exclude_empty_modules_params
+    @request.session[:user_id] = 1
+
+    get :index, params: {
+      q: "private",
+      scope: "all",
+      issues: "1",
+      projects: nil
+    }
+
+    assert_response :success
+
+    assert_select '#search-results dt.project', 0
   end
 end

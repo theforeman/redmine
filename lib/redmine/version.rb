@@ -1,10 +1,11 @@
-require 'rexml/document'
+require 'redmine/scm/adapters/subversion_adapter'
 
 module Redmine
-  module VERSION #:nodoc:
-    MAJOR = 3
-    MINOR = 4
-    TINY  = 13
+  # @private
+  module VERSION
+    MAJOR = 4
+    MINOR = 0
+    TINY  = 9
 
     # Branch values:
     # * official release: nil
@@ -17,7 +18,7 @@ module Redmine
       if File.directory?(File.join(Rails.root, '.svn'))
         begin
           path = Redmine::Scm::Adapters::AbstractAdapter.shell_quote(Rails.root.to_s)
-          if `svn info --xml #{path}` =~ /revision="(\d+)"/
+          if `#{Redmine::Scm::Adapters::SubversionAdapter.client_command} info --xml #{path}` =~ /revision="(\d+)"/
             return $1.to_i
           end
         rescue

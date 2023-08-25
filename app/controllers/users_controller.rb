@@ -28,7 +28,10 @@ class UsersController < ApplicationController
   include SortHelper
   helper :custom_fields
   include CustomFieldsHelper
+  include UsersHelper
   helper :principal_memberships
+  helper :activities
+  include ActivitiesHelper
 
   require_sudo_mode :create, :update, :destroy
 
@@ -58,6 +61,9 @@ class UsersController < ApplicationController
       format.html {
         @groups = Group.givable.sort
         render :layout => !request.xhr?
+      }
+      format.csv {
+        send_data(users_to_csv(scope.order(sort_clause)), :type => 'text/csv; header=present', :filename => 'users.csv')
       }
       format.api
     end
@@ -95,13 +101,13 @@ class UsersController < ApplicationController
     @user.pref.safe_attributes = params[:pref]
 
     if @user.save
-      Mailer.account_information(@user, @user.password).deliver if params[:send_information]
+      Mailer.deliver_account_information(@user, @user.password) if params[:send_information]
 
       respond_to do |format|
         format.html {
           flash[:notice] = l(:notice_user_successful_create, :id => view_context.link_to(@user.login, user_path(@user)))
           if params[:continue]
-            attrs = params[:user].slice(:generate_password)
+            attrs = {:generate_password => @user.generate_password }
             redirect_to new_user_path(:user => attrs)
           else
             redirect_to edit_user_path(@user)
@@ -140,9 +146,9 @@ class UsersController < ApplicationController
       @user.pref.save
 
       if was_activated
-        Mailer.account_activated(@user).deliver
+        Mailer.deliver_account_activated(@user)
       elsif @user.active? && params[:send_information] && @user != User.current
-        Mailer.account_information(@user, @user.password).deliver
+        Mailer.deliver_account_information(@user, @user.password)
       end
 
       respond_to do |format|

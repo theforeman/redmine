@@ -15,9 +15,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module Redmine #:nodoc:
+module Redmine
 
+  # Exception raised when a plugin cannot be found given its id.
   class PluginNotFound < StandardError; end
+
+  # Exception raised when a plugin requirement is not met.
   class PluginRequirementError < StandardError; end
 
   # Base class for Redmine plugins.
@@ -42,10 +45,14 @@ module Redmine #:nodoc:
   # In this example, the settings partial will be found here in the plugin directory: <tt>app/views/settings/_settings.rhtml</tt>.
   #
   # When rendered, the plugin settings value is available as the local variable +settings+
+  #
+  # See: http://www.redmine.org/projects/redmine/wiki/Plugin_Tutorial
   class Plugin
+    # Absolute path to the directory where plugins are located
     cattr_accessor :directory
     self.directory = File.join(Rails.root, 'plugins')
 
+    # Absolute path to the plublic directory where plugins assets are copied
     cattr_accessor :public_directory
     self.public_directory = File.join(Rails.root, 'public', 'plugin_assets')
 
@@ -69,7 +76,17 @@ module Redmine #:nodoc:
     def_field :name, :description, :url, :author, :author_url, :version, :settings, :directory
     attr_reader :id
 
-    # Plugin constructor
+    # Plugin constructor: instanciates a new Redmine::Plugin with given +id+
+    # and make it evaluate the given +block+
+    #
+    # Example
+    #   Redmine::Plugin.register :example do
+    #     name 'Example plugin'
+    #     author 'John Smith'
+    #     description 'This is an example plugin for Redmine'
+    #     version '0.0.1'
+    #     requires_redmine version_or_higher: '3.0.0'
+    #   end
     def self.register(id, &block)
       p = new(id)
       p.instance_eval(&block)
@@ -90,10 +107,13 @@ module Redmine #:nodoc:
         ActionMailer::Base.prepend_view_path(view_path)
       end
 
-      # Adds the app/{controllers,helpers,models} directories of the plugin to the autoload path
-      Dir.glob File.expand_path(File.join(p.directory, 'app', '{controllers,helpers,models}')) do |dir|
-        ActiveSupport::Dependencies.autoload_paths += [dir]
-      end
+      # Add the plugin directories to rails autoload paths
+      engine_cfg = Rails::Engine::Configuration.new(p.directory)
+      engine_cfg.paths.add 'lib', eager_load: true
+      Rails.application.config.eager_load_paths += engine_cfg.eager_load_paths
+      Rails.application.config.autoload_once_paths += engine_cfg.autoload_once_paths
+      Rails.application.config.autoload_paths += engine_cfg.autoload_paths
+      ActiveSupport::Dependencies.autoload_paths += engine_cfg.eager_load_paths + engine_cfg.autoload_once_paths + engine_cfg.autoload_paths
 
       # Defines plugin setting if present
       if p.settings
@@ -170,6 +190,7 @@ module Redmine #:nodoc:
       id
     end
 
+    # Returns the absolute path to the plugin assets directory
     def assets_directory
       File.join(directory, 'assets')
     end
@@ -248,7 +269,11 @@ module Redmine #:nodoc:
       arg = { :version_or_higher => arg } unless arg.is_a?(Hash)
       arg.assert_valid_keys(:version, :version_or_higher)
 
-      plugin = Plugin.find(plugin_name)
+      begin
+        plugin = Plugin.find(plugin_name)
+      rescue PluginNotFound
+        raise PluginRequirementError.new("#{id} plugin requires the #{plugin_name} plugin")
+      end
       current = plugin.version.split('.').collect(&:to_i)
 
       arg.each do |k, v|
@@ -449,7 +474,6 @@ module Redmine #:nodoc:
 
     # Migrate this plugin to the given version
     def migrate(version = nil)
-      puts "Migrating #{id} (#{name})..."
       Redmine::Plugin::Migrator.migrate_plugin(self, version)
     end
 
@@ -469,6 +493,36 @@ module Redmine #:nodoc:
       end
     end
 
+    class MigrationContext < ActiveRecord::MigrationContext
+      def up(target_version = nil)
+        selected_migrations = if block_given?
+          migrations.select { |m| yield m }
+        else
+          migrations
+        end
+
+        Migrator.new(:up, selected_migrations, target_version).migrate
+      end
+
+      def down(target_version = nil)
+        selected_migrations = if block_given?
+          migrations.select { |m| yield m }
+        else
+          migrations
+        end
+
+        Migrator.new(:down, selected_migrations, target_version).migrate
+      end
+
+      def run(direction, target_version)
+        Migrator.new(direction, migrations, target_version).run
+      end
+
+      def open
+        Migrator.new(:up, migrations, nil)
+      end
+    end
+
     class Migrator < ActiveRecord::Migrator
       # We need to be able to set the 'current' plugin being migrated.
       cattr_accessor :current_plugin
@@ -478,22 +532,29 @@ module Redmine #:nodoc:
         def migrate_plugin(plugin, version)
           self.current_plugin = plugin
           return if current_version(plugin) == version
-          migrate(plugin.migration_directory, version)
+
+          MigrationContext.new(plugin.migration_directory).migrate(version)
         end
 
-        def current_version(plugin=current_plugin)
+        def get_all_versions(plugin = current_plugin)
           # Delete migrations that don't match .. to_i will work because the number comes first
-          ::ActiveRecord::Base.connection.select_values(
-            "SELECT version FROM #{schema_migrations_table_name}"
-          ).delete_if{ |v| v.match(/-#{plugin.id}$/) == nil }.map(&:to_i).max || 0
+          @all_versions ||= {}
+          @all_versions[plugin.id.to_s] ||= begin
+            sm_table = ::ActiveRecord::SchemaMigration.table_name
+            migration_versions  = ActiveRecord::Base.connection.select_values("SELECT version FROM #{sm_table}")
+            versions_by_plugins = migration_versions.group_by { |version| version.match(/-(.*)$/).try(:[], 1) }
+            @all_versions       = versions_by_plugins.transform_values! {|versions| versions.map!(&:to_i).sort! }
+            @all_versions[plugin.id.to_s] || []
+          end
+        end
+
+        def current_version(plugin = current_plugin)
+          get_all_versions(plugin).last || 0
         end
       end
 
-      def migrated
-        sm_table = self.class.schema_migrations_table_name
-        ::ActiveRecord::Base.connection.select_values(
-          "SELECT version FROM #{sm_table}"
-        ).delete_if{ |v| v.match(/-#{current_plugin.id}$/) == nil }.map(&:to_i).sort
+      def load_migrated
+        @migrated_versions = Set.new(self.class.get_all_versions(current_plugin))
       end
 
       def record_version_state_after_migrating(version)

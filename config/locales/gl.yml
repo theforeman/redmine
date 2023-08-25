@@ -690,7 +690,6 @@ gl:
   permission_manage_repository: Administrar repositorio
   permission_manage_versions: Administrar versións
   permission_manage_wiki: Administrar wiki
-  permission_move_issues: Mover peticións
   permission_protect_wiki_pages: Protexer páxinas wiki
   permission_rename_wiki_pages: Renomear páxinas wiki
   permission_save_queries: Gravar consultas
@@ -714,7 +713,6 @@ gl:
   project_module_time_tracking: Control de tempo
   project_module_wiki: Wiki
   setting_activity_days_default: Días a mostrar na actividade do proxecto
-  setting_app_subtitle: Subtítulo da aplicación
   setting_app_title: Título da aplicación
   setting_attachment_max_size: Tamaño máximo do ficheiro
   setting_autofetch_changesets: Autorechear as remisións do repositorio
@@ -1215,7 +1213,7 @@ gl:
   setting_timespan_format: Formato de período temporal
   label_table_of_contents: Índice de contidos
   setting_commit_logs_formatting: Aplicar formateo de texto para as mensaxes de commit
-  setting_mail_handler_enable_regex_delimiters: Activar expresións regulares
+  setting_mail_handler_enable_regex: Activar expresións regulares
   error_move_of_child_not_possible: 'A subtarefa %{child} non se pode mover ao novo
     proxecto: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: O tempo empregado non pode
@@ -1236,3 +1234,32 @@ gl:
   permission_view_news: Ver noticias
   label_no_preview_alternative_html: Non hai vista previa dispoñible. %{link} o ficheiro no seu lugar.
   label_no_preview_download: Descargar
+  setting_close_duplicate_issues: Pechar as peticións duplicadas de xeito automático
+  error_exceeds_maximum_hours_per_day: Non se poden imputar máis de %{max_hours} horas no
+    mesmo día (%{logged_hours} horas teñen sido xa imputadas)
+  setting_time_entry_list_defaults: Configuración por defecto do tempo imputado
+  setting_timelog_accept_0_hours: Admitir tempo imputado con 0 horas
+  setting_timelog_max_hours_per_day: Máximo número de horas que poden imputarse por día e usuario
+  label_x_revisions: "%{count} revisións"
+  error_can_not_delete_auth_source: Este método de autenticación está en uso e non pode
+    ser borrado.
+  button_actions: Accións
+  mail_body_lost_password_validity: Por favor, teña en conta que só pode cambiar a contrasinal
+    unha vez usando esta ligazón.
+  text_login_required_html: Cando non precisan autenticación os proxectos públicos e os seus
+    contidos están dispoñibles libremente na rede. Vostede pode <a href="%{anonymous_role_path}">editar
+    os permisos aplicados</a>.
+  label_login_required_yes: 'Si'
+  label_login_required_no: Non, permitir acceso anónimo aos proxectos públicos
+  text_project_is_public_non_member: Os proxectos públicos e os seus contidos están dispoñibles
+    para todos os usuarios logueados.
+  text_project_is_public_anonymous: Os proxectos públicos e os seus contidos están dispoñibles libremente
+    na rede.
+  label_version_and_files: Versións (%{count}) e Ficheiros
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (sen comprobación de certificado)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Se recomenda usar unha conexión LDAPS con comprobación de
+    certificado para evitar calquera manipulación durante o proceso de autenticación.
+  label_nothing_to_preview: Nada que previsualizar
+  error_token_expired: Esta ligazón para recuperar a contrasinal ten caducado, por favor, tente de novo.

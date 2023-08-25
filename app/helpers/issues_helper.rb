@@ -65,7 +65,7 @@ module IssuesHelper
       "<strong>#{@cached_label_status}</strong>: #{h(issue.status.name)}<br />".html_safe +
       "<strong>#{@cached_label_start_date}</strong>: #{format_date(issue.start_date)}<br />".html_safe +
       "<strong>#{@cached_label_due_date}</strong>: #{format_date(issue.due_date)}<br />".html_safe +
-      "<strong>#{@cached_label_assigned_to}</strong>: #{h(issue.assigned_to)}<br />".html_safe +
+      "<strong>#{@cached_label_assigned_to}</strong>: #{avatar(issue.assigned_to, :size => "13", :title => l(:field_assigned_to)) if issue.assigned_to} #{h(issue.assigned_to)}<br />".html_safe +
       "<strong>#{@cached_label_priority}</strong>: #{h(issue.priority.name)}".html_safe
   end
 
@@ -82,7 +82,7 @@ module IssuesHelper
     s << '<div>'
     subject = h(issue.subject)
     if issue.is_private?
-      subject = content_tag('span', l(:field_is_private), :class => 'private') + ' ' + subject
+      subject = subject + ' ' + content_tag('span', l(:field_is_private), :class => 'private')
     end
     s << content_tag('h3', subject)
     s << '</div>' * (ancestors.size + 1)
@@ -99,7 +99,8 @@ module IssuesHelper
              content_tag('td', link_to_issue(child, :project => (issue.project_id != child.project_id)), :class => 'subject', :style => 'width: 50%') +
              content_tag('td', h(child.status), :class => 'status') +
              content_tag('td', link_to_user(child.assigned_to), :class => 'assigned_to') +
-             content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio), :class=> 'done_ratio'),
+             content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio), :class=> 'done_ratio') +
+             content_tag('td', link_to_context_menu, :class => 'buttons'),
              :class => css)
     end
     s << '</table>'
@@ -114,14 +115,15 @@ module IssuesHelper
     relations.each do |relation|
       other_issue = relation.other_issue(issue)
       css = "issue hascontextmenu #{other_issue.css_classes}"
-      link = manage_relations ? link_to(l(:label_relation_delete),
+      buttons = manage_relations ? link_to(l(:label_relation_delete),
                                   relation_path(relation),
                                   :remote => true,
                                   :method => :delete,
                                   :data => {:confirm => l(:text_are_you_sure)},
                                   :title => l(:label_relation_delete),
                                   :class => 'icon-only icon-link-break'
-                                 ) : nil
+                                 ) :"".html_safe
+      buttons << link_to_context_menu
 
       s << content_tag('tr',
              content_tag('td', check_box_tag("ids[]", other_issue.id, false, :id => nil), :class => 'checkbox') +
@@ -130,7 +132,7 @@ module IssuesHelper
              content_tag('td', format_date(other_issue.start_date), :class => 'start_date') +
              content_tag('td', format_date(other_issue.due_date), :class => 'due_date') +
              content_tag('td', other_issue.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(other_issue.done_ratio), :class=> 'done_ratio') +
-             content_tag('td', link, :class => 'buttons'),
+             content_tag('td', buttons, :class => 'buttons'),
              :id => "relation-#{relation.id}",
              :class => css)
     end
@@ -163,20 +165,6 @@ module IssuesHelper
       end
     end
   end
-
-  # Returns an array of error messages for bulk edited issues
-  def bulk_edit_error_messages(issues)
-    messages = {}
-    issues.each do |issue|
-      issue.errors.full_messages.each do |message|
-        messages[message] ||= []
-        messages[message] << issue
-      end
-    end
-    messages.map { |message, issues|
-      "#{message}: " + issues.map {|i| "##{i.id}"}.join(', ')
-    }
- end
 
   # Returns a link for adding a new subtask to the given issue
   def link_to_new_subtask(issue)
@@ -351,6 +339,8 @@ module IssuesHelper
     end
   end
 
+  MultipleValuesDetail = Struct.new(:property, :prop_key, :custom_field, :old_value, :value)
+
   # Returns the textual representation of a journal details
   # as an array of strings
   def details_to_strings(details, no_html=false, options={})
@@ -374,15 +364,14 @@ module IssuesHelper
       strings << show_detail(detail, no_html, options)
     end
     if values_by_field.present?
-      multiple_values_detail = Struct.new(:property, :prop_key, :custom_field, :old_value, :value)
       values_by_field.each do |field, changes|
         if changes[:added].any?
-          detail = multiple_values_detail.new('cf', field.id.to_s, field)
+          detail = MultipleValuesDetail.new('cf', field.id.to_s, field)
           detail.value = changes[:added]
           strings << show_detail(detail, no_html, options)
         end
         if changes[:deleted].any?
-          detail = multiple_values_detail.new('cf', field.id.to_s, field)
+          detail = MultipleValuesDetail.new('cf', field.id.to_s, field)
           detail.old_value = changes[:deleted]
           strings << show_detail(detail, no_html, options)
         end
@@ -512,6 +501,7 @@ module IssuesHelper
   end
 
   # Find the name of an associated record stored in the field attribute
+  # For project, return the associated record only if is visible for the current User
   def find_name_by_reflection(field, id)
     unless id.present?
       return nil
@@ -521,7 +511,7 @@ module IssuesHelper
       name = nil
       if association
         record = association.klass.find_by_id(key.last)
-        if record
+        if (record && !record.is_a?(Project)) || (record.is_a?(Project) && record.visible?)
           name = record.name.force_encoding('UTF-8')
         end
       end

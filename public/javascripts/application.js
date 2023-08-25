@@ -17,7 +17,7 @@ function toggleCheckboxesBySelector(selector) {
   $(selector).each(function(index) {
     if (!$(this).is(':checked')) { all_checked = false; }
   });
-  $(selector).prop('checked', !all_checked);
+  $(selector).prop('checked', !all_checked).trigger('change');
 }
 
 function showAndScrollTo(id, focus) {
@@ -342,8 +342,8 @@ function toggleMultiSelect(el) {
 
 function showTab(name, url) {
   $('#tab-content-' + name).parent().find('.tab-content').hide();
-  $('#tab-content-' + name).parent().find('div.tabs a').removeClass('selected');
   $('#tab-content-' + name).show();
+  $('#tab-' + name).closest('.tabs').find('a').removeClass('selected');
   $('#tab-' + name).addClass('selected');
   //replaces current URL with the "href" attribute of the current link
   //(only triggered if supported by browser)
@@ -426,7 +426,7 @@ function showModal(id, width, title) {
   if (el.length === 0 || el.is(':visible')) {return;}
   if (!title) title = el.find('h3.title').text();
   // moves existing modals behind the transparent background
-  $(".modal").zIndex(99);
+  $(".modal").css('zIndex',99);
   el.dialog({
     width: width,
     modal: true,
@@ -434,7 +434,7 @@ function showModal(id, width, title) {
     dialogClass: 'modal',
     title: title
   }).on('dialogclose', function(){
-    $(".modal").zIndex(101);
+    $(".modal").css('zIndex',101);
   });
   el.find("input[type=text], input[type=submit]").first().focus();
 }
@@ -447,17 +447,6 @@ function hideModal(el) {
     modal = $('#ajax-modal');
   }
   modal.dialog("close");
-}
-
-function submitPreview(url, form, target) {
-  $.ajax({
-    url: url,
-    type: 'post',
-    data: $('#'+form).serialize(),
-    success: function(data){
-      $('#'+target).html(data);
-    }
-  });
 }
 
 function collapseScmEntry(id) {
@@ -767,6 +756,36 @@ function setupTabs() {
   }
 }
 
+function setupFilePreviewNavigation() {
+  // only bind arrow keys when preview navigation is present
+  const element = $('.pagination.filepreview').first();
+  if (element) {
+
+    const handleArrowKey = function(selector, e){
+      const href = $(element).find(selector).attr('href');
+      if (href) {
+        window.location = href;
+        e.preventDefault();
+      }
+    };
+
+    $(document).keydown(function(e) {
+      if(e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return;
+      switch(e.key) {
+        case 'ArrowLeft':
+          handleArrowKey('.previous a', e);
+          break;
+
+        case 'ArrowRight':
+          handleArrowKey('.next a', e);
+          break;
+      }
+    });
+  }
+}
+
+
+
 function hideOnLoad() {
   $('.hol').hide();
 }
@@ -846,6 +865,28 @@ $(document).ready(function(){
   toggleDisabledInit();
 });
 
+$(document).ready(function(){
+  $('#content').on('click', 'div.jstTabs a.tab-preview', function(event){
+    var tab = $(event.target);
+
+    var url = tab.data('url');
+    var form = tab.parents('form');
+    var jstBlock = tab.parents('.jstBlock');
+
+    var element = encodeURIComponent(jstBlock.find('.wiki-edit').val());
+    var attachments = form.find('.attachments_fields input').serialize();
+
+    $.ajax({
+      url: url,
+      type: 'post',
+      data: "text=" + element + '&' + attachments,
+      success: function(data){
+        jstBlock.find('.wiki-preview').html(data);
+      }
+    });
+  });
+});
+
 function keepAnchorOnSignIn(form){
   var hash = decodeURIComponent(self.document.location.hash);
   if (hash) {
@@ -857,8 +898,35 @@ function keepAnchorOnSignIn(form){
   return true;
 }
 
+$(function ($) {
+  $('#auth_source_ldap_mode').change(function () {
+    $('.ldaps_warning').toggle($(this).val() != 'ldaps_verify_peer');
+  }).change();
+});
+
+function setFilecontentContainerHeight() {
+  var $filecontainer = $('.filecontent-container');
+  var fileTypeSelectors = ['.image', 'video'];
+  
+  if($filecontainer.length > 0 && $filecontainer.find(fileTypeSelectors.join(',')).length === 1) {
+    var containerOffsetTop = $filecontainer.offset().top;
+    var containerMarginBottom = parseInt($filecontainer.css('marginBottom'));
+    var paginationHeight = $filecontainer.next('.pagination').height();
+    var diff = containerOffsetTop + containerMarginBottom + paginationHeight;
+
+    $filecontainer.css('height', 'calc(100vh - ' + diff + 'px)')
+  }
+}
+
+function setupAttachmentDetail() {
+  setFilecontentContainerHeight();
+  $(window).resize(setFilecontentContainerHeight);
+}
+
 $(document).ready(setupAjaxIndicator);
 $(document).ready(hideOnLoad);
 $(document).ready(addFormObserversForDoubleSubmit);
 $(document).ready(defaultFocus);
+$(document).ready(setupAttachmentDetail);
 $(document).ready(setupTabs);
+$(document).ready(setupFilePreviewNavigation);

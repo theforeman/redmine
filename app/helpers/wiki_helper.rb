@@ -64,4 +64,8 @@ module WikiHelper
       project_wiki_page_path(page.project, page.title)
     end
   end
+
+  def wiki_content_update_info(content)
+    l(:label_updated_time_by, :author => link_to_user(content.author), :age => time_tag(content.updated_on)).html_safe
+  end
 end

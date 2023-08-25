@@ -206,7 +206,7 @@ module Redmine
                :path          => with_leading_slash(p),
                :from_path     => (cpmap.member?(p) ? with_leading_slash(cpmap[p]) : nil),
                :from_revision => (cpmap.member?(p) ? le['node'] : nil)}
-            end.sort { |a, b| a[:path] <=> b[:path] }
+            end.sort_by { |e| e[:path] }
             parents_ary = []
             as_ary(le['parents']['parent']).map do |par|
               parents_ary << par['__content__'] if par['__content__'] != "0000000000000000000000000000000000000000"
@@ -279,6 +279,15 @@ module Redmine
         rescue HgCommandAborted
           # means not found or cannot be annotated
           Annotate.new
+        end
+
+        def valid_name?(name)
+          return false unless name.nil? || name.is_a?(String)
+
+          # Mercurials names don't need to be checked further as its CLI
+          # interface is restrictive enough to reject any invalid names on its
+          # own.
+          true
         end
 
         class Revision < Redmine::Scm::Adapters::Revision

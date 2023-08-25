@@ -25,7 +25,6 @@ class TimelogController < ApplicationController
 
   before_action :find_optional_issue, :only => [:new, :create]
   before_action :find_optional_project, :only => [:index, :report]
-  before_action :authorize_global, :only => [:new, :create, :index, :report]
 
   accept_rss_auth :index
   accept_api_auth :index, :show, :create, :update, :destroy
@@ -166,8 +165,18 @@ class TimelogController < ApplicationController
   end
 
   def bulk_edit
-    @available_activities = @projects.map(&:activities).reduce(:&)
+    @target_projects = Project.allowed_to(:log_time).to_a
     @custom_fields = TimeEntry.first.available_custom_fields.select {|field| field.format.bulk_edit_supported}
+    if params[:time_entry]
+      @target_project = @target_projects.detect {|p| p.id.to_s == params[:time_entry][:project_id].to_s}
+    end
+    if @target_project
+      @available_activities = @target_project.activities
+    else
+      @available_activities = @projects.map(&:activities).reduce(:&)
+    end
+    @time_entry_params = params[:time_entry] || {}
+    @time_entry_params[:custom_field_values] ||= {}
   end
 
   def bulk_update
@@ -262,17 +271,10 @@ private
     if params[:issue_id].present?
       @issue = Issue.find(params[:issue_id])
       @project = @issue.project
+      authorize
     else
       find_optional_project
     end
-  end
-
-  def find_optional_project
-    if params[:project_id].present?
-      @project = Project.find(params[:project_id])
-    end
-  rescue ActiveRecord::RecordNotFound
-    render_404
   end
 
   # Returns the TimeEntry scope for index and report actions
@@ -281,6 +283,6 @@ private
   end
 
   def retrieve_time_entry_query
-    retrieve_query(TimeEntryQuery, false)
+    retrieve_query(TimeEntryQuery, false, :defaults => @default_columns_names)
   end
 end

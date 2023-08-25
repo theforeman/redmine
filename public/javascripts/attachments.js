@@ -185,6 +185,7 @@ handleFileDropEvent.target = '';
 function dragOverHandler(e) {
   $(this).addClass('fileover');
   blockEventPropagation(e);
+  e.dataTransfer.dropEffect = 'copy';
 }
 
 function dragOutHandler(e) {
@@ -195,6 +196,7 @@ function dragOutHandler(e) {
 function setupFileDrop() {
   if (window.File && window.FileList && window.ProgressEvent && window.FormData) {
 
+    $.event.fixHooks.dragover = { props: [ 'dataTransfer' ] };
     $.event.fixHooks.drop = { props: [ 'dataTransfer' ] };
 
     $('form div.box:not(.filedroplistner)').has('input:file.filedrop').each(function() {
@@ -237,8 +239,7 @@ function addInlineAttachmentMarkup(file) {
       'selectionStart': cursorPosition + newLineBefore,
       'selectionEnd': cursorPosition + inlineFilename.length + newLineBefore
     });
-    $textarea.closest('.jstEditor')
-      .siblings('.jstElements')
+    $textarea.parents('.jstBlock')
       .find('.jstb_img').click();
 
     // move cursor into next line

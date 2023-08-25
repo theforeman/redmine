@@ -209,18 +209,19 @@ ja:
   error_no_default_issue_status: 'デフォルトのチケットステータスが定義されていません。設定を確認してください（管理→チケットのステータス）。'
   error_can_not_delete_custom_field: 'カスタムフィールドを削除できません。'
   error_unable_to_connect: "接続できません。 (%{value})"
-  error_can_not_remove_role: 'このロールは使用されています。削除できません。'
+  error_can_not_remove_role: 'このロールは使用中です。削除できません。'
   error_can_not_reopen_issue_on_closed_version: '終了したバージョンにひも付けされたチケットの再オープンはできません。'
   error_can_not_archive_project: このプロジェクトはアーカイブできません
   error_issue_done_ratios_not_updated: "チケットの進捗率が更新できません。"
   error_workflow_copy_source: 'コピー元となるトラッカーまたはロールを選択してください'
   error_workflow_copy_target: 'コピー先となるトラッカーとロールを選択してください'
-  error_can_not_delete_tracker: 'このトラッカーは使用されています。削除できません。'
+  error_can_not_delete_tracker: 'このトラッカーは使用中です。削除できません。'
 
   warning_attachments_not_saved: "%{count}個の添付ファイルが保存できませんでした。"
 
   mail_subject_lost_password: "%{value} パスワード再発行"
   mail_body_lost_password: 'パスワードを変更するには、以下のリンクをクリックしてください:'
+  mail_body_lost_password_validity: 'このリンクでパスワードを再設定できるのは1回だけです。ご注意ください。'
   mail_subject_register: "%{value} アカウント登録の確認"
   mail_body_register: 'アカウント登録を完了するには、以下のアドレスをクリックしてください:'
   mail_body_account_information_external: "%{value} アカウントを使ってにログインできます。"
@@ -230,9 +231,9 @@ ja:
   mail_subject_reminder: "%{count}件のチケットの期日が%{days}日以内に到来します"
   mail_body_reminder: "%{count}件の担当チケットの期日が%{days}日以内に到来します:"
   mail_subject_wiki_content_added: "Wikiページ %{id} が追加されました"
-  mail_body_wiki_content_added: "%{author} によってWikiページ %{id} が追加されました。"
+  mail_body_wiki_content_added: "Wikiページ %{id} を %{author} が追加しました。"
   mail_subject_wiki_content_updated: "Wikiページ %{id} が更新されました"
-  mail_body_wiki_content_updated: "%{author} によってWikiページ %{id} が更新されました。"
+  mail_body_wiki_content_updated: "Wikiページ %{id} を %{author} が更新しました。"
 
 
   field_name: 名称
@@ -305,7 +306,7 @@ ja:
   field_start_page: メインページ
   field_subproject: サブプロジェクト
   field_hours: 時間
-  field_activity: 活動
+  field_activity: 作業分類
   field_spent_on: 日付
   field_identifier: 識別子
   field_is_filter: フィルタとして使用
@@ -341,7 +342,6 @@ ja:
   field_cvs_module: モジュール
 
   setting_app_title: アプリケーションのタイトル
-  setting_app_subtitle: アプリケーションのサブタイトル
   setting_welcome_text: ウェルカムメッセージ
   setting_default_language: デフォルトの言語
   setting_login_required: 認証が必要
@@ -372,7 +372,7 @@ ja:
   setting_protocol: プロトコル
   setting_per_page_options: ページごとの表示件数
   setting_user_format: ユーザー名の表示形式
-  setting_activity_days_default: プロジェクトの活動ページに表示される日数
+  setting_activity_days_default: プロジェクトの活動ページに表示する日数
   setting_display_subprojects_issues: サブプロジェクトのチケットをメインプロジェクトに表示する
   setting_enabled_scm: 使用するバージョン管理システム
   setting_mail_handler_body_delimiters: "メール本文から一致する行以降を切り捨てる"
@@ -413,7 +413,6 @@ ja:
   permission_add_issue_notes: 注記の追加
   permission_edit_issue_notes: 注記の編集
   permission_edit_own_issue_notes: 自身が記入した注記の編集
-  permission_move_issues: チケットの移動
   permission_delete_issues: チケットの削除
   permission_manage_public_queries: 公開クエリの管理
   permission_save_queries: クエリの保存
@@ -628,11 +627,11 @@ ja:
   label_filter_plural: フィルタ
   label_equals: 等しい
   label_not_equals: 等しくない
-  label_in_less_than: 今日から○日後以前
-  label_in_more_than: 今日から○日後以降
+  label_in_less_than: N日後以前
+  label_in_more_than: N日後以降
   label_greater_or_equal: 以上
   label_less_or_equal: 以下
-  label_in: 今日から○日後
+  label_in: N日後
   label_today: 今日
   label_all_time: 全期間
   label_yesterday: 昨日
@@ -643,9 +642,9 @@ ja:
   label_last_month: 先月
   label_this_year: 今年
   label_date_range: 期間
-  label_less_than_ago: 今日より○日前以降
-  label_more_than_ago: 今日より○日前以前
-  label_ago: ○日前
+  label_less_than_ago: N日前以降
+  label_more_than_ago: N日前以前
+  label_ago: N日前
   label_contains: 含む
   label_not_contains: 含まない
   label_day_plural: 日
@@ -900,13 +899,13 @@ ja:
   text_comma_separated: (カンマで区切ることで)複数の値を設定できます。
   text_line_separated: (1行ごとに書くことで)複数の値を設定できます。
   text_issues_ref_in_commit_messages: コミットメッセージ内でチケットの参照/修正
-  text_issue_added: "チケット %{id} が %{author} によって報告されました。"
-  text_issue_updated: "チケット %{id} が %{author} によって更新されました。"
+  text_issue_added: "チケット %{id} を %{author} が作成しました。"
+  text_issue_updated: "チケット %{id} を %{author} が更新しました。"
   text_wiki_destroy_confirmation: 本当にこのwikiとその内容のすべてを削除しますか？
   text_issue_category_destroy_question: "%{count}件のチケットがこのカテゴリに割り当てられています。"
   text_issue_category_destroy_assignments: カテゴリの割り当てを削除する
   text_issue_category_reassign_to: チケットをこのカテゴリに再割り当てする
-  text_user_mail_option: "未選択のプロジェクトでは、ウォッチまたは関係している事柄(例: 自分が報告者もしくは担当者であるチケット)のみメールが送信されます。"
+  text_user_mail_option: "未選択のプロジェクトでは、ウォッチ中または自分が関係しているもの(例: 自分が作成または担当しているチケット)のみメールが送信されます。"
   text_no_configuration_data: "ロール、トラッカー、チケットのステータス、ワークフローがまだ設定されていません。\nデフォルト設定のロードを強くお勧めします。ロードした後、それを修正することができます。"
   text_load_default_configuration: デフォルト設定をロード
   text_status_changed_by_changeset: "更新履歴 %{value} で適用されました。"
@@ -1084,8 +1083,8 @@ ja:
   label_cross_project_system: すべてのプロジェクト
   button_hide: 隠す
   setting_non_working_week_days: 休業日
-  label_in_the_next_days: 今後○日
-  label_in_the_past_days: 過去○日
+  label_in_the_next_days: 今後N日
+  label_in_the_past_days: 過去N日
   label_attribute_of_user: ユーザーの %{name}
   text_turning_multiple_off: この設定を無効にすると、複数選択されている値のうち1個だけが保持され残りは選択解除されます。
   label_attribute_of_issue: チケットの %{name}
@@ -1220,7 +1219,7 @@ ja:
   setting_timespan_format: 時間の形式
   label_table_of_contents: 目次
   setting_commit_logs_formatting: コミットメッセージにテキスト書式を適用
-  setting_mail_handler_enable_regex_delimiters: 正規表現を使用
+  setting_mail_handler_enable_regex: 正規表現を使用
   error_move_of_child_not_possible: '子チケット %{child} を指定されたプロジェクトに移動できませんでした: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: 削除対象チケットへの作業時間の再割り当てはできません
   setting_timelog_required_fields: 作業時間の必須入力フィールド
@@ -1235,3 +1234,23 @@ ja:
   setting_show_custom_fields_on_registration: アカウント登録画面でカスタムフィールドを表示
   label_no_preview_alternative_html: このファイルはプレビューできません。 %{link} してください。
   label_no_preview_download: ダウンロード
+  setting_close_duplicate_issues: 重複しているチケットを連動して終了
+  error_exceeds_maximum_hours_per_day: 作業時間は1日・1人あたり%{max_hours}時間を超えることはできません (すでに%{logged_hours}時間記録済み)
+  setting_time_entry_list_defaults: 作業時間の一覧で表示する項目
+  setting_timelog_accept_0_hours: 作業時間に0時間の入力を許可
+  setting_timelog_max_hours_per_day: 1日・1人あたりの作業時間の上限
+  label_x_revisions: "%{count}件の履歴"
+  error_can_not_delete_auth_source: この認証方式は使用中です。削除できません。
+  button_actions: 操作
+  text_login_required_html: 認証を必須としない場合、公開プロジェクトとその中の情報にはネットワーク上の誰もがアクセスできます。<a href="%{anonymous_role_path}">匿名ユーザーの権限を編集</a>できます。
+  label_login_required_yes: 'はい'
+  label_login_required_no: いいえ (匿名ユーザーに公開プロジェクトへのアクセスを許可)
+  text_project_is_public_non_member: 公開プロジェクトとその中の情報にはログイン済みの全ユーザーがアクセスできます。
+  text_project_is_public_anonymous: 公開プロジェクトとその中の情報にはネットワーク上の全ユーザーがアクセスできます。
+  label_version_and_files: バージョン (%{count}) とファイル
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (証明書の検証なし)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: 認証処理中の盗聴や改ざんなどの攻撃を防ぐために、暗号化されたLDAPSによる通信 (証明書の検証あり) の使用をお勧めします。
+  label_nothing_to_preview: プレビューするものがありません
+  error_token_expired: パスワード再発行用のリンクはすでに失効しています。もう一度やり直してください。

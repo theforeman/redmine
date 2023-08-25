@@ -32,8 +32,8 @@ module Redmine
         IssueRelation::TYPE_PRECEDES => { :landscape_margin => 20, :color => '#628FEA' }
       }.freeze
 
-      # :nodoc:
       # Some utility methods for the PDF export
+      # @private
       class PDF
         MaxCharactorsForSubject = 45
         TotalWidth = 280
@@ -301,9 +301,9 @@ module Redmine
       def line_for_version(version, options)
         # Skip versions that don't have a start_date
         if version.is_a?(Version) && version.due_date && version.start_date
-          label = "#{h(version)} #{h(version.completed_percent.to_f.round)}%"
+          label = "#{h(version)} #{h(version.visible_fixed_issues.completed_percent.to_f.round)}%"
           label = h("#{version.project} -") + label unless @project && @project == version.project
-          line(version.start_date, version.due_date,  version.completed_percent, true, label, options, version)
+          line(version.start_date, version.due_date,  version.visible_fixed_issues.completed_percent, true, label, options, version)
         end
       end
 
@@ -573,15 +573,15 @@ module Redmine
       def coordinates(start_date, end_date, progress, zoom=nil)
         zoom ||= @zoom
         coords = {}
-        if start_date && end_date && start_date < self.date_to && end_date > self.date_from
-          if start_date > self.date_from
+        if start_date && end_date && start_date <= self.date_to && end_date >= self.date_from
+          if start_date >= self.date_from
             coords[:start] = start_date - self.date_from
             coords[:bar_start] = start_date - self.date_from
           else
             coords[:bar_start] = 0
           end
-          if end_date < self.date_to
-            coords[:end] = end_date - self.date_from
+          if end_date <= self.date_to
+            coords[:end] = end_date - self.date_from + 1
             coords[:bar_end] = end_date - self.date_from + 1
           else
             coords[:bar_end] = self.date_to - self.date_from + 1
@@ -595,11 +595,11 @@ module Redmine
                 coords[:bar_progress_end] = self.date_to - self.date_from + 1
               end
             end
-            if progress_date < User.current.today
-              late_date = [User.current.today, end_date].min
+            if progress_date <= User.current.today
+              late_date = [User.current.today, end_date].min + 1
               if late_date > self.date_from && late_date > start_date
                 if late_date < self.date_to
-                  coords[:bar_late_end] = late_date - self.date_from + 1
+                  coords[:bar_late_end] = late_date - self.date_from
                 else
                   coords[:bar_late_end] = self.date_to - self.date_from + 1
                 end
@@ -608,7 +608,7 @@ module Redmine
           end
         end
         # Transforms dates into pixels witdh
-        coords.keys.each do |key|
+        coords.each_key do |key|
           coords[key] = (coords[key] * zoom).floor
         end
         coords
@@ -619,7 +619,7 @@ module Redmine
       end
 
       def self.sort_issues!(issues)
-        issues.sort! {|a, b| sort_issue_logic(a) <=> sort_issue_logic(b)}
+        issues.sort_by! {|issue| sort_issue_logic(issue)}
       end
 
       def self.sort_issue_logic(issue)
@@ -670,6 +670,7 @@ module Redmine
                              :title => assigned_string).to_s.html_safe
           end
           s << view.link_to_issue(issue).html_safe
+          s << view.content_tag(:input, nil, :type => 'checkbox', :name => 'ids[]', :value => issue.id, :style => 'display:none;', :class => 'toggle-selection')
           view.content_tag(:span, s, :class => css_classes).html_safe
         when Version
           version = object
@@ -678,9 +679,9 @@ module Redmine
           html_class << (version.behind_schedule? ? 'version-behind-schedule' : '') << " "
           html_class << (version.overdue? ? 'version-overdue' : '')
           html_class << ' version-closed' unless version.open?
-          if version.start_date && version.due_date && version.completed_percent
+          if version.start_date && version.due_date && version.visible_fixed_issues.completed_percent
             progress_date = calc_progress_date(version.start_date,
-                                               version.due_date, version.completed_percent)
+                                               version.due_date, version.visible_fixed_issues.completed_percent)
             html_class << ' behind-start-date' if progress_date < self.date_from
             html_class << ' over-end-date' if progress_date > self.date_to
           end
@@ -704,7 +705,7 @@ module Redmine
         case object
         when Issue
           tag_options[:id] = "issue-#{object.id}"
-          tag_options[:class] = "issue-subject"
+          tag_options[:class] = "issue-subject hascontextmenu"
           tag_options[:title] = object.subject
         when Version
           tag_options[:id] = "version-#{object.id}"
@@ -819,7 +820,7 @@ module Redmine
           if coords[:end]
             style = ""
             style << "top:#{params[:top]}px;"
-            style << "left:#{coords[:end] + params[:zoom]}px;"
+            style << "left:#{coords[:end]}px;"
             style << "width:15px;"
             output << view.content_tag(:div, '&nbsp;'.html_safe,
                                        :style => style,
@@ -841,6 +842,7 @@ module Redmine
           s = view.content_tag(:span,
                                view.render_issue_tooltip(object).html_safe,
                                :class => "tip")
+          s += view.content_tag(:input, nil, :type => 'checkbox', :name => 'ids[]', :value => object.id, :style => 'display:none;', :class => 'toggle-selection')
           style = ""
           style << "position: absolute;"
           style << "top:#{params[:top]}px;"
@@ -849,7 +851,7 @@ module Redmine
           style << "height:12px;"
           output << view.content_tag(:div, s.html_safe,
                                      :style => style,
-                                     :class => "tooltip")
+                                     :class => "tooltip hascontextmenu")
         end
         @lines << output
         output
@@ -863,21 +865,24 @@ module Redmine
         height /= 2 if markers
         # Renders the task bar, with progress and late
         if coords[:bar_start] && coords[:bar_end]
+          width = [1, coords[:bar_end] - coords[:bar_start]].max
           params[:pdf].SetY(params[:top] + 1.5)
           params[:pdf].SetX(params[:subject_width] + coords[:bar_start])
           params[:pdf].SetFillColor(200, 200, 200)
-          params[:pdf].RDMCell(coords[:bar_end] - coords[:bar_start], height, "", 0, 0, "", 1)
+          params[:pdf].RDMCell(width, height, "", 0, 0, "", 1)
           if coords[:bar_late_end]
+            width = [1, coords[:bar_late_end] - coords[:bar_start]].max
             params[:pdf].SetY(params[:top] + 1.5)
             params[:pdf].SetX(params[:subject_width] + coords[:bar_start])
             params[:pdf].SetFillColor(255, 100, 100)
-            params[:pdf].RDMCell(coords[:bar_late_end] - coords[:bar_start], height, "", 0, 0, "", 1)
+            params[:pdf].RDMCell(width, height, "", 0, 0, "", 1)
           end
           if coords[:bar_progress_end]
+            width = [1, coords[:bar_progress_end] - coords[:bar_start]].max
             params[:pdf].SetY(params[:top] + 1.5)
             params[:pdf].SetX(params[:subject_width] + coords[:bar_start])
             params[:pdf].SetFillColor(90, 200, 90)
-            params[:pdf].RDMCell(coords[:bar_progress_end] - coords[:bar_start], height, "", 0, 0, "", 1)
+            params[:pdf].RDMCell(width, height, "", 0, 0, "", 1)
           end
         end
         # Renders the markers
@@ -938,7 +943,7 @@ module Redmine
             params[:image].polygon(x - 4, y, x, y - 4, x + 4, y, x, y + 4)
           end
           if coords[:end]
-            x = params[:subject_width] + coords[:end] + params[:zoom]
+            x = params[:subject_width] + coords[:end]
             y = params[:top] - height / 2
             params[:image].fill('blue')
             params[:image].polygon(x - 4, y, x, y - 4, x + 4, y, x, y + 4)

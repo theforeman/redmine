@@ -21,7 +21,7 @@ require 'timeout'
 
 class AuthSourceLdap < AuthSource
   NETWORK_EXCEPTIONS = [
-    Net::LDAP::LdapError,
+    Net::LDAP::Error,
     Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET,
     Errno::EHOSTDOWN, Errno::EHOSTUNREACH,
     SocketError
@@ -36,6 +36,14 @@ class AuthSourceLdap < AuthSource
   validate :validate_filter
 
   before_validation :strip_ldap_attributes
+
+  safe_attributes 'ldap_mode'
+
+  LDAP_MODES = [
+    :ldap,
+    :ldaps_verify_none,
+    :ldaps_verify_peer
+  ]
 
   def initialize(attributes=nil, *args)
     super
@@ -101,6 +109,31 @@ class AuthSourceLdap < AuthSource
     raise AuthSourceException.new(e.message)
   end
 
+  def ldap_mode
+    case
+    when tls && verify_peer
+      :ldaps_verify_peer
+    when tls && !verify_peer
+      :ldaps_verify_none
+    else
+      :ldap
+    end
+  end
+
+  def ldap_mode=(ldap_mode)
+    case ldap_mode.try(:to_sym)
+    when :ldaps_verify_peer
+      self.tls = true
+      self.verify_peer = true
+    when :ldaps_verify_none
+      self.tls = true
+      self.verify_peer = false
+    else
+      self.tls = false
+      self.verify_peer = false
+    end
+  end
+
   private
 
   def with_timeout(&block)
@@ -117,7 +150,7 @@ class AuthSourceLdap < AuthSource
     if filter.present?
       Net::LDAP::Filter.construct(filter)
     end
-  rescue Net::LDAP::LdapError, Net::LDAP::FilterSyntaxInvalidError
+  rescue Net::LDAP::Error, Net::LDAP::FilterSyntaxInvalidError
     nil
   end
 
@@ -143,9 +176,18 @@ class AuthSourceLdap < AuthSource
 
   def initialize_ldap_con(ldap_user, ldap_password)
     options = { :host => self.host,
-                :port => self.port,
-                :encryption => (self.tls ? :simple_tls : nil)
+                :port => self.port
               }
+    if tls
+      options[:encryption] = {
+        :method => :simple_tls,
+        # Always provide non-empty tls_options, to make sure, that all
+        # OpenSSL::SSL::SSLContext::DEFAULT_PARAMS as well as the default cert
+        # store are used.
+        :tls_options => { :verify_mode => verify_peer? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE }
+      }
+    end
+
     options.merge!(:auth => { :method => :simple, :username => ldap_user, :password => ldap_password }) unless ldap_user.blank? && ldap_password.blank?
     Net::LDAP.new options
   end

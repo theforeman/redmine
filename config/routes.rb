@@ -26,11 +26,9 @@ Rails.application.routes.draw do
   get 'account/activation_email', :to => 'account#activation_email', :as => 'activation_email'
 
   match '/news/preview', :controller => 'previews', :action => 'news', :as => 'preview_news', :via => [:get, :post, :put, :patch]
-  match '/issues/preview/new/:project_id', :to => 'previews#issue', :as => 'preview_new_issue', :via => [:get, :post, :put, :patch]
-  match '/issues/preview/edit/:id', :to => 'previews#issue', :as => 'preview_edit_issue', :via => [:get, :post, :put, :patch]
   match '/issues/preview', :to => 'previews#issue', :as => 'preview_issue', :via => [:get, :post, :put, :patch]
+  match '/preview/text', :to => 'previews#text', :as => 'preview_text', :via => [:get, :post, :put, :patch]
 
-  match 'projects/:id/wiki', :to => 'wikis#edit', :via => :post
   match 'projects/:id/wiki/destroy', :to => 'wikis#destroy', :via => [:get, :post]
 
   match 'boards/:board_id/topics/new', :to => 'messages#new', :via => [:get, :post], :as => 'new_board_message'
@@ -107,7 +105,6 @@ Rails.application.routes.draw do
 
     member do
       get 'settings(/:tab)', :action => 'settings', :as => 'settings'
-      post 'modules'
       post 'archive'
       post 'unarchive'
       post 'close'
@@ -158,7 +155,7 @@ Rails.application.routes.draw do
         end
       end
     end
-  
+
     match 'wiki/index', :controller => 'wiki', :action => 'index', :via => :get
     resources :wiki, :except => [:index, :create], :as => 'wiki_page' do
       member do
@@ -234,6 +231,8 @@ Rails.application.routes.draw do
   match '/time_entries/destroy', :to => 'timelog#destroy', :via => :delete
   # Used to update the new time entry form
   post '/time_entries/new', :to => 'timelog#new'
+  # Used to update the bulk edit time entry form
+  post '/time_entries/bulk_edit', :to => 'timelog#bulk_edit'
 
   get 'projects/:id/activity', :to => 'activities#index', :as => :project_activity
   get 'activity', :to => 'activities#index'
@@ -242,63 +241,43 @@ Rails.application.routes.draw do
   get 'projects/:id/repository/:repository_id/statistics', :to => 'repositories#stats'
   get 'projects/:id/repository/:repository_id/graph', :to => 'repositories#graph'
 
-  get 'projects/:id/repository/:repository_id/changes(/*path)',
-      :to => 'repositories#changes',
-      :format => false
-
   get 'projects/:id/repository/:repository_id/revisions/:rev', :to => 'repositories#revision'
   get 'projects/:id/repository/:repository_id/revision', :to => 'repositories#revision'
   post   'projects/:id/repository/:repository_id/revisions/:rev/issues', :to => 'repositories#add_related_issue'
   delete 'projects/:id/repository/:repository_id/revisions/:rev/issues/:issue_id', :to => 'repositories#remove_related_issue'
   get 'projects/:id/repository/:repository_id/revisions', :to => 'repositories#revisions'
-  %w(browse show entry raw annotate diff).each do |action|
+  %w(browse show entry raw annotate).each do |action|
     get "projects/:id/repository/:repository_id/revisions/:rev/#{action}(/*path)",
         :controller => 'repositories',
         :action => action,
-        :format => false,
-        :constraints => {:rev => /[a-z0-9\.\-_]+/}
+        :format => 'html',
+        :constraints => {:rev => /[a-z0-9\.\-_]+/, :path => /.*/}
   end
 
-  get 'projects/:id/repository/statistics', :to => 'repositories#stats'
-  get 'projects/:id/repository/graph', :to => 'repositories#graph'
-
-  get 'projects/:id/repository/changes(/*path)',
-      :to => 'repositories#changes',
-      :format => false
-
-  get 'projects/:id/repository/revisions', :to => 'repositories#revisions'
-  get 'projects/:id/repository/revisions/:rev', :to => 'repositories#revision'
-  get 'projects/:id/repository/revision', :to => 'repositories#revision'
-  post   'projects/:id/repository/revisions/:rev/issues', :to => 'repositories#add_related_issue'
-  delete 'projects/:id/repository/revisions/:rev/issues/:issue_id', :to => 'repositories#remove_related_issue'
-  %w(browse show entry raw annotate diff).each do |action|
-    get "projects/:id/repository/revisions/:rev/#{action}(/*path)",
-        :controller => 'repositories',
-        :action => action,
-        :format => false,
-        :constraints => {:rev => /[a-z0-9\.\-_]+/}
-  end
-  %w(browse entry raw changes annotate diff).each do |action|
+  %w(browse entry raw changes annotate).each do |action|
     get "projects/:id/repository/:repository_id/#{action}(/*path)",
         :controller => 'repositories',
         :action => action,
-        :format => false
-  end
-  %w(browse entry raw changes annotate diff).each do |action|
-    get "projects/:id/repository/#{action}(/*path)",
-        :controller => 'repositories',
-        :action => action,
-        :format => false
+        :format => 'html',
+        :constraints => {:path => /.*/}
   end
 
-  get 'projects/:id/repository/:repository_id/show/*path', :to => 'repositories#show', :format => false
-  get 'projects/:id/repository/show/*path', :to => 'repositories#show', :format => false
+  get "projects/:id/repository/:repository_id/revisions/:rev/diff(/*path)",
+      :to => 'repositories#diff',
+      :format => false,
+      :constraints => {:rev => /[a-z0-9\.\-_]+/, :path => /.*/}
+  get "projects/:id/repository/:repository_id/diff(/*path)",
+      :to => 'repositories#diff',
+      :format => false,
+      :constraints => {:path => /.*/}
+
+  get 'projects/:id/repository/:repository_id/show/*path', :to => 'repositories#show', :format => 'html', :constraints => {:path => /.*/}
 
   get 'projects/:id/repository/:repository_id', :to => 'repositories#show', :path => nil
   get 'projects/:id/repository', :to => 'repositories#show', :path => nil
 
   # additional routes for having the file name at the end of url
-  get 'attachments/:id/:filename', :to => 'attachments#show', :id => /\d+/, :filename => /.*/, :as => 'named_attachment'
+  get 'attachments/:id/:filename', :to => 'attachments#show', :id => /\d+/, :filename => /.*/, :as => 'named_attachment', :format => 'html'
   get 'attachments/download/:id/:filename', :to => 'attachments#download', :id => /\d+/, :filename => /.*/, :as => 'download_named_attachment'
   get 'attachments/download/:id', :to => 'attachments#download', :id => /\d+/
   get 'attachments/thumbnail/:id(/:size)', :to => 'attachments#thumbnail', :id => /\d+/, :size => /\d+/, :as => 'thumbnail'
@@ -376,7 +355,7 @@ Rails.application.routes.draw do
 
   match 'uploads', :to => 'attachments#upload', :via => :post
 
-  get 'robots.txt', :to => 'welcome#robots'
+  get 'robots', :to => 'welcome#robots'
 
   Dir.glob File.expand_path("#{Redmine::Plugin.directory}/*") do |plugin_dir|
     file = File.join(plugin_dir, "config/routes.rb")

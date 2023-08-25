@@ -62,8 +62,14 @@ class AccountController < ApplicationController
     (redirect_to(home_url); return) unless Setting.lost_password?
     if prt = (params[:token] || session[:password_recovery_token])
       @token = Token.find_token("recovery", prt.to_s)
-      if @token.nil? || @token.expired?
+      if @token.nil?
         redirect_to home_url
+        return
+      elsif @token.expired?
+        # remove expired token from session and let user try again
+        session[:password_recovery_token] = nil
+        flash[:error] = l(:error_token_expired)
+        redirect_to lost_password_url
         return
       end
 
@@ -87,7 +93,7 @@ class AccountController < ApplicationController
           @user.must_change_passwd = false
           if @user.save
             @token.destroy
-            Mailer.password_updated(@user, { remote_ip: request.remote_ip })
+            Mailer.deliver_password_updated(@user, User.current)
             flash[:notice] = l(:notice_account_password_updated)
             redirect_to signin_path
             return
@@ -119,7 +125,7 @@ class AccountController < ApplicationController
         if token.save
           # Don't use the param to send the email
           recipent = user.mails.detect {|e| email.casecmp(e) == 0} || user.mail
-          Mailer.lost_password(token, recipent).deliver
+          Mailer.deliver_lost_password(user, token, recipent)
           flash[:notice] = l(:notice_account_lost_email_sent)
           redirect_to signin_path
           return
@@ -313,7 +319,7 @@ class AccountController < ApplicationController
   def register_by_email_activation(user, &block)
     token = Token.new(:user => user, :action => "register")
     if user.save and token.save
-      Mailer.register(token).deliver
+      Mailer.deliver_register(user, token)
       flash[:notice] = l(:notice_account_register_done, :email => ERB::Util.h(user.mail))
       redirect_to signin_path
     else
@@ -343,7 +349,7 @@ class AccountController < ApplicationController
   def register_manually_by_administrator(user, &block)
     if user.save
       # Sends an email to the administrators
-      Mailer.account_activation_request(user).deliver
+      Mailer.deliver_account_activation_request(user)
       account_pending(user)
     else
       yield if block_given?

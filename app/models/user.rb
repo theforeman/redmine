@@ -99,9 +99,6 @@ class User < Principal
   attr_accessor :last_before_login_on
   attr_accessor :remote_ip
 
-  # Prevents unauthorized assignments
-  attr_protected :password, :password_confirmation, :hashed_password
-
   LOGIN_LENGTH_LIMIT = 60
   MAIL_LENGTH_LIMIT = 60
 
@@ -242,7 +239,7 @@ class User < Principal
         end
       end
     end
-    user.update_column(:last_login_on, Time.now) if user && !user.new_record? && user.active?
+    user.update_last_login_on! if user && !user.new_record? && user.active?
     user
   rescue => text
     raise text
@@ -252,7 +249,7 @@ class User < Principal
   def self.try_to_autologin(key)
     user = Token.find_active_user('autologin', key, Setting.autologin.to_i)
     if user
-      user.update_column(:last_login_on, Time.now)
+      user.update_last_login_on!
       user
     end
   end
@@ -318,6 +315,12 @@ class User < Principal
     update_attribute(:status, STATUS_LOCKED)
   end
 
+  def update_last_login_on!
+    return if last_login_on.present? && last_login_on >= 1.minute.ago
+
+    update_column(:last_login_on, Time.now)
+  end
+
   # Returns true if +clear_password+ is the correct user's password, otherwise false
   def check_password?(clear_password)
     if auth_source_id.present?
@@ -357,7 +360,7 @@ class User < Principal
   end
 
   def generate_password?
-    generate_password == '1' || generate_password == true
+    ActiveRecord::Type::Boolean.new.deserialize(generate_password)
   end
 
   # Generate and set a random password on given length
@@ -489,7 +492,7 @@ class User < Principal
       user = where(:login => login).detect {|u| u.login == login}
       unless user
         # Fail over to case-insensitive if none was found
-        user = where("LOWER(login) = ?", login.downcase).first
+        user = find_by("LOWER(login) = ?", login.downcase)
       end
       user
     end
@@ -517,7 +520,7 @@ class User < Principal
     name
   end
 
-  CSS_CLASS_BY_STATUS = {
+  LABEL_BY_STATUS = {
     STATUS_ANONYMOUS  => 'anon',
     STATUS_ACTIVE     => 'active',
     STATUS_REGISTERED => 'registered',
@@ -525,7 +528,7 @@ class User < Principal
   }
 
   def css_classes
-    "user #{CSS_CLASS_BY_STATUS[status]}"
+    "user #{LABEL_BY_STATUS[status]}"
   end
 
   # Returns the current day according to user's time zone
@@ -607,24 +610,24 @@ class User < Principal
     # eg. project.children.visible(user)
     Project.unscoped do
       return @project_ids_by_role if @project_ids_by_role
-  
+
       group_class = anonymous? ? GroupAnonymous : GroupNonMember
       group_id = group_class.pluck(:id).first
-  
+
       members = Member.joins(:project, :member_roles).
         where("#{Project.table_name}.status <> 9").
         where("#{Member.table_name}.user_id = ? OR (#{Project.table_name}.is_public = ? AND #{Member.table_name}.user_id = ?)", self.id, true, group_id).
         pluck(:user_id, :role_id, :project_id)
-  
+
       hash = {}
       members.each do |user_id, role_id, project_id|
         # Ignore the roles of the builtin group if the user is a member of the project
         next if user_id != id && project_ids.include?(project_id)
-  
+
         hash[role_id] ||= []
         hash[role_id] << project_id
       end
-  
+
       result = Hash.new([])
       if hash.present?
         roles = Role.where(:id => hash.keys).to_a
@@ -771,9 +774,9 @@ class User < Principal
         case mail_notification
         when 'selected', 'only_my_events'
           # user receives notifications for created/assigned issues on unselected projects
-          object.author == self || is_or_belongs_to?(object.assigned_to) || is_or_belongs_to?(object.assigned_to_was)
+          object.author == self || is_or_belongs_to?(object.assigned_to) || is_or_belongs_to?(object.previous_assignee)
         when 'only_assigned'
-          is_or_belongs_to?(object.assigned_to) || is_or_belongs_to?(object.assigned_to_was)
+          is_or_belongs_to?(object.assigned_to) || is_or_belongs_to?(object.previous_assignee)
         when 'only_owner'
           object.author == self
         end
@@ -795,7 +798,7 @@ class User < Principal
   # Returns the anonymous user.  If the anonymous user does not exist, it is created.  There can be only
   # one anonymous user per database.
   def self.anonymous
-    anonymous_user = AnonymousUser.unscoped.first
+    anonymous_user = AnonymousUser.unscoped.find_by(:lastname => 'Anonymous')
     if anonymous_user.nil?
       anonymous_user = AnonymousUser.unscoped.create(:lastname => 'Anonymous', :firstname => '', :login => '', :status => 0)
       raise 'Unable to create the anonymous user.' if anonymous_user.new_record?
@@ -845,7 +848,7 @@ class User < Principal
   # This helps to keep the account secure in case the associated email account
   # was compromised.
   def destroy_tokens
-    if hashed_password_changed? || (status_changed? && !active?)
+    if saved_change_to_hashed_password? || (saved_change_to_status? && !active?)
       tokens = ['recovery', 'autologin', 'session']
       Token.where(:user_id => id, :action => tokens).delete_all
     end
@@ -900,16 +903,16 @@ class User < Principal
     }
 
     deliver = false
-    if (admin? && id_changed? && active?) ||    # newly created admin
-       (admin? && admin_changed? && active?) || # regular user became admin
-       (admin? && status_changed? && active?)   # locked admin became active again
+    if (admin? && saved_change_to_id? && active?) ||    # newly created admin
+       (admin? && saved_change_to_admin? && active?) || # regular user became admin
+       (admin? && saved_change_to_status? && active?)   # locked admin became active again
 
        deliver = true
        options[:message] = :mail_body_security_notification_add
 
     elsif (admin? && destroyed? && active?) ||      # active admin user was deleted
-          (!admin? && admin_changed? && active?) || # admin is no longer admin
-          (admin? && status_changed? && !active?)   # admin was locked
+          (!admin? && saved_change_to_admin? && active?) || # admin is no longer admin
+          (admin? && saved_change_to_status? && !active?)   # admin was locked
 
           deliver = true
           options[:message] = :mail_body_security_notification_remove
@@ -917,7 +920,7 @@ class User < Principal
 
     if deliver
       users = User.active.where(admin: true).to_a
-      Mailer.security_notification(users, options).deliver
+      Mailer.deliver_security_notification(users, User.current, options)
     end
   end
 end

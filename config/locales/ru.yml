@@ -245,7 +245,7 @@ ru:
   button_list: Список
   button_lock: Заблокировать
   button_login: Вход
-  button_log_time: Трудозатраты
+  button_log_time: Добавить трудозатраты
   button_move: Переместить
   button_quote: Цитировать
   button_rename: Переименовать
@@ -270,7 +270,7 @@ ru:
   default_doc_category_user: Пользовательская документация
   default_issue_status_in_progress: В работе
   default_issue_status_closed: Закрыта
-  default_issue_status_feedback: Обратная связь
+  default_issue_status_feedback: Нужен отклик
   default_issue_status_new: Новая
   default_issue_status_rejected: Отклонена
   default_issue_status_resolved: Решена
@@ -440,8 +440,6 @@ ru:
   label_browse: Обзор
   label_bulk_edit_selected_issues: Редактировать все выбранные задачи
   label_calendar: Календарь
-  label_calendar_filter: Включая
-  label_calendar_no_assigned: не мои
   label_change_plural: Правки
   label_change_properties: Изменить свойства
   label_change_status: Изменить статус
@@ -677,7 +675,6 @@ ru:
   label_this_week: на этой неделе
   label_this_year: этот год
   label_time_tracking: Учёт времени
-  label_timelog_today: Расход времени на сегодня
   label_today: сегодня
   label_topic_plural: Темы
   label_total: Всего
@@ -809,7 +806,6 @@ ru:
   permission_manage_subtasks: Управление подзадачами
   permission_manage_versions: Управление версиями
   permission_manage_wiki: Управление Wiki
-  permission_move_issues: Перенос задач
   permission_protect_wiki_pages: Блокирование wiki-страниц
   permission_rename_wiki_pages: Переименование wiki-страниц
   permission_save_queries: Сохранение запросов
@@ -835,7 +831,6 @@ ru:
   project_module_calendar: Календарь
 
   setting_activity_days_default: Количество дней, отображаемых в Действиях
-  setting_app_subtitle: Подзаголовок приложения
   setting_app_title: Название приложения
   setting_attachment_max_size: Максимальный размер вложения
   setting_autofetch_changesets: Автоматически следить за изменениями хранилища
@@ -1308,7 +1303,7 @@ ru:
   setting_timespan_format: Формат промежутка времени
   label_table_of_contents: Содержание
   setting_commit_logs_formatting: Использовать форматирование текста для комментариев хранилища
-  setting_mail_handler_enable_regex_delimiters: Использовать регулярные выражения
+  setting_mail_handler_enable_regex: Использовать регулярные выражения
   error_move_of_child_not_possible: 'Подзадача %{child} не может быть перемещена в новый
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Затраченное время не может быть переназначено на задачу, которая будет удалена
@@ -1327,3 +1322,24 @@ ru:
   permission_view_news: Просмотр новостей
   label_no_preview_alternative_html: Предпросмотр недоступен. %{link} файл.
   label_no_preview_download: Скачать
+  setting_close_duplicate_issues: Закрывать дубликаты задач автоматически
+  error_exceeds_maximum_hours_per_day: Не удается зарегистрировать больше %{max_hours} часов в один день (%{logged_hours} часов уже зарегистрированы)
+  setting_time_entry_list_defaults: Список трудозатрат по умолчанию
+  setting_timelog_accept_0_hours: Принимать трудозатраты с 0 часов
+  setting_timelog_max_hours_per_day: Максимальное количество часов, которое может быть зарегистрировано в день одним пользователем
+  label_x_revisions: "%{count} изменени(я, ий)"
+  error_can_not_delete_auth_source: Этот режим аутентификации используется и не может быть удален.
+  button_actions: Действия
+  mail_body_lost_password_validity: Помните, вы можете изменить пароль только один раз, используя эту ссылку.
+  text_login_required_html: Если аутентификация не требуется, публичные проекты и их содержимое в свободном доступе. Вы можете <a href="%{anonymous_role_path}">редактировать соответствующие разрешения</a>.
+  label_login_required_yes: 'Да'
+  label_login_required_no: Нет, разрешить свободный доступ к публичным проектам.
+  text_project_is_public_non_member: Публичные проекты и их содержимое доступны всем зарегистрированным пользователям.
+  text_project_is_public_anonymous: Публичные проекты и их содержимое в свободном доступе.
+  label_version_and_files: Версии (%{count}) и файлы
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (без проверки сертификата)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Рекомендуется использовать зашифрованное соединение LDAPS с проверкой сертификата для предотвращения любых посторонних вмешательств в процессе аутентификации.
+  label_nothing_to_preview: Нет данных для предварительного просмотра
+  error_token_expired: This password recovery link has expired, please try again.

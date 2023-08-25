@@ -223,7 +223,7 @@
   general_text_Yes: '是'
   general_text_no: '否'
   general_text_yes: '是'
-  general_lang_name: 'Traditional Chinese (繁體中文)'
+  general_lang_name: 'Chinese/Traditional (繁體中文)'
   general_csv_separator: ','
   general_csv_decimal_separator: '.'
   general_csv_encoding: Big5
@@ -239,7 +239,7 @@
   notice_account_unknown_email: 未知的使用者
   notice_account_not_activated_yet: 您尚未完成啟用您的帳號。若您要索取新的帳號啟用 Email ，請 <a href="%{url}">點擊此連結</a> 。
   notice_account_locked: 您的帳號已被鎖定。
-  notice_can_t_change_password: 這個帳號使用外部認證方式，無法變更其密碼。
+  notice_can_t_change_password: 這個帳號使用外部驗證方式，無法變更其密碼。
   notice_account_lost_email_sent: 包含選擇新密碼指示的電子郵件，已經寄出給您。
   notice_account_activated: 您的帳號已經啟用，可用它登入系統。
   notice_successful_create: 建立成功
@@ -304,6 +304,7 @@
   error_move_of_child_not_possible: "子任務 %{child} 無法被搬移至新的專案: %{errors}"
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: "無法將耗用工時重新分配給即將被刪除的問題"
   warning_fields_cleared_on_bulk_edit: "選取物件的變更將導致一個或多個欄位之內容值被自動刪除"
+  error_exceeds_maximum_hours_per_day: "工時記錄單日不能超過 %{max_hours} 小時 (目前已登錄 %{logged_hours} 小時)"
 
   mail_subject_lost_password: 您的 Redmine 網站密碼
   mail_body_lost_password: '欲變更您的 Redmine 網站密碼, 請點選以下鏈結:'
@@ -394,7 +395,7 @@
   field_onthefly: 即時建立使用者
   field_start_date: 開始日期
   field_done_ratio: 完成百分比
-  field_auth_source: 認證模式
+  field_auth_source: 驗證模式
   field_hide_mail: 隱藏我的電子郵件
   field_comments: 回應
   field_url: 網址
@@ -461,7 +462,6 @@
   field_default_assigned_to: 預設被分派者
 
   setting_app_title: 標題
-  setting_app_subtitle: 副標題
   setting_welcome_text: 歡迎詞
   setting_default_language: 預設語言
   setting_login_required: 需要驗證
@@ -498,7 +498,7 @@
   setting_display_subprojects_issues: 預設於父專案中顯示子專案的議題
   setting_enabled_scm: 啟用的 SCM
   setting_mail_handler_body_delimiters: "截去郵件中包含下列值之後的內容"
-  setting_mail_handler_enable_regex_delimiters: "啟用規則運算式"
+  setting_mail_handler_enable_regex: "啟用規則運算式"
   setting_mail_handler_api_enabled: 啟用處理傳入電子郵件的服務
   setting_mail_handler_api_key: 傳入電子郵件網頁服務 API 金鑰
   setting_sys_api_key: 儲存機制管理網頁服務 API 金鑰
@@ -546,6 +546,10 @@
   setting_new_item_menu_tab: 建立新物件的專案功能分頁
   setting_commit_logs_formatting: 套用文字格式至認可訊息
   setting_timelog_required_fields: 工時記錄必填欄位
+  setting_close_duplicate_issues: 自動結束重複的議題
+  setting_time_entry_list_defaults: 工時記錄清單預設值
+  setting_timelog_accept_0_hours: 允許工時為 0 的工時記錄
+  setting_timelog_max_hours_per_day: 單一用戶每日工時之最大值
 
   permission_add_project: 建立專案
   permission_add_subprojects: 建立子專案
@@ -568,7 +572,6 @@
   permission_edit_own_issue_notes: 編輯自己的筆記
   permission_view_private_notes: 檢視私人筆記
   permission_set_notes_private: 設定筆記為私人筆記
-  permission_move_issues: 搬移議題
   permission_delete_issues: 刪除議題
   permission_manage_public_queries: 管理公開查詢
   permission_save_queries: 儲存查詢
@@ -704,10 +707,10 @@
   label_new: 建立新的...
   label_logged_as: 目前登入
   label_environment: 環境
-  label_authentication: 認證
-  label_auth_source: 認證模式
-  label_auth_source_new: 建立新認證模式
-  label_auth_source_plural: 認證模式清單
+  label_authentication: 驗證
+  label_auth_source: 驗證模式
+  label_auth_source_new: 建立新驗證模式
+  label_auth_source_plural: 驗證模式清單
   label_subproject_plural: 子專案
   label_subproject_new: 建立子專案
   label_and_its_subprojects: "%{value} 與其子專案"
@@ -854,6 +857,7 @@
   label_latest_revision_plural: 最新的修訂版清單
   label_view_revisions: 檢視修訂版清單
   label_view_all_revisions: 檢視所有的的修訂版清單
+  label_x_revisions: "%{count} 個修訂版"
   label_max_size: 最大長度
   label_sort_highest: 移動至開頭
   label_sort_higher: 往上移動
@@ -969,7 +973,7 @@
   label_general: 一般
   label_scm: 版本控管
   label_plugins: 外掛程式
-  label_ldap_authentication: LDAP 認證
+  label_ldap_authentication: LDAP 驗證
   label_downloads_abbr: 下載
   label_optional_description: 額外的說明
   label_add_another_file: 增加其他檔案
@@ -1295,3 +1299,18 @@
   description_issue_category_reassign: 選擇議題分類
   description_wiki_subpages_reassign: 選擇新的父頁面
   text_repository_identifier_info: '僅允許使用小寫英文字母 (a-z), 阿拉伯數字, 虛線與底線。<br />一旦儲存之後, 代碼便無法再次被更改。'
+  error_can_not_delete_auth_source: "此驗證模式目前使用中, 無法被刪除."
+  button_actions: 動作
+  mail_body_lost_password_validity: '請注意您只能使用此鏈接更改密碼一次。'
+  text_login_required_html: 當不需要驗證時, 公開的專案與其內容在網路上是開放可用的. 您可 <a href="%{anonymous_role_path}">編輯適用的權限設定</a>.
+  label_login_required_yes: '是'
+  label_login_required_no: 否, 允許以匿名方式存取公開之專案
+  text_project_is_public_non_member: 公開之專案及其內容, 可供所有已登入的用戶使用.
+  text_project_is_public_anonymous: 公開之專案及其內容, 在網路上是開放可用的.
+  label_version_and_files: 版本 (%{count}) 與檔案
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (不含 SSL 憑證檢查)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: 建議使用包含 SSL 憑證檢查的加密 LADPS 協定，以防止驗證過程被竄改操縱。
+  label_nothing_to_preview: 沒有可供預覽的項目
+  error_token_expired: 此密碼復原連結已經過期, 請再試一次.

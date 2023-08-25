@@ -47,15 +47,11 @@ module RedmineApp
     # Do not include all helpers
     config.action_controller.include_all_helpers = false
 
-    # Do not suppress errors in after_rollback and after_commit callbacks
-    config.active_record.raise_in_transactional_callbacks = true
-
-    # XML parameter parser removed from core in Rails 4.0
-    # and extracted to actionpack-xml_parser gem
-    config.middleware.insert_after ActionDispatch::ParamsParser, ActionDispatch::XmlParamsParser
+    # Since Redmine 4.0, boolean values are stored in sqlite3 databases as 1 and 0
+    config.active_record.sqlite3.represent_boolean_as_integer = true
 
     # Sets the Content-Length header on responses with fixed-length bodies
-    config.middleware.insert_after Rack::Sendfile, Rack::ContentLength
+    config.middleware.insert_before Rack::Sendfile, Rack::ContentLength
 
     # Verify validity of user sessions
     config.redmine_verify_sessions = true

@@ -34,6 +34,7 @@ class MailHandlerTest < ActiveSupport::TestCase
   def setup
     ActionMailer::Base.deliveries.clear
     Setting.notified_events = Redmine::Notifiable.all.collect(&:name)
+    User.current = nil
   end
 
   def teardown
@@ -43,7 +44,7 @@ class MailHandlerTest < ActiveSupport::TestCase
   def test_add_issue_with_specific_overrides
     issue = submit_email('ticket_on_given_project.eml',
       :allow_override => ['status', 'start_date', 'due_date', 'assigned_to',
-                          'fixed_version', 'estimated_hours', 'done_ratio']
+                          'fixed_version', 'estimated_hours', 'done_ratio', 'parent_issue']
     )
     assert issue.is_a?(Issue)
     assert !issue.new_record?
@@ -60,6 +61,7 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal Version.find_by_name('Alpha'), issue.fixed_version
     assert_equal 2.5, issue.estimated_hours
     assert_equal 30, issue.done_ratio
+    assert_equal Issue.find(4), issue.parent
     # keywords should be removed from the email body
     assert !issue.description.match(/^Project:/i)
     assert !issue.description.match(/^Status:/i)
@@ -81,6 +83,7 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal Version.find_by_name('Alpha'), issue.fixed_version
     assert_equal 2.5, issue.estimated_hours
     assert_equal 30, issue.done_ratio
+    assert_equal Issue.find(4), issue.parent
   end
 
   def test_add_issue_without_overrides_should_ignore_attributes
@@ -102,6 +105,7 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_nil issue.fixed_version
     assert_nil issue.estimated_hours
     assert_equal 0, issue.done_ratio
+    assert_nil issue.parent
   end
 
   def test_add_issue_to_project_specified_by_subaddress
@@ -318,6 +322,7 @@ class MailHandlerTest < ActiveSupport::TestCase
 
   def test_add_issue_by_anonymous_user
     Role.anonymous.add_permission!(:add_issues)
+    Role.anonymous.add_permission!(:add_issue_watchers)
     assert_no_difference 'User.count' do
       issue = submit_email(
                 'ticket_by_unknown_user.eml',
@@ -326,6 +331,9 @@ class MailHandlerTest < ActiveSupport::TestCase
               )
       assert issue.is_a?(Issue)
       assert issue.author.anonymous?
+      issue.reload
+      assert issue.watched_by?(User.find_by_mail('dlopper@somenet.foo'))
+      assert_equal 1, issue.watchers.size
     end
   end
 
@@ -433,10 +441,11 @@ class MailHandlerTest < ActiveSupport::TestCase
       )
     end
 
-    # only 1 email for the new issue notification
-    assert_equal 1, ActionMailer::Base.deliveries.size
-    email = ActionMailer::Base.deliveries.first
-    assert_include 'Ticket by unknown user', email.subject
+    # only 2 emails for the new issue notification
+    assert_equal 2, ActionMailer::Base.deliveries.size
+    ActionMailer::Base.deliveries.each do |email|
+      assert_include 'Ticket by unknown user', email.subject
+    end
   end
 
   def test_created_user_should_have_mail_notification_to_none_with_no_notification_option
@@ -470,6 +479,7 @@ class MailHandlerTest < ActiveSupport::TestCase
       assert_nil issue.start_date
       assert_nil issue.due_date
       assert_equal 0, issue.done_ratio
+      assert_nil issue.parent
       assert_equal 'Normal', issue.priority.to_s
       assert issue.description.include?('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')
     end
@@ -731,6 +741,20 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal ja, issue.subject
   end
 
+  def test_add_issue_with_iso_2022_jp_ms_subject
+    # The original subject is "① 丸数字テスト".
+    # CIRCLED DIGIT ONE character is undefined in ISO-2022-JP but
+    # defined in some vendor-extended variants such as ISO-2022-JP-MS.
+    # This test makes sure that mail gem replaces an undefined characters
+    # with a replacement character instead of breaking the whole subject.
+    issue = submit_email(
+              'subject_japanese_3.eml',
+              :issue => {:project => 'ecookbook'}
+            )
+    assert_kind_of Issue, issue
+    assert_match /丸数字テスト/, issue.subject
+  end
+
   def test_should_ignore_emails_from_locked_users
     User.find(2).lock!
 
@@ -741,14 +765,23 @@ class MailHandlerTest < ActiveSupport::TestCase
   end
 
   def test_should_ignore_emails_from_emission_address
+    emission_addresses = [
+      'redmine@example.net',
+      'Redmine <redmine@example.net>',
+      'redmine@example.net (Redmine)'
+    ]
     Role.anonymous.add_permission!(:add_issues)
-    assert_no_difference 'User.count' do
-      assert_equal false,
-                   submit_email(
-                     'ticket_from_emission_address.eml',
-                     :issue => {:project => 'ecookbook'},
-                     :unknown_user => 'create'
-                   )
+    emission_addresses.each do |addr|
+      with_settings :mail_from => addr do
+        assert_no_difference 'User.count' do
+          assert_equal false,
+                      submit_email(
+                        'ticket_from_emission_address.eml',
+                        :issue => {:project => 'ecookbook'},
+                        :unknown_user => 'create'
+                      )
+        end
+      end
     end
   end
 
@@ -884,7 +917,7 @@ class MailHandlerTest < ActiveSupport::TestCase
   def test_update_issue_should_send_email_notification
     journal = submit_email('ticket_reply.eml')
     assert journal.is_a?(Journal)
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 3, ActionMailer::Base.deliveries.size
   end
 
   def test_update_issue_should_not_set_defaults
@@ -933,6 +966,18 @@ class MailHandlerTest < ActiveSupport::TestCase
       assert_kind_of Journal, journal
       assert_match /This is reply/, journal.notes
       assert_equal true, journal.private_notes
+    end
+  end
+
+  def test_reply_to_an_issue_without_permission
+    set_tmp_attachments_directory
+    # "add_issue_notes" permission is explicit required to allow users to add notes
+    # "edit_issue" permission no longer includes the "add_issue_notes" permission
+    Role.all.each {|r| r.remove_permission! :add_issue_notes}
+    assert_no_difference 'Issue.count' do
+      assert_no_difference 'Journal.count' do
+        assert_not submit_email('ticket_reply_with_status.eml')
+      end
     end
   end
 
@@ -1068,6 +1113,16 @@ class MailHandlerTest < ActiveSupport::TestCase
 
   def test_attachments_that_match_mail_handler_excluded_filenames_should_be_ignored
     with_settings :mail_handler_excluded_filenames => '*.vcf, *.jpg' do
+      issue = submit_email('ticket_with_attachment.eml', :issue => {:project => 'onlinestore'})
+      assert issue.is_a?(Issue)
+      assert !issue.new_record?
+      assert_equal 0, issue.reload.attachments.size
+    end
+  end
+
+  def test_attachments_that_match_mail_handler_excluded_filenames_by_regex_should_be_ignored
+    with_settings :mail_handler_excluded_filenames => '.+\.vcf,(pa|nut)ella\.jpg',
+                  :mail_handler_enable_regex_excluded_filenames => 1 do
       issue = submit_email('ticket_with_attachment.eml', :issue => {:project => 'onlinestore'})
       assert issue.is_a?(Issue)
       assert !issue.new_record?

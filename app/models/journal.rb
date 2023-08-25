@@ -26,7 +26,6 @@ class Journal < ActiveRecord::Base
   belongs_to :user
   has_many :details, :class_name => "JournalDetail", :dependent => :delete_all, :inverse_of => :journal
   attr_accessor :indice
-  attr_protected :id
 
   acts_as_event :title => Proc.new {|o| status = ((s = o.new_status) ? " (#{s})" : nil); "#{o.issue.tracker} ##{o.issue.id}#{status}: #{o.issue.subject}" },
                 :description => :notes,
@@ -43,7 +42,7 @@ class Journal < ActiveRecord::Base
                                             " (#{JournalDetail.table_name}.prop_key = 'status_id' OR #{Journal.table_name}.notes <> '')").distinct
 
   before_create :split_private_notes
-  after_commit :send_notification, :on => :create
+  after_create_commit :send_notification
 
   scope :visible, lambda {|*args|
     user = args.shift || User.current
@@ -91,19 +90,6 @@ class Journal < ActiveRecord::Base
         Issue.find_by_id(detail.value || detail.old_value).try(:visible?, user)
       else
         true
-      end
-    end
-  end
-
-  def each_notification(users, &block)
-    if users.any?
-      users_by_details_visibility = users.group_by do |user|
-        visible_details(user)
-      end
-      users_by_details_visibility.each do |visible_details, users|
-        if notes? || visible_details.any?
-          yield(users)
-        end
       end
     end
   end

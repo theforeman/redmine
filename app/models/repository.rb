@@ -48,7 +48,6 @@ class Repository < ActiveRecord::Base
   # Checks if the SCM is enabled when creating a repository
   validate :repo_create_validation, :on => :create
   validate :validate_repository_path
-  attr_protected :id
 
   safe_attributes 'identifier',
     'login',
@@ -130,9 +129,7 @@ class Repository < ActiveRecord::Base
   end
 
   def identifier_param
-    if is_default?
-      nil
-    elsif identifier.present?
+    if identifier.present?
       identifier
     else
       id.to_s
@@ -250,7 +247,7 @@ class Repository < ActiveRecord::Base
     return nil if name.blank?
     s = name.to_s
     if s.match(/^\d*$/)
-      changesets.where("revision = ?", s).first
+      changesets.find_by(:revision => s)
     else
       changesets.where("revision LIKE ?", s + '%').first
     end
@@ -460,6 +457,10 @@ class Repository < ActiveRecord::Base
       scope = scope.where(:revision => changeset.revision)
     end
     scope
+  end
+
+  def valid_name?(name)
+    scm.valid_name?(name)
   end
 
   protected

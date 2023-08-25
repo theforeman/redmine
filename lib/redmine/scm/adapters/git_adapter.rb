@@ -82,6 +82,7 @@ module Redmine
           git_cmd(cmd_args) do |io|
             io.each_line do |line|
               branch_rev = line.match('\s*(\*?)\s*(.*?)\s*([0-9a-f]{40}).*$')
+              next unless branch_rev
               bran = GitBranch.new(branch_rev[2])
               next unless branch_rev
               bran.revision =  branch_rev[3]
@@ -378,6 +379,18 @@ module Redmine
           cat
         rescue ScmCommandAborted
           nil
+        end
+
+        def valid_name?(name)
+          return false unless name.is_a?(String)
+
+          return false if name.start_with?('-', '/', 'refs/heads/', 'refs/remotes/')
+          return false if name == 'HEAD'
+
+          git_cmd ['show-ref', '--heads', '--tags', '--quiet', '--', name]
+          true
+        rescue ScmCommandAborted
+          false
         end
 
         class Revision < Redmine::Scm::Adapters::Revision

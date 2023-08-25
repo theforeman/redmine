@@ -316,7 +316,6 @@ ko:
   field_spent_on: 작업시간
   field_identifier: 식별자
   field_is_filter: 검색조건으로 사용됨
-  field_issue_to_id: 연관된 일감
   field_delay: 지연
   field_assignable: 일감을 맡길 수 있음
   field_redirect_existing_links: 기존의 링크로 돌려보냄(redirect)
@@ -334,7 +333,6 @@ ko:
   field_group_by: 결과를 묶어 보여줄 기준
 
   setting_app_title: 레드마인 제목
-  setting_app_subtitle: 레드마인 부제목
   setting_welcome_text: 환영 메시지
   setting_default_language: 기본 언어
   setting_login_required: 인증이 필요함
@@ -388,7 +386,6 @@ ko:
   permission_add_issue_notes: 덧글 추가
   permission_edit_issue_notes: 덧글 편집
   permission_edit_own_issue_notes: 내 덧글 편집
-  permission_move_issues: 일감 이동
   permission_delete_issues: 일감 삭제
   permission_manage_public_queries: 공용 검색양식 관리
   permission_save_queries: 검색양식 저장
@@ -1246,7 +1243,7 @@ ko:
   setting_timespan_format: Time span format
   label_table_of_contents: Table of contents
   setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  setting_mail_handler_enable_regex: Enable regular expressions
   error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
@@ -1267,3 +1264,32 @@ ko:
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
   label_no_preview_download: Download
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.

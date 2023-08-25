@@ -67,8 +67,6 @@ class Project < ActiveRecord::Base
                 :url => Proc.new {|o| {:controller => 'projects', :action => 'show', :id => o}},
                 :author => nil
 
-  attr_protected :status
-
   validates_presence_of :name, :identifier
   validates_uniqueness_of :identifier, :if => Proc.new {|p| p.identifier_changed?}
   validates_length_of :name, :maximum => 255
@@ -80,9 +78,9 @@ class Project < ActiveRecord::Base
   validates_exclusion_of :identifier, :in => %w( new )
   validate :validate_parent
 
-  after_save :update_inherited_members, :if => Proc.new {|project| project.inherit_members_changed?}
-  after_save :remove_inherited_member_roles, :add_inherited_member_roles, :if => Proc.new {|project| project.parent_id_changed?}
-  after_update :update_versions_from_hierarchy_change, :if => Proc.new {|project| project.parent_id_changed?}
+  after_save :update_inherited_members, :if => Proc.new {|project| project.saved_change_to_inherit_members?}
+  after_save :remove_inherited_member_roles, :add_inherited_member_roles, :if => Proc.new {|project| project.saved_change_to_parent_id?}
+  after_update :update_versions_from_hierarchy_change, :if => Proc.new {|project| project.saved_change_to_parent_id?}
   before_destroy :delete_all_members
 
   scope :has_module, lambda {|mod|
@@ -257,6 +255,15 @@ class Project < ActiveRecord::Base
     scope
   end
 
+  # Creates or updates project time entry activities
+  def update_or_create_time_entry_activities(activities)
+    transaction do
+      activities.each do |id, activity|
+        update_or_create_time_entry_activity(id, activity)
+      end
+    end
+  end
+
   # Will create a new Project specific Activity or update an existing one
   #
   # This will raise a ActiveRecord::Rollback if the TimeEntryActivity
@@ -380,15 +387,11 @@ class Project < ActiveRecord::Base
     true
   end
 
-  # Unarchives the project
-  # All its ancestors must be active
+  # Unarchives the project and its archived ancestors
   def unarchive
-    return false if ancestors.detect {|a| a.archived?}
-    new_status = STATUS_ACTIVE
-    if parent
-      new_status = parent.status
-    end
-    update_attribute :status, new_status
+    new_status = ancestors.any?(&:closed?) ? STATUS_CLOSED : STATUS_ACTIVE
+    self_and_ancestors.status(STATUS_ARCHIVED).update_all :status => new_status
+    reload
   end
 
   def close
@@ -412,14 +415,6 @@ class Project < ActiveRecord::Base
       @allowed_parents << parent
     end
     @allowed_parents
-  end
-
-  # Sets the parent of the project with authorization check
-  def set_allowed_parent!(p)
-    ActiveSupport::Deprecation.warn "Project#set_allowed_parent! is deprecated and will be removed in Redmine 4, use #safe_attributes= instead."
-    p = p.id if p.is_a?(Project)
-    send :safe_attributes, {:project_id => p}
-    save
   end
 
   # Sets the parent of the project and saves the project
@@ -527,8 +522,8 @@ class Project < ActiveRecord::Base
     member
   end
 
-	# Default role that is given to non-admin users that
-	# create a project
+  # Default role that is given to non-admin users that
+  # create a project
   def self.default_member_role
     Role.givable.find_by_id(Setting.new_project_user_role_id.to_i) || Role.givable.first
   end
@@ -629,6 +624,7 @@ class Project < ActiveRecord::Base
     s << ' root' if root?
     s << ' child' if child?
     s << (leaf? ? ' leaf' : ' parent')
+    s << ' public' if is_public?
     unless active?
       if archived?
         s << ' archived'
@@ -776,6 +772,10 @@ class Project < ActiveRecord::Base
     :if => lambda {|project, user| project.parent.nil? || project.parent.visible?(user)}
 
   def safe_attributes=(attrs, user=User.current)
+    if attrs.respond_to?(:to_unsafe_hash)
+      attrs = attrs.to_unsafe_hash
+    end
+
     return unless attrs.is_a?(Hash)
     attrs = attrs.deep_dup
 
@@ -818,12 +818,17 @@ class Project < ActiveRecord::Base
   def copy(project, options={})
     project = project.is_a?(Project) ? project : Project.find(project)
 
-    to_be_copied = %w(members wiki versions issue_categories issues queries boards)
+    to_be_copied = %w(members wiki versions issue_categories issues queries boards documents)
     to_be_copied = to_be_copied & Array.wrap(options[:only]) unless options[:only].nil?
 
     Project.transaction do
       if save
         reload
+
+        self.attachments = project.attachments.map do |attachment|
+          attachment.copy(:container => self)
+        end
+
         to_be_copied.each do |name|
           send "copy_#{name}", project
         end
@@ -833,11 +838,6 @@ class Project < ActiveRecord::Base
         false
       end
     end
-  end
-
-  def member_principals
-    ActiveSupport::Deprecation.warn "Project#member_principals is deprecated and will be removed in Redmine 4.0. Use #memberships.active instead."
-    memberships.active
   end
 
   # Returns a new unsaved Project instance with attributes copied from +project+
@@ -872,10 +872,10 @@ class Project < ActiveRecord::Base
 
   def update_inherited_members
     if parent
-      if inherit_members? && !inherit_members_was
+      if inherit_members? && !inherit_members_before_last_save
         remove_inherited_member_roles
         add_inherited_member_roles
-      elsif !inherit_members? && inherit_members_was
+      elsif !inherit_members? && inherit_members_before_last_save
         remove_inherited_member_roles
       end
     end
@@ -932,6 +932,7 @@ class Project < ActiveRecord::Base
         new_wiki_page = WikiPage.new(page.attributes.dup.except("id", "wiki_id", "created_on", "parent_id"))
         new_wiki_page.content = new_wiki_content
         wiki.pages << new_wiki_page
+        new_wiki_page.attachments = page.attachments.map{|attachement| attachement.copy(:container => new_wiki_page)}
         wiki_pages_map[page.id] = new_wiki_page
       end
 
@@ -952,6 +953,11 @@ class Project < ActiveRecord::Base
     project.versions.each do |version|
       new_version = Version.new
       new_version.attributes = version.attributes.dup.except("id", "project_id", "created_on", "updated_on")
+
+      new_version.attachments = version.attachments.map do |attachment|
+        attachment.copy(:container => new_version)
+      end
+
       self.versions << new_version
     end
   end
@@ -1101,6 +1107,21 @@ class Project < ActiveRecord::Base
       new_board.attributes = board.attributes.dup.except("id", "project_id", "topics_count", "messages_count", "last_message_id")
       new_board.project = self
       self.boards << new_board
+    end
+  end
+
+  # Copies documents from +project+
+  def copy_documents(project)
+    project.documents.each do |document|
+      new_document = Document.new
+      new_document.attributes = document.attributes.dup.except("id", "project_id")
+      new_document.project = self
+
+      new_document.attachments = document.attachments.map do |attachement|
+        attachement.copy(:container => new_document)
+      end
+
+      self.documents << new_document
     end
   end
 

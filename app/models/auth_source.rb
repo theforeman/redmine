@@ -30,7 +30,6 @@ class AuthSource < ActiveRecord::Base
   validates_presence_of :name
   validates_uniqueness_of :name
   validates_length_of :name, :maximum => 60
-  attr_protected :id
 
   safe_attributes 'name',
     'host',
@@ -44,6 +43,7 @@ class AuthSource < ActiveRecord::Base
     'attr_mail',
     'onthefly_register',
     'tls',
+    'verify_peer',
     'filter',
     'timeout'
 

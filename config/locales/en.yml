@@ -208,6 +208,7 @@ en:
   error_unable_to_connect: "Unable to connect (%{value})"
   error_attachment_too_big: "This file cannot be uploaded because it exceeds the maximum allowed file size (%{max_size})"
   error_session_expired: "Your session has expired. Please login again."
+  error_token_expired: "This password recovery link has expired, please try again."
   warning_attachments_not_saved: "%{count} file(s) could not be saved."
   error_password_expired: "Your password has expired or the administrator requires you to change it."
   error_invalid_file_encoding: "The file is not a valid %{encoding} encoded file"
@@ -220,9 +221,12 @@ en:
   error_move_of_child_not_possible: "Subtask %{child} could not be moved to the new project: %{errors}"
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: "Spent time cannot be reassigned to an issue that is about to be deleted"
   warning_fields_cleared_on_bulk_edit: "Changes will result in the automatic deletion of values from one or more fields on the selected objects"
+  error_exceeds_maximum_hours_per_day: "Cannot log more than %{max_hours} hours on the same day (%{logged_hours} hours have already been logged)"
+  error_can_not_delete_auth_source: "This authentication mode is in use and cannot be deleted."
 
   mail_subject_lost_password: "Your %{value} password"
   mail_body_lost_password: 'To change your password, click on the following link:'
+  mail_body_lost_password_validity: 'Please be aware that you may change the password only once using this link.'
   mail_subject_register: "Your %{value} account activation"
   mail_body_register: 'To activate your account, click on the following link:'
   mail_body_account_information_external: "You can use your %{value} account to log in."
@@ -377,7 +381,6 @@ en:
   field_default_assigned_to: Default assignee
 
   setting_app_title: Application title
-  setting_app_subtitle: Application subtitle
   setting_welcome_text: Welcome text
   setting_default_language: Default language
   setting_login_required: Authentication required
@@ -403,7 +406,7 @@ en:
   setting_timespan_format: Time span format
   setting_cross_project_issue_relations: Allow cross-project issue relations
   setting_cross_project_subtasks: Allow cross-project subtasks
-  setting_issue_list_default_columns: Default columns displayed on the issue list
+  setting_issue_list_default_columns: Issues list defaults
   setting_repositories_encodings: Attachments and repositories encodings
   setting_emails_header: Email header
   setting_emails_footer: Email footer
@@ -414,7 +417,7 @@ en:
   setting_display_subprojects_issues: Display subprojects issues on main projects by default
   setting_enabled_scm: Enabled SCM
   setting_mail_handler_body_delimiters: "Truncate emails after one of these lines"
-  setting_mail_handler_enable_regex_delimiters: "Enable regular expressions"
+  setting_mail_handler_enable_regex: "Enable regular expressions"
   setting_mail_handler_api_enabled: Enable WS for incoming emails
   setting_mail_handler_api_key: Incoming email WS API key
   setting_sys_api_key: Repository management WS API key
@@ -462,6 +465,10 @@ en:
   setting_new_item_menu_tab: Project menu tab for creating new objects
   setting_commit_logs_formatting: Apply text formatting to commit messages
   setting_timelog_required_fields: Required fields for time logs
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
 
   permission_add_project: Create project
   permission_add_subprojects: Create subprojects
@@ -484,7 +491,6 @@ en:
   permission_edit_own_issue_notes: Edit own notes
   permission_view_private_notes: View private notes
   permission_set_notes_private: Set notes as private
-  permission_move_issues: Move issues
   permission_delete_issues: Delete issues
   permission_manage_public_queries: Manage public queries
   permission_save_queries: Save queries
@@ -662,6 +668,7 @@ en:
   label_version: Version
   label_version_new: New version
   label_version_plural: Versions
+  label_version_and_files: Versions (%{count}) and Files
   label_close_versions: Close completed versions
   label_confirmation: Confirmation
   label_export_to: 'Also available in:'
@@ -770,6 +777,7 @@ en:
   label_latest_revision_plural: Latest revisions
   label_view_revisions: View revisions
   label_view_all_revisions: View all revisions
+  label_x_revisions: "%{count} revisions"
   label_max_size: Maximum size
   label_sort_highest: Move to top
   label_sort_higher: Move up
@@ -885,7 +893,11 @@ en:
   label_general: General
   label_scm: SCM
   label_plugins: Plugins
+  label_ldap: LDAP
   label_ldap_authentication: LDAP authentication
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate check to prevent any manipulation during the authentication process.
   label_downloads_abbr: D/L
   label_optional_description: Optional description
   label_add_another_file: Add another file
@@ -1019,6 +1031,7 @@ en:
   label_font_monospace: Monospaced font
   label_font_proportional: Proportional font
   label_last_notes: Last notes
+  label_nothing_to_preview: Nothing to preview
 
   button_login: Login
   button_submit: Submit
@@ -1074,6 +1087,7 @@ en:
   button_reopen: Reopen
   button_import: Import
   button_filter: Filter
+  button_actions: Actions
 
   status_active: active
   status_registered: registered
@@ -1209,3 +1223,8 @@ en:
   description_issue_category_reassign: Choose issue category
   description_wiki_subpages_reassign: Choose new parent page
   text_repository_identifier_info: 'Only lower case letters (a-z), numbers, dashes and underscores are allowed.<br />Once saved, the identifier cannot be changed.'
+  text_login_required_html: When not requiring authentication, public projects and their contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit the applicable permissions</a>.
+  label_login_required_yes: "Yes"
+  label_login_required_no: "No, allow anonymous access to public projects"
+  text_project_is_public_non_member: Public projects and their contents are available to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available on the network.

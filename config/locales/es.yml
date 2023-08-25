@@ -715,7 +715,6 @@ es:
   permission_manage_repository: Administrar repositorio
   permission_manage_versions: Administrar versiones
   permission_manage_wiki: Administrar wiki
-  permission_move_issues: Mover peticiones
   permission_protect_wiki_pages: Proteger páginas wiki
   permission_rename_wiki_pages: Renombrar páginas wiki
   permission_save_queries: Grabar consultas
@@ -739,7 +738,6 @@ es:
   project_module_time_tracking: Control de tiempo
   project_module_wiki: Wiki
   setting_activity_days_default: Días a mostrar en la actividad de proyecto
-  setting_app_subtitle: Subtítulo de la aplicación
   setting_app_title: Título de la aplicación
   setting_attachment_max_size: Tamaño máximo del fichero
   setting_autofetch_changesets: Autorellenar los commits del repositorio
@@ -858,7 +856,7 @@ es:
   label_branch: Rama
   error_no_tracker_in_project: Este proyecto no tiene asociados tipos de peticiones. Por favor, revise la configuración.
   error_no_default_issue_status: No se ha definido un estado de petición por defecto. Por favor, revise la configuración (en "Administración" -> "Estados de las peticiones").
-  text_journal_changed: "%{label} cambiado %{old} por %{new}"
+  text_journal_changed: "%{label} cambiado de %{old} a %{new}"
   text_journal_set_to: "%{label} establecido a %{value}"
   text_journal_deleted: "%{label} eliminado (%{old})"
   label_group_plural: Grupos
@@ -1235,7 +1233,7 @@ es:
   setting_timespan_format: Time span format
   label_table_of_contents: Table of contents
   setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  setting_mail_handler_enable_regex: Enable regular expressions
   error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
@@ -1256,3 +1254,32 @@ es:
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
   label_no_preview_download: Download
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.

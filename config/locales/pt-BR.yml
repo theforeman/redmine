@@ -298,7 +298,6 @@ pt-BR:
   field_parent_title: Página pai
 
   setting_app_title: Título da aplicação
-  setting_app_subtitle: Subtítulo da aplicação
   setting_welcome_text: Texto de boas-vindas
   setting_default_language: Idioma padrão
   setting_login_required: Exigir autenticação
@@ -769,7 +768,6 @@ pt-BR:
   permission_edit_wiki_pages: Editar páginas wiki
   permission_add_issue_watchers: Adicionar observadores
   permission_view_gantt: Ver gráfico gantt
-  permission_move_issues: Mover tarefas
   permission_manage_issue_relations: Gerenciar relacionamentos de tarefas
   permission_delete_wiki_pages: Excluir páginas wiki
   permission_manage_boards: Gerenciar fóruns
@@ -813,7 +811,6 @@ pt-BR:
   field_editable: Editável
   setting_repository_log_display_limit: Número máximo de revisões exibidas no arquivo de log
   setting_file_max_size_displayed: Tamanho máximo dos arquivos textos exibidos em linha
-  field_identity_urler: Observador
   setting_openid: Permitir Login e Registro via OpenID
   field_identity_url: OpenID URL
   label_login_with_open_id_option: ou use o OpenID
@@ -1224,7 +1221,7 @@ pt-BR:
   setting_timespan_format: Formato de tempo
   label_table_of_contents: Índice
   setting_commit_logs_formatting: Aplicar formatação de texto às mensagens de commit
-  setting_mail_handler_enable_regex_delimiters: Ativar a utilização de expressões regulares
+  setting_mail_handler_enable_regex: Ativar a utilização de expressões regulares
   error_move_of_child_not_possible: 'A subtarefa %{child} não pode ser movida para o novo projeto: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: O tempo gasto não pode ser alterado numa tarefa que será apagada
   setting_timelog_required_fields: Campos obrigatórios para registro de horas
@@ -1242,3 +1239,24 @@ pt-BR:
   permission_view_news: Ver notícias
   label_no_preview_alternative_html: Visualização não disponível. Faça o %{link} do arquivo.
   label_no_preview_download: download
+  setting_close_duplicate_issues: Fechar tarefas duplicadas automaticamente
+  error_exceeds_maximum_hours_per_day: Não é possível registrar mais de %{max_hours} horas no mesmo dia (%{logged_hours} horas já foram registradas)
+  setting_time_entry_list_defaults: Registro de horas padrão
+  setting_timelog_accept_0_hours: Aceitar registros de horas com 0 horas
+  setting_timelog_max_hours_per_day: Máximo de horas que podem ser registradas por dia por usuário
+  label_x_revisions: "%{count} revisões"
+  error_can_not_delete_auth_source: Este modo de autenticação está sendo utilizado e não pode ser removido.
+  button_actions: Ações
+  mail_body_lost_password_validity: Por favor, esteja ciente de que você pode alterar a senha apenas uma vez utilizando este link.
+  text_login_required_html: Quando a autenticação não é obrigatória, projetos públicos e seus conteúdos estão disponíveis abertamente na rede. Você pode <a href="%{anonymous_role_path}">editar as permissões aplicáveis</a>.
+  label_login_required_yes: 'Sim'
+  label_login_required_no: Não, permitir acesso anônimo a projetos públicos
+  text_project_is_public_non_member: Projetos públicos e seus conteúdos estão disponíveis para todos os usuários logados.
+  text_project_is_public_anonymous: Projetos públicos e seus conteúdos estão disponíveis abertamente na rede.
+  label_version_and_files: Versão (%{count}) e Arquivos
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (sem verificação de certificado)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: É recomendado utilizar uma conexão LDAPS criptografada com verificação de certificado para evitar qualquer manipulação durante o processo de autenticação.
+  label_nothing_to_preview: Nada para visualizar
+  error_token_expired: Este link de recuperação de senha expirou. Por favor, tente novamente.

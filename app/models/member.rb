@@ -25,13 +25,12 @@ class Member < ActiveRecord::Base
   validates_presence_of :principal, :project
   validates_uniqueness_of :user_id, :scope => :project_id
   validate :validate_role
-  attr_protected :id
 
   before_destroy :set_issue_category_nil, :remove_from_project_default_assigned_to
 
   scope :active, lambda { joins(:principal).where(:users => {:status => Principal::STATUS_ACTIVE})}
 
-	# Sort by first role and principal
+  # Sort by first role and principal
   scope :sorted, lambda {
     includes(:member_roles, :roles, :principal).
       reorder("#{Role.table_name}.position").

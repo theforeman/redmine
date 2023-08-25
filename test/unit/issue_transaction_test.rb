@@ -27,7 +27,11 @@ class IssueTransactionTest < ActiveSupport::TestCase
            :custom_fields, :custom_fields_projects, :custom_fields_trackers, :custom_values,
            :time_entries
 
-  self.use_transactional_fixtures = false
+  self.use_transactional_tests = false
+
+  def setup
+    User.current = nil
+  end
 
   def setup
     User.current = nil

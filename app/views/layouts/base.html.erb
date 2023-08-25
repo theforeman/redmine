@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <title><%= html_title %></title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="<%= Redmine::Info.app_name %>" />
 <meta name="keywords" content="issue,bug,tracker" />
 <%= csrf_meta_tag %>
@@ -86,10 +86,7 @@
     </div>
     <% end %>
 
-    <H1>
-      <%= image_tag('foremanlogo.png', :style => 'vertical-align: middle') %>
-      <%= page_header_title %>
-    </h1>
+    <h1><%= page_header_title %></h1>
 
     <% if display_main_menu?(@project) %>
     <div id="main-menu" class="tabs">
@@ -122,7 +119,7 @@
 
 <div id="footer">
   <div class="bgl"><div class="bgr">
-    Powered by <%= link_to Redmine::Info.app_name, Redmine::Info.url %> &copy; 2006-2019 Jean-Philippe Lang
+    Powered by <%= link_to Redmine::Info.app_name, Redmine::Info.url %> &copy; 2006-2021 Jean-Philippe Lang
   </div></div>
 </div>
 </div>

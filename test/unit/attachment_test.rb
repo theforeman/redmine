@@ -23,10 +23,6 @@ class AttachmentTest < ActiveSupport::TestCase
   fixtures :users, :email_addresses, :projects, :roles, :members, :member_roles,
            :enabled_modules, :issues, :trackers, :attachments
 
-  # TODO: remove this with Rails 5 that supports after_commit callbacks
-  # in transactional fixtures (https://github.com/rails/rails/pull/18458)
-  self.use_transactional_fixtures = false
-
   def setup
     set_tmp_attachments_directory
   end
@@ -155,6 +151,19 @@ class AttachmentTest < ActiveSupport::TestCase
     end
   end
 
+  def test_extension_update_should_be_validated_against_denied_extensions
+    with_settings :attachment_extensions_denied => "txt, png" do
+      a = Attachment.new(:container => Issue.find(1),
+                         :file => mock_file_with_options(:original_filename => "test.jpeg"),
+                         :author => User.find(1))
+      assert_save a
+
+      b = Attachment.find(a.id)
+      b.filename = "test.png"
+      assert !b.save
+    end
+  end
+
   def test_valid_extension_should_be_case_insensitive
     with_settings :attachment_extensions_allowed => "txt, Png" do
       assert Attachment.valid_extension?(".pnG")
@@ -236,6 +245,23 @@ class AttachmentTest < ActiveSupport::TestCase
     a2 = Attachment.create!(:container => Issue.find(1), :author => User.find(1),
                             :file => mock_file(:filename => 'foo', :content => 'efgh'))
     assert_not_equal a1.diskfile, a2.diskfile
+  end
+
+  def test_identical_attachments_created_in_same_transaction_should_not_end_up_unreadable
+    attachments = []
+    Project.transaction do
+      3.times do
+        a = Attachment.create!(
+          :container => Issue.find(1), :author => User.find(1),
+          :file => mock_file(:filename => 'foo', :content => 'abcde')
+        )
+        attachments << a
+      end
+    end
+    attachments.each do |a|
+      assert a.readable?
+    end
+    assert_equal 1, attachments.map(&:diskfile).uniq.size
   end
 
   def test_filename_should_be_basenamed
@@ -448,4 +474,21 @@ class AttachmentTest < ActiveSupport::TestCase
     puts '(ImageMagick convert not available)'
   end
 
+  def test_is_text
+    js_attachment = Attachment.new(
+      :container => Issue.find(1),
+      :file => uploaded_test_file('hello.js', 'application/javascript'),
+      :author => User.find(1))
+
+    to_test = {
+      js_attachment => true,               # hello.js (application/javascript)
+      attachments(:attachments_003) => false, # logo.gif (image/gif)
+      attachments(:attachments_004) => true,  # source.rb (application/x-ruby)
+      attachments(:attachments_015) => true,  # private.diff (text/x-diff)
+      attachments(:attachments_016) => false, # testfile.png (image/png)
+    }
+    to_test.each do |attachment, expected|
+      assert_equal expected, attachment.is_text?, attachment.inspect
+    end
+  end
 end
