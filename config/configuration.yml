@@ -154,7 +154,7 @@ default:
   #
   # If you have a load-balancing Redmine cluster, you have to use the
   # same secret token on each machine.
-  secret_token: "<%= ENV['redmine_secret_token'] %>"
+  secret_key_base: "<%= ENV['redmine_secret_key_base'] %>"
 
   # Absolute path (e.g. /usr/bin/convert, c:/im/convert.exe) to
   # the ImageMagick's `convert` binary. Used to generate attachment thumbnails.
