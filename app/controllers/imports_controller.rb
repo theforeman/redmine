@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,22 +20,23 @@
 require 'csv'
 
 class ImportsController < ApplicationController
-  menu_item :issues
-
   before_action :find_import, :only => [:show, :settings, :mapping, :run]
-  before_action :authorize_global
+  before_action :authorize_import
+
+  layout :import_layout
 
   helper :issues
   helper :queries
 
   def new
+    @import = import_type.new
   end
 
   def create
-    @import = IssueImport.new
+    @import = import_type.new
     @import.user = User.current
     @import.file = params[:file]
-    @import.set_default_settings
+    @import.set_default_settings(:project_id => params[:project_id])
 
     if @import.save
       redirect_to import_settings_path(@import)
@@ -50,8 +53,7 @@ class ImportsController < ApplicationController
       redirect_to import_mapping_path(@import)
     end
 
-  # TODO: Remove ArgumentError when support for Ruby 2.2 is dropped (#28689)
-  rescue CSV::MalformedCSVError, ArgumentError, EncodingError => e
+  rescue CSV::MalformedCSVError, EncodingError => e
     if e.is_a?(CSV::MalformedCSVError) && e.message !~ /Invalid byte sequence/
       flash.now[:error] = l(:error_invalid_csv_file_or_settings)
     else
@@ -97,6 +99,14 @@ class ImportsController < ApplicationController
     end
   end
 
+  def current_menu(project)
+    if import_layout == 'admin'
+      nil
+    else
+      :application_menu
+    end
+  end
+
   private
 
   def find_import
@@ -121,5 +131,32 @@ class ImportsController < ApplicationController
 
   def max_items_per_request
     5
+  end
+
+  def import_layout
+    import_type && import_type.layout || 'base'
+  end
+
+  def menu_items
+    menu_item = import_type ? import_type.menu_item : nil
+
+    { self.controller_name.to_sym => { :actions => {}, :default => menu_item } }
+  end
+
+  def authorize_import
+    return render_404 unless import_type
+    return render_403 unless import_type.authorized?(User.current)
+  end
+
+  def import_type
+    return @import_type if defined? @import_type
+
+    @import_type =
+      if @import
+        @import.class
+      else
+        type = Object.const_get(params[:type]) rescue nil
+        type && type < Import ? type : nil
+      end
   end
 end

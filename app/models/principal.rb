@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -56,7 +58,8 @@ class Principal < ActiveRecord::Base
         active
       else
         # self and members of visible projects
-        active.where("#{table_name}.id = ? OR #{table_name}.id IN (SELECT user_id FROM #{Member.table_name} WHERE project_id IN (?))",
+        active.where(
+          "#{table_name}.id = ? OR #{table_name}.id IN (SELECT user_id FROM #{Member.table_name} WHERE project_id IN (?))",
           user.id, user.visible_project_ids
         )
       end
@@ -69,7 +72,7 @@ class Principal < ActiveRecord::Base
       where({})
     else
       pattern = "%#{q}%"
-      sql = "LOWER(#{table_name}.login) LIKE LOWER(:p)"
+      sql = +"LOWER(#{table_name}.login) LIKE LOWER(:p)"
       sql << " OR #{table_name}.id IN (SELECT user_id FROM #{EmailAddress.table_name} WHERE LOWER(address) LIKE LOWER(:p))"
       params = {:p => pattern}
 
@@ -174,13 +177,14 @@ class Principal < ActiveRecord::Base
     principal ||= principals.detect {|a| keyword.casecmp(a.login.to_s) == 0}
     principal ||= principals.detect {|a| keyword.casecmp(a.mail.to_s) == 0}
 
-    if principal.nil? && keyword.match(/ /)
+    if principal.nil? && / /.match?(keyword)
       firstname, lastname = *(keyword.split) # "First Last Throwaway"
-      principal ||= principals.detect {|a|
-                                 a.is_a?(User) &&
-                                   firstname.casecmp(a.firstname.to_s) == 0 &&
-                                   lastname.casecmp(a.lastname.to_s) == 0
-                               }
+      principal ||=
+        principals.detect {|a|
+          a.is_a?(User) &&
+            firstname.casecmp(a.firstname.to_s) == 0 &&
+              lastname.casecmp(a.lastname.to_s) == 0
+        }
     end
     if principal.nil?
       principal ||= principals.detect {|a| keyword.casecmp(a.name) == 0}

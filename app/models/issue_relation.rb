@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -78,8 +80,8 @@ class IssueRelation < ActiveRecord::Base
   after_destroy :call_issues_relation_removed_callback
 
   safe_attributes 'relation_type',
-    'delay',
-    'issue_to_id'
+                  'delay',
+                  'issue_to_id'
 
   def safe_attributes=(attrs, user=User.current)
     if attrs.respond_to?(:to_unsafe_hash)
@@ -150,9 +152,11 @@ class IssueRelation < ActiveRecord::Base
   end
 
   def label_for(issue)
-    TYPES[relation_type] ?
-        TYPES[relation_type][(self.issue_from_id == issue.id) ? :name : :sym_name] :
-        :unknow
+    if TYPES[relation_type]
+      TYPES[relation_type][(self.issue_from_id == issue.id) ? :name : :sym_name]
+    else
+      :unknow
+    end
   end
 
   def to_s(issue=nil)

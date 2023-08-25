@@ -133,6 +133,10 @@ mk:
         earlier_than_minimum_start_date: "cannot be earlier than %{date} because of preceding issues"
         not_a_regexp: "is not a valid regular expression"
         open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Изберете
 
@@ -192,7 +196,7 @@ mk:
   error_issue_done_ratios_not_updated: "Issue done ratios not updated."
   error_workflow_copy_source: 'Please select a source tracker or role'
   error_workflow_copy_target: 'Please select target tracker(s) and role(s)'
-  error_unable_delete_issue_status: 'Unable to delete issue status'
+  error_unable_delete_issue_status: 'Unable to delete issue status (%{value})'
   error_unable_to_connect: "Unable to connect (%{value})"
   warning_attachments_not_saved: "%{count} file(s) could not be saved."
 
@@ -469,7 +473,6 @@ mk:
   label_enumeration_new: Нова вредност
   label_information: Информација
   label_information_plural: Информации
-  label_please_login: Најави се
   label_register: Регистрирај се
   label_login_with_open_id_option: или најави се со OpenID
   label_password_lost: Изгубена лозинка
@@ -586,7 +589,6 @@ mk:
   label_less_or_equal: '<='
   label_in: во
   label_today: денес
-  label_all_time: цело време
   label_yesterday: вчера
   label_this_week: оваа недела
   label_last_week: минатата недела
@@ -803,7 +805,6 @@ mk:
   button_update: Ажурирај
   button_configure: Конфигурирај
   button_quote: Цитирај
-  button_duplicate: Копирај
   button_show: Show
 
   status_active: активни
@@ -853,12 +854,13 @@ mk:
   text_default_administrator_account_changed: Default administrator account changed
   text_file_repository_writable: Во папката за прилози може да се запишува
   text_plugin_assets_writable: Во папката за додатоци може да се запишува
-  text_rmagick_available: RMagick available (незадолжително)
+  text_minimagick_available: MiniMagick available (незадолжително)
   text_destroy_time_entries_question: "%{hours} hours were reported on the issues you are about to delete. What do you want to do ?"
   text_destroy_time_entries: Delete reported hours
   text_assign_time_entries_to_project: Додели ги пријавените часови на проектот
   text_reassign_time_entries: 'Reassign reported hours to this issue:'
   text_user_wrote: "%{value} напиша:"
+  text_user_wrote_in: "%{value} напиша (%{link}):"
   text_enumeration_destroy_question: "%{count} objects are assigned to this value."
   text_enumeration_category_reassign_to: 'Reassign them to this value:'
   text_email_delivery_not_configured: "Доставата по е-пошта не е конфигурирана, и известувањата се оневозможени.\nКонфигурирајте го Вашиот  SMTP сервер во config/configuration.yml и рестартирајте ја апликацијата."
@@ -1011,7 +1013,6 @@ mk:
   setting_session_timeout: Session inactivity timeout
   label_session_expiration: Session expiration
   permission_close_project: Close / reopen the project
-  label_show_closed_projects: View closed projects
   button_close: Close
   button_reopen: Reopen
   project_status_active: active
@@ -1255,3 +1256,60 @@ mk:
     check to prevent any manipulation during the authentication process.
   label_nothing_to_preview: Nothing to preview
   error_token_expired: This password recovery link has expired, please try again.
+  error_spent_on_future_date: Cannot log time on a future date
+  setting_timelog_accept_future_dates: Accept time logs on future dates
+  label_delete_link_to_subtask: Избриши релација
+  error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
+    for other users
+  permission_log_time_for_other_users: Log spent time for other users
+  label_tomorrow: tomorrow
+  label_next_week: next week
+  label_next_month: next month
+  text_role_no_workflow: No workflow defined for this role
+  text_status_no_workflow: No tracker uses this status in the workflows
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: Show status changes in issue mail notifications
+    subject
+  label_inherited_from_parent_project: Inherited from parent project
+  label_inherited_from_group: Inherited from group %{name}
+  label_trackers_description: Trackers description
+  label_open_trackers_description: View all trackers description
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Parent task subject
+  permission_edit_own_issues: Edit own issues
+  text_select_apply_tracker: Select tracker
+  label_updated_issues: Updated issues
+  text_avatar_server_config_html: The current avatar server is <a href="%{url}">%{url}</a>.
+    You can configure it in config/configuration.yml.
+  setting_gantt_months_limit: Maximum number of months displayed on the gantt chart
+  permission_import_time_entries: Import time entries
+  label_import_notifications: Send email notifications during the import
+  text_gs_available: ImageMagick PDF support available (optional)
+  field_recently_used_projects: Number of recently used projects in jump box
+  label_optgroup_bookmarks: Bookmarks
+  label_optgroup_others: Other projects
+  label_optgroup_recents: Recently used
+  button_project_bookmark: Add bookmark
+  button_project_bookmark_delete: Remove bookmark
+  field_history_default_tab: Issue's history default tab
+  label_issue_history_properties: Property changes
+  label_issue_history_notes: Notes
+  label_last_tab_visited: Last visited tab
+  field_unique_id: Unique ID
+  text_no_subject: no subject
+  setting_password_required_char_classes: Required character classes for passwords
+  label_password_char_class_uppercase: uppercase letters
+  label_password_char_class_lowercase: lowercase letters
+  label_password_char_class_digits: digits
+  label_password_char_class_special_chars: special characters
+  text_characters_must_contain: Must contain %{character_classes}.
+  label_starts_with: starts with
+  label_ends_with: ends with
+  label_issue_fixed_version_updated: Target version updated
+  setting_project_list_defaults: Projects list defaults
+  label_display_type: Display results as
+  label_display_type_list: List
+  label_display_type_board: Board
+  label_my_bookmarks: My bookmarks
+  label_import_time_entries: Import time entries

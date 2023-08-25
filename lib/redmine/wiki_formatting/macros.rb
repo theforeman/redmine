@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,9 +26,15 @@ module Redmine
           Redmine::WikiFormatting::Macros.available_macros.key?(name.to_sym)
         end
 
-        def exec_macro(name, obj, args, text)
+        def exec_macro(name, obj, args, text, options={})
           macro_options = Redmine::WikiFormatting::Macros.available_macros[name.to_sym]
           return unless macro_options
+
+          if options[:inline_attachments] == false
+            Redmine::WikiFormatting::Macros.inline_attachments = false
+          else
+            Redmine::WikiFormatting::Macros.inline_attachments = true
+          end
 
           method_name = "macro_#{name}"
           unless macro_options[:parse_args] == false
@@ -57,7 +65,9 @@ module Redmine
       end
 
       @@available_macros = {}
+      @@inline_attachments = true
       mattr_accessor :available_macros
+      mattr_accessor :inline_attachments
 
       class << self
         # Plugins can use this method to define new macros:
@@ -67,7 +77,7 @@ module Redmine
         #     macro :my_macro do |obj, args|
         #       "My macro output"
         #     end
-        #   
+        #
         #     desc "This is my macro that accepts a block of text"
         #     macro :my_macro do |obj, args, text|
         #       "My macro output"
@@ -81,7 +91,7 @@ module Redmine
         #
         # Options:
         # * :desc - A description of the macro
-        # * :parse_args => false - Disables arguments parsing (the whole arguments 
+        # * :parse_args => false - Disables arguments parsing (the whole arguments
         #   string is passed to the macro)
         #
         # Macro blocks accept 2 or 3 arguments:
@@ -89,7 +99,7 @@ module Redmine
         # * args: macro arguments
         # * text: the block of text given to the macro (should be present only if the
         #   macro accepts a block of text). text is a String or nil if the macro is
-        #   invoked without a block of text.  
+        #   invoked without a block of text.
         #
         # Examples:
         # By default, when the macro is invoked, the comma separated list of arguments
@@ -141,7 +151,7 @@ module Redmine
         # If a block of text is given, the closing tag }} must be at the start of a new line.
         def macro(name, options={}, &block)
           options.assert_valid_keys(:desc, :parse_args)
-          unless name.to_s.match(/\A\w+\z/)
+          unless /\A\w+\z/.match?(name.to_s)
             raise "Invalid macro name: #{name} (only 0-9, A-Z, a-z and _ characters are accepted)"
           end
           unless block_given?
@@ -162,7 +172,7 @@ module Redmine
       # Builtin macros
       desc "Sample macro."
       macro :hello_world do |obj, args, text|
-        h("Hello world! Object: #{obj.class.name}, " + 
+        h("Hello world! Object: #{obj.class.name}, " +
           (args.empty? ? "Called with no argument" : "Arguments: #{args.join(', ')}") +
           " and " + (text.present? ? "a #{text.size} bytes long block of text." : "no block of text.")
         )
@@ -209,7 +219,7 @@ module Redmine
         @included_wiki_pages ||= []
         raise 'Circular inclusion detected' if @included_wiki_pages.include?(page.id)
         @included_wiki_pages << page.id
-        out = textilizable(page.content, :text, :attachments => page.attachments, :headings => false)
+        out = textilizable(page.content, :text, :attachments => page.attachments, :headings => false,  :inline_attachments => @@inline_attachments)
         @included_wiki_pages.pop
         out
       end
@@ -223,9 +233,9 @@ module Redmine
         hide_label = args[1] || args[0] || l(:button_hide)
         js = "$('##{html_id}-show, ##{html_id}-hide').toggle(); $('##{html_id}').fadeToggle(150);"
         out = ''.html_safe
-        out << link_to_function(show_label, js, :id => "#{html_id}-show", :class => 'collapsible collapsed')
-        out << link_to_function(hide_label, js, :id => "#{html_id}-hide", :class => 'collapsible', :style => 'display:none;')
-        out << content_tag('div', textilizable(text, :object => obj, :headings => false), :id => html_id, :class => 'collapsed-text', :style => 'display:none;')
+        out << link_to_function(show_label, js, :id => "#{html_id}-show", :class => 'icon icon-collapsed collapsible')
+        out << link_to_function(hide_label, js, :id => "#{html_id}-hide", :class => 'icon icon-expended collapsible', :style => 'display:none;')
+        out << content_tag('div', textilizable(text, :object => obj, :headings => false, :inline_attachments => @@inline_attachments), :id => html_id, :class => 'collapsed-text', :style => 'display:none;')
         out
       end
 
@@ -238,7 +248,7 @@ module Redmine
         filename = args.first
         raise 'Filename required' unless filename.present?
         size = options[:size]
-        raise 'Invalid size parameter' unless size.nil? || size.match(/^\d+$/)
+        raise 'Invalid size parameter' unless size.nil? || /^\d+$/.match?(size)
         size = size.to_i
         size = 200 unless size > 0
         if obj && obj.respond_to?(:attachments) && attachment = Attachment.latest_attach(obj.attachments, filename)
@@ -250,6 +260,33 @@ module Redmine
           link_to(img, image_url, :class => 'thumbnail', :title => title)
         else
           raise "Attachment #{filename} not found"
+        end
+      end
+
+      desc "Displays an issue link including additional information. Examples:\n\n" +
+             "{{issue(123)}}                              -- Issue #123: Enhance macro capabilities\n" +
+             "{{issue(123, project=true)}}                -- Andromeda - Issue #123: Enhance macro capabilities\n" +
+             "{{issue(123, tracker=false)}}               -- #123: Enhance macro capabilities\n" +
+             "{{issue(123, subject=false, project=true)}} -- Andromeda - Issue #123\n"
+      macro :issue do |obj, args|
+        args, options = extract_macro_options(args, :project, :subject, :tracker)
+        id = args.first
+        issue = Issue.visible.find_by(id: id)
+
+        if issue
+          # remove invalid options
+          options.delete_if { |k,v| v != 'true' && v != 'false' }
+
+          # turn string values into boolean
+          options.each do |k, v|
+            options[k] = v == 'true'
+          end
+
+          link_to_issue(issue, options)
+        else
+          # Fall back to regular issue link format to indicate, that there
+          # should have been something.
+          "##{id}"
         end
       end
     end

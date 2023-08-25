@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +22,7 @@ module SearchHelper
     return text unless text && tokens && !tokens.empty?
     re_tokens = tokens.collect {|t| Regexp.escape(t)}
     regexp = Regexp.new "(#{re_tokens.join('|')})", Regexp::IGNORECASE
-    result = ''
+    result = +''
     text.split(regexp).each_with_index do |words, i|
       if result.length > 1200
         # maximum length of the preview reached
@@ -63,7 +63,7 @@ module SearchHelper
                        :all_words => params[:all_words], :scope => params[:scope], t => 1)
     end
     ('<ul>'.html_safe +
-        links.map {|link| content_tag('li', link)}.join(' ').html_safe + 
+        links.map {|link| content_tag('li', link)}.join(' ').html_safe +
         '</ul>'.html_safe) unless links.empty?
   end
 end

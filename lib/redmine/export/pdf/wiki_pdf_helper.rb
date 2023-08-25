@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -46,8 +46,9 @@ module Redmine
           pdf.footer_date = format_date(User.current.today)
           pdf.add_page
           pdf.SetFontStyle('B',11)
-          pdf.RDMMultiCell(190,5,
-               "#{project} - #{page.title} - # #{page.content.version}")
+          pdf.RDMMultiCell(
+                190,5,
+                "#{project} - #{page.title} - # #{page.content.version}")
           pdf.ln
           # Set resize image scale
           pdf.set_image_scale(1.6)
@@ -70,12 +71,14 @@ module Redmine
         end
 
         def write_wiki_page(pdf, page)
-          text = textilizable(page.content, :text,
-            :only_path => false,
-            :edit_section_links => false,
-            :headings => false,
-            :inline_attachments => false
-          )
+          text =
+            textilizable(
+              page.content, :text,
+              :only_path => false,
+              :edit_section_links => false,
+              :headings => false,
+              :inline_attachments => false
+            )
           pdf.RDMwriteFormattedCell(190,5,'','', text, page.attachments, 0)
           if page.attachments.any?
             pdf.ln(5)

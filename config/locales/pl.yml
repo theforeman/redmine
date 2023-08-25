@@ -140,6 +140,10 @@ pl:
         earlier_than_minimum_start_date: "nie może być wcześniej niż %{date} z powodu poprzedających zagadnień"
         not_a_regexp: "is not a valid regular expression"
         open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   support:
     array:
@@ -326,7 +330,6 @@ pl:
   label_age: Wiek
   label_ago: dni temu
   label_all: wszystko
-  label_all_time: cały czas
   label_all_words: Wszystkie słowa
   label_and_its_subprojects: "%{value} i podprojekty"
   label_applied_status: Stosowany status
@@ -522,7 +525,6 @@ pl:
   label_password_lost: Zapomniane hasło
   label_permissions: Uprawnienia
   label_permissions_report: Raport uprawnień
-  label_please_login: Zaloguj się
   label_plugins: Wtyczki
   label_precedes: poprzedza
   label_preferences: Preferencje
@@ -777,7 +779,7 @@ pl:
   text_reassign_time_entries: 'Przepnij przepracowany czas do tego zagadnienia:'
   text_regexp_info: np. ^[A-Z0-9]+$
   text_repository_usernames_mapping: "Wybierz lub uaktualnij przyporządkowanie użytkowników Redmine do użytkowników repozytorium.\nUżytkownicy z taką samą nazwą lub adresem e-mail są przyporządkowani automatycznie."
-  text_rmagick_available: RMagick dostępne (opcjonalnie)
+  text_minimagick_available: MiniMagick dostępne (opcjonalnie)
   text_select_mail_notifications: Zaznacz czynności przy których użytkownik powinien być powiadomiony e-mailem.
   text_select_project_modules: 'Wybierz moduły do aktywacji w tym projekcie:'
   text_status_changed_by_changeset: "Zastosowane w zmianach %{value}."
@@ -789,6 +791,7 @@ pl:
   text_unallowed_characters: Niedozwolone znaki
   text_user_mail_option: "W przypadku niezaznaczonych projektów, będziesz otrzymywał powiadomienia tylko na temat zagadnień które obserwujesz, lub w których bierzesz udział (np. jesteś autorem lub adresatem)."
   text_user_wrote: "%{value} napisał(a):"
+  text_user_wrote_in: "%{value} napisał(a) (%{link}):"
   text_wiki_destroy_confirmation: Jesteś pewien, że chcesz usunąć to wiki i całą jego zawartość?
   text_workflow_edit: Zaznacz rolę i typ zagadnienia do edycji przepływu pracy
 
@@ -845,7 +848,6 @@ pl:
   field_active: Aktywne
   enumeration_system_activity: Aktywność systemowa
   button_copy_and_follow: Kopiuj i przejdź do kopii zagadnienia
-  button_duplicate: Duplikuj
   button_move_and_follow: Przenieś i przejdź do zagadnienia
   button_show: Pokaż
   error_can_not_archive_project: Ten projekt nie może zostać zarchiwizowany
@@ -899,7 +901,7 @@ pl:
   permission_export_wiki_pages: Eksport stron wiki
   permission_manage_project_activities: Zarządzanie aktywnościami projektu
   setting_cache_formatted_text: Buforuj sformatowany tekst
-  error_unable_delete_issue_status: Nie można usunąć statusu zagadnienia
+  error_unable_delete_issue_status: Nie można usunąć statusu zagadnienia (%{value})
   label_profile: Profil
   permission_manage_subtasks: Zarządzanie podzagadnieniami
   field_parent_issue: Zagadnienie nadrzędne
@@ -1029,7 +1031,6 @@ pl:
   setting_session_timeout: Maksymalny czas życia nieaktywnej sesji
   label_session_expiration: Przeterminowywanie sesji
   permission_close_project: Zamykanie / otwieranie projektów
-  label_show_closed_projects: Przeglądanie zamkniętych projektów
   button_close: Zamknij projekt
   button_reopen: Otwórz projekt
   project_status_active: aktywny
@@ -1268,3 +1269,60 @@ pl:
     check to prevent any manipulation during the authentication process.
   label_nothing_to_preview: Nothing to preview
   error_token_expired: This password recovery link has expired, please try again.
+  error_spent_on_future_date: Cannot log time on a future date
+  setting_timelog_accept_future_dates: Accept time logs on future dates
+  label_delete_link_to_subtask: Usuń powiązanie
+  error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
+    for other users
+  permission_log_time_for_other_users: Log spent time for other users
+  label_tomorrow: tomorrow
+  label_next_week: next week
+  label_next_month: next month
+  text_role_no_workflow: No workflow defined for this role
+  text_status_no_workflow: No tracker uses this status in the workflows
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: Show status changes in issue mail notifications
+    subject
+  label_inherited_from_parent_project: Inherited from parent project
+  label_inherited_from_group: Inherited from group %{name}
+  label_trackers_description: Trackers description
+  label_open_trackers_description: View all trackers description
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Parent task subject
+  permission_edit_own_issues: Edit own issues
+  text_select_apply_tracker: Select tracker
+  label_updated_issues: Updated issues
+  text_avatar_server_config_html: The current avatar server is <a href="%{url}">%{url}</a>.
+    You can configure it in config/configuration.yml.
+  setting_gantt_months_limit: Maximum number of months displayed on the gantt chart
+  permission_import_time_entries: Import time entries
+  label_import_notifications: Send email notifications during the import
+  text_gs_available: ImageMagick PDF support available (optional)
+  field_recently_used_projects: Number of recently used projects in jump box
+  label_optgroup_bookmarks: Bookmarks
+  label_optgroup_others: Other projects
+  label_optgroup_recents: Recently used
+  button_project_bookmark: Add bookmark
+  button_project_bookmark_delete: Remove bookmark
+  field_history_default_tab: Issue's history default tab
+  label_issue_history_properties: Property changes
+  label_issue_history_notes: Notes
+  label_last_tab_visited: Last visited tab
+  field_unique_id: Unique ID
+  text_no_subject: no subject
+  setting_password_required_char_classes: Required character classes for passwords
+  label_password_char_class_uppercase: uppercase letters
+  label_password_char_class_lowercase: lowercase letters
+  label_password_char_class_digits: digits
+  label_password_char_class_special_chars: special characters
+  text_characters_must_contain: Must contain %{character_classes}.
+  label_starts_with: starts with
+  label_ends_with: ends with
+  label_issue_fixed_version_updated: Target version updated
+  setting_project_list_defaults: Projects list defaults
+  label_display_type: Display results as
+  label_display_type_list: List
+  label_display_type_board: Board
+  label_my_bookmarks: My bookmarks
+  label_import_time_entries: Import time entries

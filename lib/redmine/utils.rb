@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,9 +24,11 @@ module Redmine
     class << self
       # Returns the relative root url of the application
       def relative_url_root
-        ActionController::Base.respond_to?('relative_url_root') ?
-          ActionController::Base.relative_url_root.to_s :
+        if ActionController::Base.respond_to?('relative_url_root')
+          ActionController::Base.relative_url_root.to_s
+        else
           ActionController::Base.config.relative_url_root.to_s
+        end
       end
 
       # Sets the relative root url of the application
@@ -128,9 +132,7 @@ module Redmine
       def next_working_date(date)
         cwday = date.cwday
         days = 0
-        while non_working_week_days.include?(((cwday + days - 1) % 7) + 1)
-          days += 1
-        end
+        days += 1 while non_working_week_days.include?(((cwday + days - 1) % 7) + 1)
         date + days
       end
 

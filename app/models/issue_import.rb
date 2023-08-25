@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,6 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class IssueImport < Import
+  def self.menu_item
+    :issues
+  end
+
+  def self.authorized?(user)
+    user.allowed_to?(:import_issues, nil, :global => true)
+  end
 
   # Returns the objects that were imported
   def saved_objects
@@ -77,7 +86,7 @@ class IssueImport < Import
   def build_object(row, item)
     issue = Issue.new
     issue.author = user
-    issue.notify = false
+    issue.notify = !!ActiveRecord::Type::Boolean.new.cast(settings['notifications'])
 
     tracker_id = nil
     if tracker
@@ -141,18 +150,30 @@ class IssueImport < Import
       end
     end
     if parent_issue_id = row_value(row, 'parent_issue_id')
-      if parent_issue_id =~ /\A(#)?(\d+)\z/
-        parent_issue_id = $2.to_i
-        if $1
-          attributes['parent_issue_id'] = parent_issue_id
+      if parent_issue_id.start_with? '#'
+        # refers to existing issue
+        attributes['parent_issue_id'] = parent_issue_id[1..-1]
+      elsif use_unique_id?
+        # refers to other row with unique id
+        issue_id = items.where(:unique_id => parent_issue_id).first.try(:obj_id)
+
+        if issue_id
+          attributes['parent_issue_id'] = issue_id
         else
-          if parent_issue_id > item.position
-            add_callback(parent_issue_id, 'set_as_parent', item.position)
-          elsif issue_id = items.where(:position => parent_issue_id).first.try(:obj_id)
-            attributes['parent_issue_id'] = issue_id
-          end
+          add_callback(parent_issue_id, 'set_as_parent', item.position)
         end
+      elsif parent_issue_id =~ /\A\d+\z/
+        # refers to other row by position
+        parent_issue_id = parent_issue_id.to_i
+
+        if parent_issue_id > item.position
+          add_callback(parent_issue_id, 'set_as_parent', item.position)
+        elsif issue_id = items.where(:position => parent_issue_id).first.try(:obj_id)
+          attributes['parent_issue_id'] = issue_id
+        end
+
       else
+        # Something is odd. Assign parent_issue_id to trigger validation error
         attributes['parent_issue_id'] = parent_issue_id
       end
     end
@@ -170,12 +191,13 @@ class IssueImport < Import
     end
 
     attributes['custom_field_values'] = issue.custom_field_values.inject({}) do |h, v|
-      value = case v.custom_field.field_format
-      when 'date'
-        row_date(row, "cf_#{v.custom_field.id}")
-      else
-        row_value(row, "cf_#{v.custom_field.id}")
-      end
+      value =
+        case v.custom_field.field_format
+        when 'date'
+          row_date(row, "cf_#{v.custom_field.id}")
+        else
+          row_value(row, "cf_#{v.custom_field.id}")
+        end
       if value
         h[v.custom_field.id.to_s] = v.custom_field.value_from_keyword(value, issue)
       end

@@ -16,12 +16,12 @@
   <label><%=l(:label_role)%>:
   <%= options_for_workflow_select 'role_id[]', Role.sorted.select(&:consider_workflow?), @roles, :id => 'role_id', :class => 'expandable' %>
   </label>
-  <a href="#" data-expands="#role_id"><span class="toggle-multiselect"></span></a>
+  <a href="#" data-expands="#role_id"><span class="toggle-multiselect icon-only icon-toggle-plus"></span></a>
 
   <label><%=l(:label_tracker)%>:
   <%= options_for_workflow_select 'tracker_id[]', Tracker.sorted, @trackers, :id => 'tracker_id', :class => 'expandable' %>
   </label>
-  <a href="#" data-expands="#tracker_id"><span class="toggle-multiselect"></span></a>
+  <a href="#" data-expands="#tracker_id"><span class="toggle-multiselect icon-only icon-toggle-plus"></span></a>
 
   <%= submit_tag l(:button_edit), :name => nil %>
 
@@ -40,7 +40,7 @@
       <%= render :partial => 'form', :locals => {:name => 'always', :workflows => @workflows['always']} %>
 
       <fieldset class="collapsible" style="padding: 0; margin-top: 0.5em;">
-        <legend onclick="toggleFieldset(this);"><%= l(:label_additional_workflow_transitions_for_author) %></legend>
+        <legend onclick="toggleFieldset(this);" class="icon icon-collapsed"><%= l(:label_additional_workflow_transitions_for_author) %></legend>
         <div id="author_workflows" style="margin: 0.5em 0 0.5em 0;">
           <%= render :partial => 'form', :locals => {:name => 'author', :workflows => @workflows['author']} %>
         </div>
@@ -48,7 +48,7 @@
       <%= javascript_tag "hideFieldset($('#author_workflows'))" unless @workflows['author'].present? %>
 
       <fieldset class="collapsible" style="padding: 0;">
-        <legend onclick="toggleFieldset(this);"><%= l(:label_additional_workflow_transitions_for_assignee) %></legend>
+        <legend onclick="toggleFieldset(this);" class="icon icon-collapsed"><%= l(:label_additional_workflow_transitions_for_assignee) %></legend>
         <div id="assignee_workflows" style="margin: 0.5em 0 0.5em 0;">
       <%= render :partial => 'form', :locals => {:name => 'assignee', :workflows => @workflows['assignee']} %>
         </div>
@@ -64,9 +64,11 @@ $("a[data-expands]").click(function(e){
   e.preventDefault();
   var target = $($(this).attr("data-expands"));
   if (target.attr("multiple")) {
+    $(this).find('span').switchClass('icon-toggle-minus', 'icon-toggle-plus');
     target.attr("multiple", false);
     target.find("option[value=all]").show();
   } else {
+    $(this).find('span').switchClass('icon-toggle-plus', 'icon-toggle-minus');
     target.attr("multiple", true);
     target.find("option[value=all]").attr("selected", false).hide();
   }

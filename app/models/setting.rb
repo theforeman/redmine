@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,6 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Setting < ActiveRecord::Base
+
+  PASSWORD_CHAR_CLASSES = {
+        'uppercase'     => /[A-Z]/,
+        'lowercase'     => /[a-z]/,
+        'digits'        => /[0-9]/,
+        'special_chars' => /[[:ascii:]&&[:graph:]&&[:^alnum:]]/
+    }
 
   DATE_FORMATS = [
         '%Y-%m-%d',
@@ -34,7 +43,7 @@ class Setting < ActiveRecord::Base
     '%I:%M %p'
     ]
 
-  ENCODINGS = %w(US-ASCII
+  ENCODINGS =  %w(US-ASCII
                   windows-1250
                   windows-1251
                   windows-1252
@@ -91,7 +100,8 @@ class Setting < ActiveRecord::Base
     v = read_attribute(:value)
     # Unserialize serialized settings
     if available_settings[name]['serialized'] && v.is_a?(String)
-      v = YAML::load(v)
+      # YAML.load works as YAML.safe_load if Psych >= 4.0 is installed
+      v = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(v) : YAML.load(v)
       v = force_utf8_strings(v)
     end
     v = v.to_sym if available_settings[name]['format'] == 'symbol' && !v.blank?
@@ -105,13 +115,12 @@ class Setting < ActiveRecord::Base
 
   # Returns the value of the setting named name
   def self.[](name)
-    v = @cached_settings[name]
-    v ? v : (@cached_settings[name] = find_or_default(name).value)
+    @cached_settings[name] ||= find_or_default(name).value
   end
 
   def self.[]=(name, v)
     setting = find_or_default(name)
-    setting.value = (v ? v : "")
+    setting.value = v || ''
     @cached_settings[name] = nil
     setting.save
     setting.value
@@ -142,11 +151,10 @@ class Setting < ActiveRecord::Base
 
   def self.validate_all_from_params(settings)
     messages = []
-
-    [[:mail_handler_enable_regex_delimiters,         :mail_handler_body_delimiters,    /[\r\n]+/],
+    [
+     [:mail_handler_enable_regex_delimiters,         :mail_handler_body_delimiters,    /[\r\n]+/],
      [:mail_handler_enable_regex_excluded_filenames, :mail_handler_excluded_filenames, /\s*,\s*/]
     ].each do |enable_regex, regex_field, delimiter|
-
       if settings.key?(regex_field) || settings.key?(enable_regex)
         regexp = Setting.send("#{enable_regex}?")
         if settings.key?(enable_regex)
@@ -163,7 +171,14 @@ class Setting < ActiveRecord::Base
         end
       end
     end
-
+    if settings.key?(:mail_from)
+      begin
+        mail_from = Mail::Address.new(settings[:mail_from])
+        raise unless mail_from.address =~ EmailAddress::EMAIL_REGEXP
+      rescue
+        messages << [:mail_from, l('activerecord.errors.messages.invalid')]
+      end
+    end
     messages
   end
 
@@ -258,19 +273,19 @@ class Setting < ActiveRecord::Base
   def self.define_setting(name, options={})
     available_settings[name.to_s] = options
 
-    src = <<-END_SRC
-    def self.#{name}
-      self[:#{name}]
-    end
+    src = <<~END_SRC
+      def self.#{name}
+        self[:#{name}]
+      end
 
-    def self.#{name}?
-      self[:#{name}].to_i > 0
-    end
+      def self.#{name}?
+        self[:#{name}].to_i > 0
+      end
 
-    def self.#{name}=(value)
-      self[:#{name}] = value
-    end
-END_SRC
+      def self.#{name}=(value)
+        self[:#{name}] = value
+      end
+    END_SRC
     class_eval src, __FILE__, __LINE__
   end
 
@@ -289,7 +304,7 @@ END_SRC
   load_available_settings
   load_plugin_settings
 
-private
+  private
 
   def force_utf8_strings(arg)
     if arg.is_a?(String)
@@ -322,4 +337,5 @@ private
     end
     setting
   end
+  private_class_method :find_or_default
 end

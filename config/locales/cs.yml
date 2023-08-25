@@ -137,6 +137,10 @@ cs:
         earlier_than_minimum_start_date: "nemůže být dříve než %{date} kvůli předřazeným úkolům"
         not_a_regexp: "není platný regulární výraz"
         open_issue_with_closed_parent: "Otevřený úkol nemůže být přiřazen pod uzavřený rodičovský úkol"
+        must_contain_uppercase: "musí obsahovat velká písmena (A-Z)"
+        must_contain_lowercase: "musí obsahovat malá písmena (a-z)"
+        must_contain_digits: "musí obsahovat čísla (0-9)"
+        must_contain_special_chars: "musí obsahovat speciální znaky (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Prosím vyberte
 
@@ -198,7 +202,7 @@ cs:
   error_issue_done_ratios_not_updated: Koeficient dokončení úkolu nebyl aktualizován.
   error_workflow_copy_source: Prosím vyberte zdrojovou frontu nebo roli
   error_workflow_copy_target: Prosím vyberte cílovou frontu(y) a roli(e)
-  error_unable_delete_issue_status: Nelze smazat stavy úkolů
+  error_unable_delete_issue_status: Nelze smazat stavy úkolů (%{value})
   error_unable_to_connect: Nelze se připojit (%{value})
   warning_attachments_not_saved: "%{count} soubor(ů) nebylo možné uložit."
 
@@ -484,7 +488,6 @@ cs:
   label_enumeration_new: Nová hodnota
   label_information: Informace
   label_information_plural: Informace
-  label_please_login: Přihlašte se, prosím
   label_register: Registrovat
   label_login_with_open_id_option: nebo se přihlašte s OpenID
   label_password_lost: Zapomenuté heslo
@@ -601,7 +604,6 @@ cs:
   label_less_or_equal: '<='
   label_in: v
   label_today: dnes
-  label_all_time: vše
   label_yesterday: včera
   label_this_week: tento týden
   label_last_week: minulý týden
@@ -823,7 +825,6 @@ cs:
   button_update: Aktualizovat
   button_configure: Konfigurovat
   button_quote: Citovat
-  button_duplicate: Duplikovat
   button_show: Zobrazit
 
   status_active: aktivní
@@ -874,12 +875,13 @@ cs:
   text_default_administrator_account_changed: Výchozí nastavení administrátorského účtu změněno
   text_file_repository_writable: Povolen zápis do adresáře ukládání souborů
   text_plugin_assets_writable: Možnost zápisu do adresáře plugin assets
-  text_rmagick_available: RMagick k dispozici (volitelné)
+  text_minimagick_available: MiniMagick k dispozici (volitelné)
   text_destroy_time_entries_question: "U úkolů, které chcete odstranit, je evidováno %{hours} práce. Co chete udělat?"
   text_destroy_time_entries: Odstranit zaznamenané hodiny.
   text_assign_time_entries_to_project: Přiřadit zaznamenané hodiny projektu
   text_reassign_time_entries: 'Přeřadit zaznamenané hodiny k tomuto úkolu:'
   text_user_wrote: "%{value} napsal:"
+  text_user_wrote_in: "%{value} napsal (%{link}):"
   text_enumeration_destroy_question: "Několik (%{count}) objektů je přiřazeno k této hodnotě."
   text_enumeration_category_reassign_to: 'Přeřadit je do této:'
   text_email_delivery_not_configured: "Doručování e-mailů není nastaveno a odesílání notifikací je zakázáno.\nNastavte Váš SMTP server v souboru config/configuration.yml a restartujte aplikaci."
@@ -1018,7 +1020,6 @@ cs:
   setting_session_timeout: Vypršení sezení bez aktivity
   label_session_expiration: Vypršení sezení
   permission_close_project: Zavřít / Otevřít projekt
-  label_show_closed_projects: Zobrazit zavřené projekty
   button_close: Zavřít
   button_reopen: Znovu otevřít
   project_status_active: aktivní
@@ -1034,7 +1035,7 @@ cs:
   label_fields_permissions: Práva k polím
   label_readonly: Pouze pro čtení
   label_required: Vyžadováno
-  text_repository_identifier_info: Jou povoleny pouze malá písmena (a-z), číslice, pomlčky a podtržítka.<br />Po uložení již nelze identifikátor změnit.
+  text_repository_identifier_info: Jsou povoleny pouze malá písmena (a-z), číslice, pomlčky a podtržítka.<br />Po uložení již nelze identifikátor změnit.
   field_board_parent: Rodičovské fórum
   label_attribute_of_project: "%{name} projektu"
   label_attribute_of_author: "%{name} autora"
@@ -1090,10 +1091,10 @@ cs:
   label_drop_down_list: rozbalovací seznam
   label_checkboxes: zaškrtávátka
   label_link_values_to: Propojit hodnoty s URL
-  setting_force_default_language_for_anonymous: Vynutit výchozí jazyk pro anonymní uživatele
-    users
-  setting_force_default_language_for_loggedin: Vynutit výchozí jazyk pro přihlášené uživatele
-    users
+  setting_force_default_language_for_anonymous: Vynutit výchozí jazyk pro anonymní
+    uživatele
+  setting_force_default_language_for_loggedin: Vynutit výchozí jazyk pro přihlášené
+    uživatele
   label_custom_field_select_type: Vybrat typ objektu, ke kterému bude přiřazeno uživatelské pole
   label_issue_assigned_to_updated: Přiřazený uživatel aktualizován
   label_check_for_updates: Zkontroluj aktualizace
@@ -1245,3 +1246,60 @@ cs:
     jakékoliv manipulace během autentifikačního procesu.
   label_nothing_to_preview: Žádný náhled
   error_token_expired: Tento odkaz na obnovu hesla vypršel, prosím zkuste to znovu.
+  error_spent_on_future_date: Nelze zapsat čas do budoucna
+  setting_timelog_accept_future_dates: Akceptovat zápis času do budoucna
+  label_delete_link_to_subtask: Odstranit souvislost
+  error_not_allowed_to_log_time_for_other_users: Nejste oprávněni k zápisu času
+    ostatních uživatelů
+  permission_log_time_for_other_users: Záznam stráveného času ostatních uživatelů
+  label_tomorrow: zítra
+  label_next_week: příští týden
+  label_next_month: příští měsíc
+  text_role_no_workflow: Tato role nemá definován průběh práce
+  text_status_no_workflow: Žádná fronta nepoužívá tento stav v průběhu práce
+  setting_mail_handler_preferred_body_part: Preferovaná část (HTML) emailu
+  setting_show_status_changes_in_mail_subject: Zobrazit změny stavů v předmetu mailové
+    notifikace úkolů
+  label_inherited_from_parent_project: Poděděné z rodičovského projektu
+  label_inherited_from_group: Poděděné ze skupiny %{name}
+  label_trackers_description: Popis front
+  label_open_trackers_description: Zobrazit popis všech trackerů
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimentální)
+  field_parent_issue_subject: Předmět rodičovského úkolu
+  permission_edit_own_issues: Upravování vlastních úkolů
+  text_select_apply_tracker: Použít frontu
+  label_updated_issues: Aktualizované úkoly
+  text_avatar_server_config_html: Aktuální avatar server je <a href="%{url}">%{url}</a>.
+    Nastavení lze změnit v config/configuration.yml.
+  setting_gantt_months_limit: Maximální počet měsíců zobrazených v ganttově diagramu
+  permission_import_time_entries: Import stráveného času
+  label_import_notifications: Odeslat emailové notifikace během importu
+  text_gs_available: ImageMagick PDF podpora k dispozici (volitelné)
+  field_recently_used_projects: Počet nedávno použitých projektů v rychlém výběru
+  label_optgroup_bookmarks: Záložky
+  label_optgroup_others: Jiné projekty
+  label_optgroup_recents: Nedávno použité
+  button_project_bookmark: Přidat záložku
+  button_project_bookmark_delete: Odstranit záložku
+  field_history_default_tab: Výchozí karta historie úkolů
+  label_issue_history_properties: Změny vlastností
+  label_issue_history_notes: Poznámky
+  label_last_tab_visited: Poslední zobrazená karta
+  field_unique_id: Unikátní ID
+  text_no_subject: bez předmětu
+  setting_password_required_char_classes: Vyžadované třídy znaků pro hesla
+  label_password_char_class_uppercase: velká písmena
+  label_password_char_class_lowercase: malá písmena
+  label_password_char_class_digits: číslice
+  label_password_char_class_special_chars: speciální znaky
+  text_characters_must_contain: Musí obsahovat %{character_classes}.
+  label_starts_with: začíná
+  label_ends_with: končí
+  label_issue_fixed_version_updated: Cílová verze aktualizována
+  setting_project_list_defaults: Výchozí nastavení seznamu projektů
+  label_display_type: Zobrazit výsledky jako
+  label_display_type_list: Seznam
+  label_display_type_board: Fórum
+  label_my_bookmarks: Moje záložky
+  label_import_time_entries: Import stráveného času

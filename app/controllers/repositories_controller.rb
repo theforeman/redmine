@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,8 +20,8 @@
 require 'digest/sha1'
 require 'redmine/scm/adapters'
 
-class ChangesetNotFound < Exception; end
-class InvalidRevisionParam < Exception; end
+class ChangesetNotFound < StandardError; end
+class InvalidRevisionParam < StandardError; end
 
 class RepositoriesController < ApplicationController
   menu_item :repository
@@ -237,7 +239,7 @@ class RepositoriesController < ApplicationController
     if params[:format] == 'diff'
       @diff = @repository.diff(@path, @rev, @rev_to)
       (show_error_not_found; return) unless @diff
-      filename = "changeset_r#{@rev}"
+      filename = +"changeset_r#{@rev}"
       filename << "_r#{@rev_to}" if @rev_to
       send_data @diff.join, :filename => "#{filename}.diff",
                             :type => 'text/x-patch',
@@ -375,7 +377,7 @@ class RepositoriesController < ApplicationController
   end
 
   def graph_commits_per_author(repository)
-    #data
+    # data
     stats = repository.stats_by_author
     fields, commits_data, changes_data = [], [], []
     stats.each do |name, hsh|
@@ -384,7 +386,7 @@ class RepositoriesController < ApplicationController
       changes_data << hsh[:changes_count]
     end
 
-    #expand to 10 values if needed
+    # expand to 10 values if needed
     fields = fields + [""]*(10 - fields.length) if fields.length<10
     commits_data = commits_data + [0]*(10 - commits_data.length) if commits_data.length<10
     changes_data = changes_data + [0]*(10 - changes_data.length) if changes_data.length<10

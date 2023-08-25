@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,7 +32,7 @@ module Redmine
 
         def array(tag, options={}, &block)
           @struct << []
-          block.call(self)
+          yield(self)
           ret = @struct.pop
           @struct.last[tag] = ret
           @struct.last.merge!(options) if options
@@ -67,10 +69,9 @@ module Redmine
               end
             end
           end
-
-          if block
+          if block_given?
             @struct << (args.first.is_a?(Hash) ? args.first : {})
-            block.call(self)
+            yield(self)
             ret = @struct.pop
             if @struct.last.is_a?(Array)
               @struct.last << ret

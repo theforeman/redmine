@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,10 +22,10 @@ module WikiHelper
 
   def wiki_page_options_for_select(pages, selected = nil, parent = nil, level = 0)
     pages = pages.group_by(&:parent) unless pages.is_a?(Hash)
-    s = ''.html_safe
+    s = (+'').html_safe
     if pages.has_key?(parent)
       pages[parent].each do |page|
-        attrs = "value='#{page.id}'"
+        attrs = +"value='#{page.id}'"
         attrs << " selected='selected'" if selected == page
         indent = (level > 0) ? ('&nbsp;' * level * 2 + '&#187; ') : ''
 

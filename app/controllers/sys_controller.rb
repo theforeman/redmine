@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -52,7 +54,7 @@ class SysController < ActionController::Base
     scope = Project.active.has_module(:repository)
     if params[:id]
       project = nil
-      if params[:id].to_s =~ /^\d*$/
+      if /^\d*$/.match?(params[:id].to_s)
         project = scope.find(params[:id])
       else
         project = scope.find_by_identifier(params[:id])

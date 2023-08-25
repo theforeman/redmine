@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,14 +24,16 @@ class TimeEntry < ActiveRecord::Base
   belongs_to :project
   belongs_to :issue
   belongs_to :user
+  belongs_to :author, :class_name => 'User'
   belongs_to :activity, :class_name => 'TimeEntryActivity'
 
   acts_as_customizable
-  acts_as_event :title => Proc.new { |o|
-                  related   = o.issue if o.issue && o.issue.visible?
-                  related ||= o.project
-                  "#{l_hours(o.hours)} (#{related.event_title})"
-                },
+  acts_as_event :title =>
+                  Proc.new {|o|
+                    related   = o.issue if o.issue && o.issue.visible?
+                    related ||= o.project
+                    "#{l_hours(o.hours)} (#{related.event_title})"
+                  },
                 :url => Proc.new {|o| {:controller => 'timelog', :action => 'index', :project_id => o.project, :issue_id => o.issue}},
                 :author => :user,
                 :group => :issue,
@@ -39,13 +43,15 @@ class TimeEntry < ActiveRecord::Base
                             :author_key => :user_id,
                             :scope => joins(:project).preload(:project)
 
-  validates_presence_of :user_id, :activity_id, :project_id, :hours, :spent_on
+  validates_presence_of :author_id, :user_id, :activity_id, :project_id, :hours, :spent_on
   validates_presence_of :issue_id, :if => lambda { Setting.timelog_required_fields.include?('issue_id') }
   validates_presence_of :comments, :if => lambda { Setting.timelog_required_fields.include?('comments') }
   validates_numericality_of :hours, :allow_nil => true, :message => :invalid
   validates_length_of :comments, :maximum => 1024, :allow_nil => true
   validates :spent_on, :date => true
   before_validation :set_project_if_nil
+  #TODO: remove this, author should be always explicitly set
+  before_validation :set_author_if_nil
   validate :validate_time_entry
 
   scope :visible, lambda {|*args|
@@ -60,7 +66,7 @@ class TimeEntry < ActiveRecord::Base
     where("#{Issue.table_name}.root_id = #{issue.root_id} AND #{Issue.table_name}.lft >= #{issue.lft} AND #{Issue.table_name}.rgt <= #{issue.rgt}")
   }
 
-  safe_attributes 'hours', 'comments', 'project_id', 'issue_id', 'activity_id', 'spent_on', 'custom_field_values', 'custom_fields'
+  safe_attributes 'user_id', 'hours', 'comments', 'project_id', 'issue_id', 'activity_id', 'spent_on', 'custom_field_values', 'custom_fields'
 
   # Returns a SQL conditions string used to find all time entries visible by the specified user
   def self.visible_condition(user, options={})
@@ -107,16 +113,39 @@ class TimeEntry < ActiveRecord::Base
             self.project_id = issue.project_id
           end
           @invalid_issue_id = nil
+        elsif user.allowed_to?(:log_time, issue.project) && issue.assigned_to_id_changed? && issue.previous_assignee == User.current
+          current_assignee = issue.assigned_to
+          issue.assigned_to = issue.previous_assignee
+          unless issue.visible?(user)
+            @invalid_issue_id = issue_id
+          end
+          issue.assigned_to = current_assignee
         else
           @invalid_issue_id = issue_id
         end
       end
+      if user_id_changed? && user_id != author_id && !user.allowed_to?(:log_time_for_other_users, project)
+        @invalid_user_id = user_id
+      else
+        @invalid_user_id = nil
+      end
+
+      # Delete assigned custom fields not visible by the user
+      editable_custom_field_ids = editable_custom_field_values(user).map {|v| v.custom_field_id.to_s}
+      self.custom_field_values.delete_if do |c|
+        !editable_custom_field_ids.include?(c.custom_field.id.to_s)
+      end
     end
+
     attrs
   end
 
   def set_project_if_nil
     self.project = issue.project if issue && project.nil?
+  end
+
+  def set_author_if_nil
+    self.author = User.current if author.nil?
   end
 
   def validate_time_entry
@@ -128,14 +157,23 @@ class TimeEntry < ActiveRecord::Base
       if hours_changed? && max_hours > 0.0
         logged_hours = other_hours_with_same_user_and_day
         if logged_hours + hours > max_hours
-          errors.add :base, I18n.t(:error_exceeds_maximum_hours_per_day,
-            :logged_hours => format_hours(logged_hours), :max_hours => format_hours(max_hours))
+          errors.add(
+            :base,
+            I18n.t(:error_exceeds_maximum_hours_per_day,
+                   :logged_hours => format_hours(logged_hours),
+                   :max_hours => format_hours(max_hours)))
         end
       end
     end
     errors.add :project_id, :invalid if project.nil?
+    if @invalid_user_id || (user_id_changed? && user_id != author_id && !self.assignable_users.map(&:id).include?(user_id))
+      errors.add :user_id, :invalid
+    end
     errors.add :issue_id, :invalid if (issue_id && !issue) || (issue && project!=issue.project) || @invalid_issue_id
     errors.add :activity_id, :inclusion if activity_id_changed? && project && !project.activities.include?(activity)
+    if spent_on_changed? && user
+      errors.add :base, I18n.t(:error_spent_on_future_date) if !Setting.timelog_accept_future_dates? && (spent_on > user.today)
+    end
   end
 
   def hours=(h)
@@ -169,12 +207,29 @@ class TimeEntry < ActiveRecord::Base
 
   # Returns the custom_field_values that can be edited by the given user
   def editable_custom_field_values(user=nil)
-    visible_custom_field_values
+    visible_custom_field_values(user)
   end
 
   # Returns the custom fields that can be edited by the given user
   def editable_custom_fields(user=nil)
     editable_custom_field_values(user).map(&:custom_field).uniq
+  end
+
+  def visible_custom_field_values(user = nil)
+    user ||= User.current
+    custom_field_values.select do |value|
+      value.custom_field.visible_by?(project, user)
+    end
+  end
+
+  def assignable_users
+    users = []
+    if project
+      users = project.members.active.preload(:user)
+      users = users.map(&:user).select{ |u| u.allowed_to?(:log_time, project) }
+    end
+    users << User.current if User.current.logged? && !users.include?(User.current)
+    users
   end
 
   private

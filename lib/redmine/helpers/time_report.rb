@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -56,7 +58,7 @@ module Redmine
             end
             @hours << h
           end
-          
+
           @hours.each do |row|
             case @columns
             when 'year'
@@ -69,13 +71,13 @@ module Redmine
               row['day'] = "#{row['spent_on']}"
             end
           end
-          
+
           min = @hours.collect {|row| row['spent_on']}.min
           @from = min ? min.to_date : User.current.today
 
           max = @hours.collect {|row| row['spent_on']}.max
           @to = max ? max.to_date : User.current.today
-          
+
           @total_hours = @hours.inject(0) {|s,k| s = s + k['hours'].to_f}
 
           @periods = []

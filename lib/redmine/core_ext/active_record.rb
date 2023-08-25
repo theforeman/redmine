@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,7 +21,7 @@ class DateValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, value)
     before_type_cast = record.attributes_before_type_cast[attribute.to_s]
     if before_type_cast.is_a?(String) && before_type_cast.present?
-      unless before_type_cast =~ /\A\d{4}-\d{2}-\d{2}( 00:00:00)?\z/ && value
+      unless /\A\d{4}-\d{2}-\d{2}( 00:00:00)?\z/.match?(before_type_cast) && value
         record.errors.add attribute, :not_a_date
       end
     end

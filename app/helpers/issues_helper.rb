@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,8 @@ module IssuesHelper
   def issue_list(issues, &block)
     ancestors = []
     issues.each do |issue|
-      while (ancestors.any? && !issue.is_descendant_of?(ancestors.last))
+      while ancestors.any? &&
+            !issue.is_descendant_of?(ancestors.last)
         ancestors.pop
       end
       yield issue, ancestors.size
@@ -35,7 +36,8 @@ module IssuesHelper
   def grouped_issue_list(issues, query, &block)
     ancestors = []
     grouped_query_results(issues, query) do |issue, group_name, group_count, group_totals|
-      while (ancestors.any? && !issue.is_descendant_of?(ancestors.last))
+      while ancestors.any? &&
+            !issue.is_descendant_of?(ancestors.last)
         ancestors.pop
       end
       yield issue, ancestors.size, group_name, group_count, group_totals
@@ -62,10 +64,10 @@ module IssuesHelper
 
     link_to_issue(issue) + "<br /><br />".html_safe +
       "<strong>#{@cached_label_project}</strong>: #{link_to_project(issue.project)}<br />".html_safe +
-      "<strong>#{@cached_label_status}</strong>: #{h(issue.status.name)}<br />".html_safe +
+      "<strong>#{@cached_label_status}</strong>: #{h(issue.status.name) + (" (#{format_date(issue.closed_on)})" if issue.closed?)}<br />".html_safe +
       "<strong>#{@cached_label_start_date}</strong>: #{format_date(issue.start_date)}<br />".html_safe +
       "<strong>#{@cached_label_due_date}</strong>: #{format_date(issue.due_date)}<br />".html_safe +
-      "<strong>#{@cached_label_assigned_to}</strong>: #{avatar(issue.assigned_to, :size => "13", :title => l(:field_assigned_to)) if issue.assigned_to} #{h(issue.assigned_to)}<br />".html_safe +
+      "<strong>#{@cached_label_assigned_to}</strong>: #{avatar(issue.assigned_to, :size => '13', :title => l(:field_assigned_to)) if issue.assigned_to} #{h(issue.assigned_to)}<br />".html_safe +
       "<strong>#{@cached_label_priority}</strong>: #{h(issue.priority.name)}".html_safe
   end
 
@@ -74,7 +76,7 @@ module IssuesHelper
   end
 
   def render_issue_subject_with_tree(issue)
-    s = ''
+    s = +''
     ancestors = issue.root? ? [] : issue.ancestors.visible.to_a
     ancestors.each do |ancestor|
       s << '<div>' + content_tag('p', link_to_issue(ancestor, :project => (issue.project_id != ancestor.project_id)))
@@ -82,7 +84,7 @@ module IssuesHelper
     s << '<div>'
     subject = h(issue.subject)
     if issue.is_private?
-      subject = subject + ' ' + content_tag('span', l(:field_is_private), :class => 'private')
+      subject = subject + ' ' + content_tag('span', l(:field_is_private), :class => 'badge badge-private private')
     end
     s << content_tag('h3', subject)
     s << '</div>' * (ancestors.size + 1)
@@ -90,18 +92,52 @@ module IssuesHelper
   end
 
   def render_descendants_tree(issue)
-    s = '<table class="list issues odd-even">'
-    issue_list(issue.descendants.visible.preload(:status, :priority, :tracker, :assigned_to).sort_by(&:lft)) do |child, level|
-      css = "issue issue-#{child.id} hascontextmenu #{child.css_classes}"
+    manage_relations = User.current.allowed_to?(:manage_subtasks, issue.project)
+    s = +'<table class="list issues odd-even">'
+    issue_list(
+      issue.descendants.visible.
+        preload(:status, :priority, :tracker,
+                :assigned_to).sort_by(&:lft)) do |child, level|
+      css = +"issue issue-#{child.id} hascontextmenu #{child.css_classes}"
       css << " idnt idnt-#{level}" if level > 0
-      s << content_tag('tr',
-             content_tag('td', check_box_tag("ids[]", child.id, false, :id => nil), :class => 'checkbox') +
-             content_tag('td', link_to_issue(child, :project => (issue.project_id != child.project_id)), :class => 'subject', :style => 'width: 50%') +
+      buttons =
+        if manage_relations
+          link_to(l(:label_delete_link_to_subtask),
+                  issue_path(
+                    {:id => child.id, :issue => {:parent_issue_id => ''},
+                     :back_url => issue_path(issue.id), :no_flash => '1'}),
+                  :method => :put,
+                  :data => {:confirm => l(:text_are_you_sure)},
+                  :title => l(:label_delete_link_to_subtask),
+                  :class => 'icon-only icon-link-break'
+                  )
+        else
+          "".html_safe
+        end
+      buttons << link_to_context_menu
+      s <<
+        content_tag(
+          'tr',
+          content_tag('td', check_box_tag("ids[]", child.id, false, :id => nil),
+                      :class => 'checkbox') +
+             content_tag('td',
+                         link_to_issue(
+                           child,
+                           :project => (issue.project_id != child.project_id)),
+                         :class => 'subject') +
              content_tag('td', h(child.status), :class => 'status') +
              content_tag('td', link_to_user(child.assigned_to), :class => 'assigned_to') +
-             content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio), :class=> 'done_ratio') +
-             content_tag('td', link_to_context_menu, :class => 'buttons'),
-             :class => css)
+             content_tag('td', format_date(child.start_date), :class => 'start_date') +
+             content_tag('td', format_date(child.due_date), :class => 'due_date') +
+             content_tag('td',
+                         (if child.disabled_core_fields.include?('done_ratio')
+                            ''
+                          else
+                             progress_bar(child.done_ratio)
+                          end),
+                         :class=> 'done_ratio') +
+             content_tag('td', buttons, :class => 'buttons'),
+          :class => css)
     end
     s << '</table>'
     s.html_safe
@@ -110,33 +146,55 @@ module IssuesHelper
   # Renders the list of related issues on the issue details view
   def render_issue_relations(issue, relations)
     manage_relations = User.current.allowed_to?(:manage_issue_relations, issue.project)
-
     s = ''.html_safe
     relations.each do |relation|
       other_issue = relation.other_issue(issue)
       css = "issue hascontextmenu #{other_issue.css_classes}"
-      buttons = manage_relations ? link_to(l(:label_relation_delete),
-                                  relation_path(relation),
-                                  :remote => true,
-                                  :method => :delete,
-                                  :data => {:confirm => l(:text_are_you_sure)},
-                                  :title => l(:label_relation_delete),
-                                  :class => 'icon-only icon-link-break'
-                                 ) :"".html_safe
+      buttons =
+        if manage_relations
+          link_to(
+            l(:label_relation_delete),
+            relation_path(relation),
+            :remote => true,
+            :method => :delete,
+            :data => {:confirm => l(:text_are_you_sure)},
+            :title => l(:label_relation_delete),
+            :class => 'icon-only icon-link-break'
+          )
+        else
+          "".html_safe
+        end
       buttons << link_to_context_menu
-
-      s << content_tag('tr',
-             content_tag('td', check_box_tag("ids[]", other_issue.id, false, :id => nil), :class => 'checkbox') +
-             content_tag('td', relation.to_s(@issue) {|other| link_to_issue(other, :project => Setting.cross_project_issue_relations?)}.html_safe, :class => 'subject', :style => 'width: 50%') +
+      s <<
+        content_tag(
+          'tr',
+          content_tag('td',
+                      check_box_tag(
+                        "ids[]", other_issue.id,
+                        false, :id => nil),
+                      :class => 'checkbox') +
+             content_tag('td',
+                         relation.to_s(@issue) {|other|
+                           link_to_issue(
+                             other,
+                             :project => Setting.cross_project_issue_relations?)
+                         }.html_safe,
+                         :class => 'subject') +
              content_tag('td', other_issue.status, :class => 'status') +
+             content_tag('td', link_to_user(other_issue.assigned_to), :class => 'assigned_to') +
              content_tag('td', format_date(other_issue.start_date), :class => 'start_date') +
              content_tag('td', format_date(other_issue.due_date), :class => 'due_date') +
-             content_tag('td', other_issue.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(other_issue.done_ratio), :class=> 'done_ratio') +
+             content_tag('td',
+                         (if other_issue.disabled_core_fields.include?('done_ratio')
+                            ''
+                          else
+                            progress_bar(other_issue.done_ratio)
+                          end),
+                         :class=> 'done_ratio') +
              content_tag('td', buttons, :class => 'buttons'),
-             :id => "relation-#{relation.id}",
-             :class => css)
+          :id => "relation-#{relation.id}",
+          :class => css)
     end
-
     content_tag('table', s, :class => 'list issues odd-even')
   end
 
@@ -146,7 +204,7 @@ module IssuesHelper
         l_hours_short(issue.estimated_hours)
       else
         s = issue.estimated_hours.present? ? l_hours_short(issue.estimated_hours) : ""
-        s << " (#{l(:label_total)}: #{l_hours_short(issue.total_estimated_hours)})"
+        s += " (#{l(:label_total)}: #{l_hours_short(issue.total_estimated_hours)})"
         s.html_safe
       end
     end
@@ -159,11 +217,23 @@ module IssuesHelper
       if issue.total_spent_hours == issue.spent_hours
         link_to(l_hours_short(issue.spent_hours), path)
       else
+        # link to global time entries if cross-project subtasks are allowed
+        # in order to show time entries from not descendents projects
+        if %w(system tree hierarchy).include?(Setting.cross_project_subtasks)
+          path = time_entries_path(:issue_id => "~#{issue.id}")
+        end
         s = issue.spent_hours > 0 ? l_hours_short(issue.spent_hours) : ""
-        s << " (#{l(:label_total)}: #{link_to l_hours_short(issue.total_spent_hours), path})"
+        s += " (#{l(:label_total)}: #{link_to l_hours_short(issue.total_spent_hours), path})"
         s.html_safe
       end
     end
+  end
+
+  def issue_due_date_details(issue)
+    return if issue&.due_date.nil?
+    s = format_date(issue.due_date)
+    s += " (#{due_date_distance_in_words(issue.due_date)})" unless issue.closed?
+    s
   end
 
   # Returns a link for adding a new subtask to the given issue
@@ -176,13 +246,18 @@ module IssuesHelper
   end
 
   def trackers_options_for_select(issue)
+    trackers = trackers_for_select(issue)
+    trackers.collect {|t| [t.name, t.id]}
+  end
+
+  def trackers_for_select(issue)
     trackers = issue.allowed_target_trackers
     if issue.new_record? && issue.parent_issue_id.present?
       trackers = trackers.reject do |tracker|
         issue.tracker_id != tracker.id && tracker.disabled_core_fields.include?('parent_issue_id')
       end
     end
-    trackers.collect {|t| [t.name, t.id]}
+    trackers
   end
 
   class IssueFieldsRows
@@ -215,9 +290,11 @@ module IssuesHelper
 
     def cells(label, text, options={})
       options[:class] = [options[:class] || "", 'attribute'].join(' ')
-      content_tag 'div',
-        content_tag('div', label + ":", :class => 'label') + content_tag('div', text, :class => 'value'),
-        options
+      content_tag(
+        'div',
+        content_tag('div', label + ":", :class => 'label') +
+          content_tag('div', text, :class => 'value'),
+        options)
     end
   end
 
@@ -233,13 +310,8 @@ module IssuesHelper
     half = (values.size / 2.0).ceil
     issue_fields_rows do |rows|
       values.each_with_index do |value, i|
-        css = "cf_#{value.custom_field.id}"
-        attr_value = show_value(value)
-        if value.custom_field.text_formatting == 'full'
-          attr_value = content_tag('div', attr_value, class: 'wiki')
-        end
         m = (i < half ? :left : :right)
-        rows.send m, custom_field_name_tag(value.custom_field), attr_value, :class => css
+        rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
       end
     end
   end
@@ -247,21 +319,15 @@ module IssuesHelper
   def render_full_width_custom_fields_rows(issue)
     values = issue.visible_custom_field_values.select {|value| value.custom_field.full_width_layout?}
     return if values.empty?
-
     s = ''.html_safe
     values.each_with_index do |value, i|
-      attr_value = show_value(value)
-      next if attr_value.blank?
-
-      if value.custom_field.text_formatting == 'full'
-        attr_value = content_tag('div', attr_value, class: 'wiki')
-      end
-
+      attr_value_tag = custom_field_value_tag(value)
+      next if attr_value_tag.blank?
       content =
-          content_tag('hr') +
-          content_tag('p', content_tag('strong', custom_field_name_tag(value.custom_field) )) +
-          content_tag('div', attr_value, class: 'value')
-      s << content_tag('div', content, class: "cf_#{value.custom_field.id} attribute")
+        content_tag('hr') +
+        content_tag('p', content_tag('strong', custom_field_name_tag(value.custom_field) )) +
+        content_tag('div', attr_value_tag, class: 'value')
+      s << content_tag('div', content, class: "#{value.custom_field.css_classes} attribute")
     end
     s
   end
@@ -311,20 +377,24 @@ module IssuesHelper
 
   def email_issue_attributes(issue, user, html)
     items = []
-    %w(author status priority assigned_to category fixed_version).each do |attribute|
-      unless issue.disabled_core_fields.include?(attribute+"_id")
+    %w(author status priority assigned_to category fixed_version start_date due_date).each do |attribute|
+      if issue.disabled_core_fields.grep(/^#{attribute}(_id)?$/).empty?
+        attr_value = (issue.send attribute).to_s
+        next if attr_value.blank?
         if html
-          items << content_tag('strong', "#{l("field_#{attribute}")}: ") + (issue.send attribute)
+          items << content_tag('strong', "#{l("field_#{attribute}")}: ") + attr_value
         else
-          items << "#{l("field_#{attribute}")}: #{issue.send attribute}"
+          items << "#{l("field_#{attribute}")}: #{attr_value}"
         end
       end
     end
     issue.visible_custom_field_values(user).each do |value|
+      cf_value = show_value(value, false)
+      next if cf_value.blank?
       if html
-        items << content_tag('strong', "#{value.custom_field.name}: ") + show_value(value, false)
+        items << content_tag('strong', "#{value.custom_field.name}: ") + cf_value
       else
-        items << "#{value.custom_field.name}: #{show_value(value, false)}"
+        items << "#{value.custom_field.name}: #{cf_value}"
       end
     end
     items
@@ -344,7 +414,7 @@ module IssuesHelper
   # Returns the textual representation of a journal details
   # as an array of strings
   def details_to_strings(details, no_html=false, options={})
-    options[:only_path] = (options[:only_path] == false ? false : true)
+    options[:only_path] = !(options[:only_path] == false)
     strings = []
     values_by_field = {}
     details.each do |detail|
@@ -435,12 +505,20 @@ module IssuesHelper
     when 'relation'
       if detail.value && !detail.old_value
         rel_issue = Issue.visible.find_by_id(detail.value)
-        value = rel_issue.nil? ? "#{l(:label_issue)} ##{detail.value}" :
-                  (no_html ? rel_issue : link_to_issue(rel_issue, :only_path => options[:only_path]))
+        value =
+          if rel_issue.nil?
+            "#{l(:label_issue)} ##{detail.value}"
+          else
+            (no_html ? rel_issue : link_to_issue(rel_issue, :only_path => options[:only_path]))
+          end
       elsif detail.old_value && !detail.value
         rel_issue = Issue.visible.find_by_id(detail.old_value)
-        old_value = rel_issue.nil? ? "#{l(:label_issue)} ##{detail.old_value}" :
-                          (no_html ? rel_issue : link_to_issue(rel_issue, :only_path => options[:only_path]))
+        old_value =
+          if rel_issue.nil?
+            "#{l(:label_issue)} ##{detail.old_value}"
+          else
+            (no_html ? rel_issue : link_to_issue(rel_issue, :only_path => options[:only_path]))
+          end
       end
       relation_type = IssueRelation::TYPES[detail.prop_key]
       label = l(relation_type[:name]) if relation_type
@@ -476,10 +554,13 @@ module IssuesHelper
     elsif show_diff
       s = l(:text_journal_changed_no_detail, :label => label)
       unless no_html
-        diff_link = link_to 'diff',
-          diff_journal_url(detail.journal_id, :detail_id => detail.id, :only_path => options[:only_path]),
-          :title => l(:label_view_diff)
-        s << " (#{ diff_link })"
+        diff_link =
+          link_to(
+            l(:label_diff),
+            diff_journal_url(detail.journal_id, :detail_id => detail.id,
+                             :only_path => options[:only_path]),
+            :title => l(:label_view_diff))
+        s << " (#{diff_link})"
       end
       s.html_safe
     elsif detail.value.present?
@@ -503,9 +584,7 @@ module IssuesHelper
   # Find the name of an associated record stored in the field attribute
   # For project, return the associated record only if is visible for the current User
   def find_name_by_reflection(field, id)
-    unless id.present?
-      return nil
-    end
+    return nil if id.blank?
     @detail_value_name_by_reflection ||= Hash.new do |hash, key|
       association = Issue.reflect_on_association(key.first.to_sym)
       name = nil
@@ -533,4 +612,36 @@ module IssuesHelper
       end
     end
   end
+
+  # Issue history tabs
+  def issue_history_tabs
+    tabs = []
+    if @journals.present?
+      journals_without_notes = @journals.select{|value| value.notes.blank?}
+      journals_with_notes = @journals.reject{|value| value.notes.blank?}
+
+      tabs << {:name => 'history', :label => :label_history, :onclick => 'showIssueHistory("history", this.href)', :partial => 'issues/tabs/history', :locals => {:issue => @issue, :journals => @journals}}
+      tabs << {:name => 'notes', :label => :label_issue_history_notes, :onclick => 'showIssueHistory("notes", this.href)'} if journals_with_notes.any?
+      tabs << {:name => 'properties', :label => :label_issue_history_properties, :onclick => 'showIssueHistory("properties", this.href)'} if journals_without_notes.any?
+    end
+    tabs << {:name => 'time_entries', :label => :label_time_entry_plural, :remote => true, :onclick => "getRemoteTab('time_entries', '#{tab_issue_path(@issue, :name => 'time_entries')}', '#{issue_path(@issue, :tab => 'time_entries')}')"} if User.current.allowed_to?(:view_time_entries, @project) && @issue.spent_hours > 0
+    tabs << {:name => 'changesets', :label => :label_associated_revisions, :remote => true, :onclick => "getRemoteTab('changesets', '#{tab_issue_path(@issue, :name => 'changesets')}', '#{issue_path(@issue, :tab => 'changesets')}')"} if @has_changesets
+    tabs
+  end
+
+  def issue_history_default_tab
+    # tab params overrides user default tab preference
+    return params[:tab] if params[:tab].present?
+    user_default_tab = User.current.pref.history_default_tab
+
+    case user_default_tab
+    when 'last_tab_visited'
+      cookies['history_last_tab'].presence || 'notes'
+    when ''
+      'notes'
+    else
+      user_default_tab
+    end
+  end
+
 end

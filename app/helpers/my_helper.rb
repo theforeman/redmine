@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -34,7 +34,7 @@ module MyHelper
   def render_block(block, user)
     content = render_block_content(block, user)
     if content.present?
-      handle = content_tag('span', '', :class => 'sort-handle', :title => l(:button_move))
+      handle = content_tag('span', '', :class => 'icon-only icon-sort-handle sort-handle', :title => l(:button_move))
       close = link_to(l(:button_delete),
                       {:action => "remove_block", :block => block},
                       :remote => true, :method => 'post', 
@@ -78,7 +78,7 @@ module MyHelper
   def render_calendar_block(block, settings)
     calendar = Redmine::Helpers::Calendar.new(User.current.today, current_language, :week)
     calendar.events = Issue.visible.
-      where(:project_id => User.current.projects.pluck(:id)).
+      where(:project => User.current.projects).
       where("(start_date>=? and start_date<=?) or (due_date>=? and due_date<=?)", calendar.startdt, calendar.enddt, calendar.startdt, calendar.enddt).
       includes(:project, :tracker, :priority, :assigned_to).
       references(:project, :tracker, :priority, :assigned_to).
@@ -115,6 +115,17 @@ module MyHelper
     render :partial => 'my/blocks/issues', :locals => {:query => query, :issues => issues, :block => block}
   end
 
+  def render_issuesupdatedbyme_block(block, settings)
+    query = IssueQuery.new(:name => l(:label_updated_issues), :user => User.current)
+    query.add_filter 'updated_by', '=', ['me']
+    query.add_filter 'project.status', '=', ["#{Project::STATUS_ACTIVE}"]
+    query.column_names = settings[:columns].presence || ['project', 'tracker', 'status', 'subject']
+    query.sort_criteria = settings[:sort].presence || [['updated_on', 'desc']]
+    issues = query.issues(:limit => 10)
+
+    render :partial => 'my/blocks/issues', :locals => {:query => query, :issues => issues, :block => block}
+  end
+
   def render_issueswatched_block(block, settings)
     query = IssueQuery.new(:name => l(:label_watched_issues), :user => User.current)
     query.add_filter 'watcher_id', '=', ['me']
@@ -142,7 +153,7 @@ module MyHelper
 
   def render_news_block(block, settings)
     news = News.visible.
-      where(:project_id => User.current.projects.pluck(:id)).
+      where(:project => User.current.projects).
       limit(10).
       includes(:project, :author).
       references(:project, :author).

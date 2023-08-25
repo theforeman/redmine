@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -96,7 +98,7 @@ class Repository::Mercurial < Repository
   def find_changeset_by_name(name)
     return nil if name.blank?
     s = name.to_s
-    if /[^\d]/ =~ s or s.size > 8
+    if /[^\d]/.match?(s) || s.size > 8
       cs = changesets.where(:scmid => s).first
     else
       cs = changesets.find_by(:revision => s)
@@ -157,7 +159,7 @@ class Repository::Mercurial < Repository
       # But, it is very heavy.
       # Mercurial does not treat directory.
       # So, "hg log DIR" is very heavy.
-      branch_limit = path.blank? ? limit : ( limit * 5 )
+      branch_limit = path.blank? ? limit : (limit * 5)
       args << nodes_in_branch(rev, branch_limit)
     elsif last = rev ? find_changeset_by_name(tag_scmid(rev) || rev) : nil
       cond << "#{Changeset.table_name}.id <= ?"

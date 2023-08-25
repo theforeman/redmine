@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # FileSystem adapter
 # File written by Paul Rivier, at Demotera.
@@ -107,7 +109,7 @@ module Redmine
         # Here we do not shell-out, so we do not want quotes.
         def target(path=nil)
           # Prevent the use of ..
-          if path and !path.match(/(^|\/)\.\.(\/|$)/)
+          if path and !/(^|\/)\.\.(\/|$)/.match?(path)
             return "#{self.url}#{without_leading_slash(path)}"
           end
           return self.url

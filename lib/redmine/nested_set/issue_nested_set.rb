@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -84,19 +86,19 @@ module Redmine
         if parent
           previous_root_id = root_id
           self.root_id = parent.root_id
-          
+
           lft_after_move = target_lft
           self.class.where(:root_id => parent.root_id).update_all([
             "lft = CASE WHEN lft >= :lft THEN lft + :shift ELSE lft END, " +
             "rgt = CASE WHEN rgt >= :lft THEN rgt + :shift ELSE rgt END",
             {:lft => lft_after_move, :shift => (rgt - lft + 1)}
           ])
-    
+
           self.class.where(:root_id => previous_root_id).update_all([
             "root_id = :root_id, lft = lft + :shift, rgt = rgt + :shift",
             {:root_id => parent.root_id, :shift => lft_after_move - lft}
           ])
-    
+
           self.lft, self.rgt = lft_after_move, (rgt - lft + lft_after_move)
           parent.send :reload_nested_set_values
         end
@@ -105,7 +107,7 @@ module Redmine
       def remove_from_nested_set
         self.class.where(:root_id => root_id).where("lft >= ? AND rgt <= ?", lft, rgt).
           update_all(["root_id = :id, lft = lft - :shift, rgt = rgt - :shift", {:id => id, :shift => lft - 1}])
-    
+
         self.class.where(:root_id => root_id).update_all([
           "lft = CASE WHEN lft >= :lft THEN lft - :shift ELSE lft END, " +
           "rgt = CASE WHEN rgt >= :lft THEN rgt - :shift ELSE rgt END",
@@ -149,7 +151,7 @@ module Redmine
       end
 
       def lock_nested_set
-        if self.class.connection.adapter_name =~ /sqlserver/i
+        if /sqlserver/i.match?(self.class.connection.adapter_name)
           lock = "WITH (ROWLOCK HOLDLOCK UPDLOCK)"
           # Custom lock for SQLServer
           # This can be problematic if root_id or parent root_id changes

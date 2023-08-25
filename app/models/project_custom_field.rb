@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +20,10 @@
 class ProjectCustomField < CustomField
   def type_name
     :label_project_plural
+  end
+
+  def visible_by?(project, user=User.current)
+    super || (roles & user.roles_for_project(project)).present?
   end
 
   def visibility_by_project_condition(project_key=nil, user=User.current, id_column=nil)

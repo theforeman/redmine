@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,7 @@
 class IssuesController < ApplicationController
   default_search_scope :issues
 
-  before_action :find_issue, :only => [:show, :edit, :update]
+  before_action :find_issue, :only => [:show, :edit, :update, :issue_tab]
   before_action :find_issues, :only => [:bulk_edit, :bulk_update, :destroy]
   before_action :authorize, :except => [:index, :new, :create]
   before_action :find_optional_project, :only => [:index, :new, :create]
@@ -84,13 +86,10 @@ class IssuesController < ApplicationController
 
   def show
     @journals = @issue.visible_journals_with_index
-    @changesets = @issue.changesets.visible.preload(:repository, :user).to_a
+    @has_changesets = @issue.changesets.visible.preload(:repository, :user).exists?
     @relations = @issue.relations.select {|r| r.other_issue(@issue) && r.other_issue(@issue).visible? }
 
-    if User.current.wants_comments_in_reverse_order?
-      @journals.reverse!
-      @changesets.reverse!
-    end
+    @journals.reverse! if User.current.wants_comments_in_reverse_order?
 
     if User.current.allowed_to?(:view_time_entries, @project)
       Issue.load_visible_spent_hours([@issue])
@@ -102,11 +101,15 @@ class IssuesController < ApplicationController
         @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
         @priorities = IssuePriority.active
         @time_entry = TimeEntry.new(:issue => @issue, :project => @issue.project)
+        @time_entries = @issue.time_entries.visible.preload(:activity, :user)
         @relation = IssueRelation.new
         retrieve_previous_and_next_issue_ids
         render :template => 'issues/show'
       }
-      format.api
+      format.api {
+        @changesets = @issue.changesets.visible.preload(:repository, :user).to_a
+        @changesets.reverse! if User.current.wants_comments_in_reverse_order?
+      }
       format.atom { render :template => 'journals/index', :layout => false, :content_type => 'application/atom+xml' }
       format.pdf  {
         send_file_headers! :type => 'application/pdf', :filename => "#{@project.identifier}-#{@issue.id}.pdf"
@@ -177,7 +180,7 @@ class IssuesController < ApplicationController
 
     if saved
       render_attachment_warning_if_needed(@issue)
-      flash[:notice] = l(:notice_successful_update) unless @issue.current_journal.new_record?
+      flash[:notice] = l(:notice_successful_update) unless @issue.current_journal.new_record? || params[:no_flash]
 
       respond_to do |format|
         format.html { redirect_back_or_default issue_path(@issue, previous_and_next_issue_ids_params) }
@@ -188,6 +191,21 @@ class IssuesController < ApplicationController
         format.html { render :action => 'edit' }
         format.api  { render_validation_errors(@issue) }
       end
+    end
+  end
+
+  def issue_tab
+    return render_error :status => 422 unless request.xhr?
+    tab = params[:name]
+
+    case tab
+    when 'time_entries'
+      @time_entries = @issue.time_entries.visible.preload(:activity, :user).to_a
+      render :partial => 'issues/tabs/time_entries', :locals => {:time_entries => @time_entries}
+    when 'changesets'
+      @changesets = @issue.changesets.visible.preload(:repository, :user).to_a
+      @changesets.reverse! if User.current.wants_comments_in_reverse_order?
+      render :partial => 'issues/tabs/changesets', :locals => {:changesets => @changesets}
     end
   end
 
@@ -259,14 +277,16 @@ class IssuesController < ApplicationController
     end
     @values_by_custom_field.delete_if {|k,v| v.blank?}
 
-    @custom_fields = edited_issues.map{|i|i.editable_custom_fields}.reduce(:&).select {|field| field.format.bulk_edit_supported}
+    @custom_fields = edited_issues.map{|i| i.editable_custom_fields}.reduce(:&).select {|field| field.format.bulk_edit_supported}
     @assignables = target_projects.map(&:assignable_users).reduce(:&)
     @versions = target_projects.map {|p| p.shared_versions.open}.reduce(:&)
     @categories = target_projects.map {|p| p.issue_categories}.reduce(:&)
     if @copy
       @attachments_present = @issues.detect {|i| i.attachments.any?}.present?
       @subtasks_present = @issues.detect {|i| !i.leaf?}.present?
-      @watchers_present = User.current.allowed_to?(:add_issue_watchers, @projects) && Watcher.where(:watchable_type => 'Issue', :watchable_id => @issues.map(&:id)).exists?
+      @watchers_present = User.current.allowed_to?(:add_issue_watchers, @projects) &&
+                            Watcher.where(:watchable_type => 'Issue',
+                                          :watchable_id => @issues.map(&:id)).exists?
     end
 
     @safe_attributes = edited_issues.map(&:safe_attribute_names).reduce(:&)
@@ -316,7 +336,8 @@ class IssuesController < ApplicationController
     @issues.each do |orig_issue|
       orig_issue.reload
       if @copy
-        issue = orig_issue.copy({},
+        issue = orig_issue.copy(
+          {},
           :attachments => copy_attachments,
           :subtasks => copy_subtasks,
           :watchers => copy_watchers,
@@ -464,6 +485,7 @@ class IssuesController < ApplicationController
     @issue.init_journal(User.current)
 
     issue_attributes = params[:issue]
+    issue_attributes[:assigned_to_id] = User.current.id if issue_attributes && issue_attributes[:assigned_to_id] == 'me'
     if issue_attributes && params[:conflict_resolution]
       case params[:conflict_resolution]
       when 'overwrite'
@@ -520,6 +542,7 @@ class IssuesController < ApplicationController
       # so we can use the default version for the new project
       attrs.delete(:fixed_version_id)
     end
+    attrs[:assigned_to_id] = User.current.id if attrs[:assigned_to_id] == 'me'
     @issue.safe_attributes = attrs
 
     if @issue.project
@@ -554,6 +577,7 @@ class IssuesController < ApplicationController
         time_entry = @time_entry || TimeEntry.new
         time_entry.project = @issue.project
         time_entry.issue = @issue
+        time_entry.author = User.current
         time_entry.user = User.current
         time_entry.spent_on = User.current.today
         time_entry.safe_attributes = params[:time_entry]

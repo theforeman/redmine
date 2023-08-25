@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -62,14 +64,15 @@ Rails.application.routes.draw do
   get 'projects/:id/issues/report', :to => 'reports#issue_report', :as => 'project_issues_report'
   get 'projects/:id/issues/report/:detail', :to => 'reports#issue_report_details', :as => 'project_issues_report_details'
 
-  get   '/issues/imports/new', :to => 'imports#new', :as => 'new_issues_import'
+  get   '/issues/imports/new', :to => 'imports#new', :defaults => { :type => 'IssueImport' }, :as => 'new_issues_import'
+  get   '/time_entries/imports/new', :to => 'imports#new', :defaults => { :type => 'TimeEntryImport' }, :as => 'new_time_entries_import'
   post  '/imports', :to => 'imports#create', :as => 'imports'
   get   '/imports/:id', :to => 'imports#show', :as => 'import'
   match '/imports/:id/settings', :to => 'imports#settings', :via => [:get, :post], :as => 'import_settings'
   match '/imports/:id/mapping', :to => 'imports#mapping', :via => [:get, :post], :as => 'import_mapping'
   match '/imports/:id/run', :to => 'imports#run', :via => [:get, :post], :as => 'import_run'
 
-  match 'my/account', :controller => 'my', :action => 'account', :via => [:get, :post]
+  match 'my/account', :controller => 'my', :action => 'account', :via => [:get, :put]
   match 'my/account/destroy', :controller => 'my', :action => 'destroy', :via => [:get, :post]
   match 'my/page', :controller => 'my', :action => 'page', :via => :get
   post 'my/page', :to => 'my#update_page'
@@ -110,6 +113,7 @@ Rails.application.routes.draw do
       post 'close'
       post 'reopen'
       match 'copy', :via => [:get, :post]
+      match 'bookmark', :via => [:delete, :post]
     end
 
     shallow do
@@ -184,6 +188,7 @@ Rails.application.routes.draw do
     member do
       # Used when updating the form of an existing issue
       patch 'edit', :to => 'issues#edit'
+      get 'tab/:name', :action => 'issue_tab', :as => 'tab'
     end
     collection do
       match 'bulk_edit', :via => [:get, :post]
@@ -312,7 +317,8 @@ Rails.application.routes.draw do
   end
   resources :roles do
     collection do
-      match 'permissions', :via => [:get, :post]
+      get 'permissions'
+      post 'permissions', :to => 'roles#update_permissions'
     end
   end
   resources :enumerations, :except => :show
@@ -362,7 +368,7 @@ Rails.application.routes.draw do
     if File.exists?(file)
       begin
         instance_eval File.read(file)
-      rescue Exception => e
+      rescue SyntaxError, StandardError => e
         puts "An error occurred while loading the routes definition of #{File.basename(plugin_dir)} plugin (#{file}): #{e.message}."
         exit 1
       end

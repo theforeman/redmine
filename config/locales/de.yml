@@ -148,6 +148,10 @@ de:
         earlier_than_minimum_start_date: "kann wegen eines Vorgängertickets nicht vor %{date} liegen"
         not_a_regexp: "ist kein gültiger regulärer Ausdruck"
         open_issue_with_closed_parent: "Ein offenes Ticket kann nicht an einen geschlossenen Vater gehängt werden"
+        must_contain_uppercase: "muss Großbuchstaben (A-Z) enthalten"
+        must_contain_lowercase: "muss Kleinbuchstaben (a-z) enthalten"
+        must_contain_digits: "muss Zahlen (0-9) enthalten"
+        must_contain_special_chars: "muss Sonderzeichen (!, $, %, ...) enthalten"
 
   actionview_instancetag_blank_option: Bitte auswählen
 
@@ -172,7 +176,6 @@ de:
   button_delete: Löschen
   button_delete_my_account: Mein Benutzerkonto löschen
   button_download: Herunterladen
-  button_duplicate: Duplizieren
   button_edit: Bearbeiten
   button_edit_associated_wikipage: "Zugehörige Wikiseite bearbeiten: %{page_title}"
   button_edit_section: Diesen Bereich bearbeiten
@@ -265,7 +268,7 @@ de:
   error_scm_not_found: Eintrag und/oder Revision existiert nicht im Repository.
   error_session_expired: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
   error_token_expired: "Dieser Link zum Passwort zurücksetzen ist nicht mehr gültig. Bitte versuchen Sie es erneut."
-  error_unable_delete_issue_status: "Der Ticket-Status konnte nicht gelöscht werden."
+  error_unable_delete_issue_status: "Der Ticket-Status konnte nicht gelöscht werden. (%{value})"
   error_unable_to_connect: Fehler beim Verbinden (%{value})
   error_workflow_copy_source: Bitte wählen Sie einen Quell-Tracker und eine Quell-Rolle.
   error_workflow_copy_target: Bitte wählen Sie die Ziel-Tracker und -Rollen.
@@ -392,6 +395,7 @@ de:
   field_warn_on_leaving_unsaved: Vor dem Verlassen einer Seite mit ungesichertem Text im Editor warnen
   field_watcher: Beobachter
   field_default_assigned_to: Standardbearbeiter
+  field_unique_id: Eindeutige ID
 
   general_csv_decimal_separator: ','
   general_csv_encoding: ISO-8859-1
@@ -417,7 +421,6 @@ de:
   label_age: Geändert vor
   label_ago: vor
   label_all: alle
-  label_all_time: gesamter Zeitraum
   label_all_words: Alle Wörter
   label_and_its_subprojects: "%{value} und dessen Unterprojekte"
   label_any: alle
@@ -679,7 +682,6 @@ de:
   label_password_required: Bitte geben Sie Ihr Passwort ein
   label_permissions: Berechtigungen
   label_permissions_report: Berechtigungsübersicht
-  label_please_login: Anmelden
   label_plugins: Plugins
   label_precedes: Vorgänger von
   label_preferences: Präferenzen
@@ -741,7 +743,6 @@ de:
   label_send_test_email: Test-E-Mail senden
   label_session_expiration: Ende einer Sitzung
   label_settings: Konfiguration
-  label_show_closed_projects: Geschlossene Projekte anzeigen
   label_show_completed_versions: Abgeschlossene Versionen anzeigen
   label_sort: Sortierung
   label_sort_by: "Sortiert nach %{value}"
@@ -1068,6 +1069,7 @@ de:
   text_caracters_minimum: "Muss mindestens %{count} Zeichen lang sein."
   text_comma_separated: Mehrere Werte erlaubt (durch Komma getrennt).
   text_convert_available: ImageMagick-Konvertierung verfügbar (optional)
+  text_gs_available: ImageMagick PDF-Unterstützung verfügbar (optional)
   text_custom_field_possible_values_info: 'Eine Zeile pro Wert'
   text_default_administrator_account_changed: Administrator-Passwort geändert
   text_destroy_time_entries: Gebuchte Aufwände löschen
@@ -1104,12 +1106,12 @@ de:
   text_plugin_assets_writable: Verzeichnis für Plugin-Assets beschreibbar
   text_project_closed: Dieses Projekt ist geschlossen und kann nicht bearbeitet werden.
   text_project_destroy_confirmation: Sind Sie sicher, dass Sie das Projekt löschen wollen?
-  text_project_identifier_info: 'Kleinbuchstaben (a-z), Ziffern, Binde- und Unterstriche erlaubt, muss mit einem Kleinbuchstaben beginnen.<br />Einmal gespeichert, kann die Kennung nicht mehr geändert werden.'
+  text_project_identifier_info: 'Kleinbuchstaben (a-z), Ziffern, Binde- und Unterstriche erlaubt.<br />Einmal gespeichert, kann die Kennung nicht mehr geändert werden.'
   text_reassign_time_entries: 'Gebuchte Aufwände diesem Ticket zuweisen:'
   text_regexp_info: z. B. ^[A-Z0-9]+$
   text_repository_identifier_info: 'Kleinbuchstaben (a-z), Ziffern, Binde- und Unterstriche erlaubt.<br />Einmal gespeichert, kann die Kennung nicht mehr geändert werden.'
   text_repository_usernames_mapping: "Bitte legen Sie die Zuordnung der Redmine-Benutzer zu den Benutzernamen der Commit-Nachrichten des Repositories fest.\nBenutzer mit identischen Redmine- und Repository-Benutzernamen oder -E-Mail-Adressen werden automatisch zugeordnet."
-  text_rmagick_available: RMagick verfügbar (optional)
+  text_minimagick_available: MiniMagick verfügbar (optional)
   text_scm_command: Kommando
   text_scm_command_not_available: SCM-Kommando ist nicht verfügbar. Bitte prüfen Sie die Einstellungen im Administrationspanel.
   text_scm_command_version: Version
@@ -1132,6 +1134,7 @@ de:
   text_unallowed_characters: Nicht erlaubte Zeichen
   text_user_mail_option: "Für nicht ausgewählte Projekte werden Sie nur Benachrichtigungen für Dinge erhalten, die Sie beobachten oder an denen Sie beteiligt sind (z. B. Tickets, deren Autor Sie sind oder die Ihnen zugewiesen sind)."
   text_user_wrote: "%{value} schrieb:"
+  text_user_wrote_in: "%{value} schrieb (%{link}):"
   text_warn_on_leaving_unsaved: Die aktuellen Änderungen gehen verloren, wenn Sie diese Seite verlassen.
   text_wiki_destroy_confirmation: Sind Sie sicher, dass Sie dieses Wiki mit sämtlichem Inhalt löschen möchten?
   text_wiki_page_destroy_children: Lösche alle Unterseiten
@@ -1246,3 +1249,57 @@ de:
   text_project_is_public_non_member: Öffentliche Projekte und deren Inhalte sind für alle angemeldeten Benutzer zugänglich.
   text_project_is_public_anonymous: Öffentliche Projekte und deren Inhalte sind ohne Anmeldung frei zugänglich.
   label_nothing_to_preview: Keine Vorschau vorhanden
+  error_spent_on_future_date: Zeitbuchung nicht möglich. Das Datum liegt in der Zukunft
+  setting_timelog_accept_future_dates: Akzeptiere Zeitbuchungen in der Zukunft
+  label_delete_link_to_subtask: Beziehung löschen
+  error_not_allowed_to_log_time_for_other_users: Sie sind nicht berechtigt, Aufwände für andere Benutzer zu buchen.
+  permission_log_time_for_other_users: Aufwände für andere Benutzer buchen
+  label_tomorrow: morgen
+  label_next_week: nächste Woche
+  label_next_month: nächster Monat
+  text_role_no_workflow: Für diese Rolle ist kein Workflow definiert
+  text_status_no_workflow: Kein Tracker verwendet diesen Status in den Workflows
+  setting_mail_handler_preferred_body_part: Bevorzugter Teil von E-Mails im Multipart-Format
+  setting_show_status_changes_in_mail_subject: Zeige Statusänderungen im Betreff der Mailbenachrichtigung für Tickets
+  label_inherited_from_parent_project: Vom Hauptprojekt geerbt
+  label_inherited_from_group: Von der Gruppe %{name} geerbt
+  label_trackers_description: Beschreibung des Trackers
+  label_open_trackers_description: Beschreibung aller Tracker anzeigen
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimentell)
+  field_parent_issue_subject: Thema der übergeordneten Aufgabe
+
+  permission_edit_own_issues: Eigene Tickets bearbeiten
+  text_select_apply_tracker: Tracker wählen
+  label_updated_issues: Aktualisierte Tickets
+  text_avatar_server_config_html: Der aktuelle Avatar-Server ist <a href="%{url}">%{url}</a>.
+    Die URL kann in config/configuration.yml angepasst werden.
+  setting_gantt_months_limit: Maximal anzeigbare Monate im Gantt-Diagramm
+  permission_import_time_entries: Zeitbuchungen importieren
+  label_import_notifications: Versende E-Mail-Benachrichtigungen während des Imports
+  field_recently_used_projects: Anzahl kürzlich verwendeter Projekte in der Projekt-Jump-Box
+  label_optgroup_bookmarks: Lesezeichen
+  label_optgroup_others: Andere Projekte
+  label_optgroup_recents: Kürzlich verwendet
+  button_project_bookmark: Lesezeichen hinzufügen
+  button_project_bookmark_delete: Lesezeichen entfernen
+  field_history_default_tab: Standard-Tab für Tickethistorie
+  label_issue_history_properties: Eigenschaftsänderungen
+  label_issue_history_notes: Notizen
+  label_last_tab_visited: Zuletzt geöffneter Tab
+  text_no_subject: kein Thema
+  setting_password_required_char_classes: Für Passwörter benötigte Zeichenklassen
+  label_password_char_class_uppercase: Großbuchstaben
+  label_password_char_class_lowercase: Kleinbuchstaben
+  label_password_char_class_digits: Ziffern
+  label_password_char_class_special_chars: Sonderzeichen
+  text_characters_must_contain: Muss enthalten %{character_classes}.
+  label_starts_with: beginnt mit
+  label_ends_with: endet mit
+  label_issue_fixed_version_updated: Zielversion aktualisiert
+  setting_project_list_defaults: Voreinstellungen Projektliste
+  label_display_type: Ergebnisse anzeigen als
+  label_display_type_list: Liste
+  label_display_type_board: Karte
+  label_my_bookmarks: Meine Lesezeichen
+  label_import_time_entries: Zeitbuchungen importieren

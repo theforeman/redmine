@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -75,18 +77,22 @@ class Role < ActiveRecord::Base
 
   validates_presence_of :name
   validates_uniqueness_of :name
-  validates_length_of :name, :maximum => 30
-  validates_inclusion_of :issues_visibility,
+  validates_length_of :name, :maximum => 255
+  validates_inclusion_of(
+    :issues_visibility,
     :in => ISSUES_VISIBILITY_OPTIONS.collect(&:first),
-    :if => lambda {|role| role.respond_to?(:issues_visibility) && role.issues_visibility_changed?}
-  validates_inclusion_of :users_visibility,
+    :if => lambda {|role| role.respond_to?(:issues_visibility) && role.issues_visibility_changed?})
+  validates_inclusion_of(
+    :users_visibility,
     :in => USERS_VISIBILITY_OPTIONS.collect(&:first),
-    :if => lambda {|role| role.respond_to?(:users_visibility) && role.users_visibility_changed?}
-  validates_inclusion_of :time_entries_visibility,
+    :if => lambda {|role| role.respond_to?(:users_visibility) && role.users_visibility_changed?})
+  validates_inclusion_of(
+    :time_entries_visibility,
     :in => TIME_ENTRIES_VISIBILITY_OPTIONS.collect(&:first),
-    :if => lambda {|role| role.respond_to?(:time_entries_visibility) && role.time_entries_visibility_changed?}
+    :if => lambda {|role| role.respond_to?(:time_entries_visibility) && role.time_entries_visibility_changed?})
 
-  safe_attributes 'name',
+  safe_attributes(
+      'name',
       'assignable',
       'position',
       'issues_visibility',
@@ -96,7 +102,7 @@ class Role < ActiveRecord::Base
       'managed_role_ids',
       'permissions',
       'permissions_all_trackers',
-      'permissions_tracker_ids'
+      'permissions_tracker_ids')
 
   # Copies attributes from another role, arg can be an id or a Role
   def copy_from(arg, options={})
@@ -158,9 +164,10 @@ class Role < ActiveRecord::Base
 
   def name
     case builtin
-    when 1; l(:label_role_non_member, :default => read_attribute(:name))
-    when 2; l(:label_role_anonymous,  :default => read_attribute(:name))
-    else; read_attribute(:name)
+    when 1 then l(:label_role_non_member, :default => read_attribute(:name))
+    when 2 then l(:label_role_anonymous,  :default => read_attribute(:name))
+    else
+      read_attribute(:name)
     end
   end
 
@@ -277,14 +284,17 @@ class Role < ActiveRecord::Base
     find_or_create_system_role(BUILTIN_ANONYMOUS, 'Anonymous')
   end
 
-private
+  private
 
   def allowed_permissions
     @allowed_permissions ||= permissions + Redmine::AccessControl.public_permissions.collect {|p| p.name}
   end
 
   def allowed_actions
-    @actions_allowed ||= allowed_permissions.inject([]) { |actions, permission| actions += Redmine::AccessControl.allowed_actions(permission) }.flatten
+    @actions_allowed ||=
+      allowed_permissions.inject([]) {|actions, permission|
+        actions += Redmine::AccessControl.allowed_actions(permission)
+      }.flatten
   end
 
   def check_deletable
@@ -302,4 +312,5 @@ private
     end
     role
   end
+  private_class_method :find_or_create_system_role
 end

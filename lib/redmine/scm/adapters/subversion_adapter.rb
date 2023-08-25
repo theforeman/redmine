@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -46,7 +48,7 @@ module Redmine
           end
 
           def svn_binary_version
-            scm_version = scm_version_from_command_line.dup.force_encoding('ASCII-8BIT')
+            scm_version = scm_version_from_command_line.b
             if m = scm_version.match(%r{\A(.*?)((\d+\.)+\d+)})
               m[2].scan(%r{\d+}).collect(&:to_i)
             end
@@ -59,7 +61,7 @@ module Redmine
 
         # Get info about the svn repository
         def info
-          cmd = "#{self.class.sq_bin} info --xml #{target}"
+          cmd = +"#{self.class.sq_bin} info --xml #{target}"
           cmd << credentials_string
           info = nil
           shellout(cmd) do |io|
@@ -89,7 +91,7 @@ module Redmine
           path ||= ''
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
           entries = Entries.new
-          cmd = "#{self.class.sq_bin} list --xml #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} list --xml #{target(path)}@#{identifier}"
           cmd << credentials_string
           shellout(cmd) do |io|
             output = io.read.force_encoding('UTF-8')
@@ -113,7 +115,7 @@ module Redmine
                               })
                             })
               end
-            rescue Exception => e
+            rescue => e
               logger.error("Error parsing svn output: #{e.message}")
               logger.error("Output was:\n #{output}")
             end
@@ -128,7 +130,7 @@ module Redmine
           return nil unless self.class.client_version_above?([1, 5, 0])
 
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} proplist --verbose --xml #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} proplist --verbose --xml #{target(path)}@#{identifier}"
           cmd << credentials_string
           properties = {}
           shellout(cmd) do |io|
@@ -136,7 +138,7 @@ module Redmine
             begin
               doc = parse_xml(output)
               each_xml_element(doc['properties']['target'], 'property') do |property|
-                properties[ property['name'] ] = property['__content__'].to_s
+                properties[property['name']] = property['__content__'].to_s
               end
             rescue
             end
@@ -150,7 +152,7 @@ module Redmine
           identifier_from = (identifier_from && identifier_from.to_i > 0) ? identifier_from.to_i : "HEAD"
           identifier_to = (identifier_to && identifier_to.to_i > 0) ? identifier_to.to_i : 1
           revisions = Revisions.new
-          cmd = "#{self.class.sq_bin} log --xml -r #{identifier_from}:#{identifier_to}"
+          cmd = +"#{self.class.sq_bin} log --xml -r #{identifier_from}:#{identifier_to}"
           cmd << credentials_string
           cmd << " --verbose " if  options[:with_paths]
           cmd << " --limit #{options[:limit].to_i}" if options[:limit]
@@ -190,7 +192,7 @@ module Redmine
 
           identifier_to = (identifier_to and identifier_to.to_i > 0) ? identifier_to.to_i : (identifier_from.to_i - 1)
 
-          cmd = "#{self.class.sq_bin} diff -r "
+          cmd = +"#{self.class.sq_bin} diff -r "
           cmd << "#{identifier_to}:"
           cmd << "#{identifier_from}"
           cmd << " #{target(path)}@#{identifier_from}"
@@ -207,7 +209,7 @@ module Redmine
 
         def cat(path, identifier=nil)
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} cat #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} cat #{target(path)}@#{identifier}"
           cmd << credentials_string
           cat = nil
           shellout(cmd) do |io|
@@ -220,7 +222,7 @@ module Redmine
 
         def annotate(path, identifier=nil)
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} blame #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} blame #{target(path)}@#{identifier}"
           cmd << credentials_string
           blame = Annotate.new
           shellout(cmd) do |io|
@@ -242,7 +244,7 @@ module Redmine
         private
 
         def credentials_string
-          str = ''
+          str = +''
           str << " --username #{shell_quote(@login)}" unless @login.blank?
           str << " --password #{shell_quote(@password)}" unless @login.blank? || @password.blank?
           str << " --no-auth-cache --non-interactive"
@@ -265,7 +267,7 @@ module Redmine
         end
 
         def target(path = '')
-          base = path.match(/^\//) ? root_url : url
+          base = /^\//.match?(path) ? root_url : url
           uri = "#{base}/#{path}"
           uri = URI.escape(URI.escape(uri), '[]')
           shell_quote(uri.gsub(/[?<>\*]/, ''))

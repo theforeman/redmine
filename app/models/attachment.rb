@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -84,14 +86,14 @@ class Attachment < ActiveRecord::Base
   def file=(incoming_file)
     unless incoming_file.nil?
       @temp_file = incoming_file
-        if @temp_file.respond_to?(:original_filename)
-          self.filename = @temp_file.original_filename
-          self.filename.force_encoding("UTF-8")
-        end
-        if @temp_file.respond_to?(:content_type)
-          self.content_type = @temp_file.content_type.to_s.chomp
-        end
-        self.filesize = @temp_file.size
+      if @temp_file.respond_to?(:original_filename)
+        self.filename = @temp_file.original_filename
+        self.filename.force_encoding("UTF-8")
+      end
+      if @temp_file.respond_to?(:content_type)
+        self.content_type = @temp_file.content_type.to_s.chomp
+      end
+      self.filesize = @temp_file.size
     end
   end
 
@@ -198,7 +200,9 @@ class Attachment < ActiveRecord::Base
   end
 
   def thumbnailable?
-    image?
+    Redmine::Thumbnail.convert_available? && (
+      image? || (is_pdf? && Redmine::Thumbnail.gs_available?)
+    )
   end
 
   # Returns the full path the attachment thumbnail, or nil
@@ -208,17 +212,17 @@ class Attachment < ActiveRecord::Base
       size = options[:size].to_i
       if size > 0
         # Limit the number of thumbnails per image
-        size = (size / 50) * 50
+        size = (size / 50.0).ceil * 50
         # Maximum thumbnail size
         size = 800 if size > 800
       else
         size = Setting.thumbnails_size.to_i
       end
       size = 100 unless size > 0
-      target = File.join(self.class.thumbnails_storage_path, "#{id}_#{digest}_#{size}.thumb")
+      target = thumbnail_path(size)
 
       begin
-        Redmine::Thumbnail.generate(self.diskfile, target, size)
+        Redmine::Thumbnail.generate(self.diskfile, target, size, is_pdf?)
       rescue => e
         logger.error "An error occured while generating thumbnail for #{disk_filename} to #{target}\nException was: #{e.message}" if logger
         return nil
@@ -237,12 +241,20 @@ class Attachment < ActiveRecord::Base
     Redmine::MimeType.is_type?('text', filename) || Redmine::SyntaxHighlighting.filename_supported?(filename)
   end
 
+  def is_markdown?
+    Redmine::MimeType.of(filename) == 'text/markdown'
+  end
+
+  def is_textile?
+    Redmine::MimeType.of(filename) == 'text/x-textile'
+  end
+
   def is_image?
     Redmine::MimeType.is_type?('image', filename)
   end
 
   def is_diff?
-    self.filename =~ /\.(patch|diff)$/i
+    /\.(patch|diff)$/i.match?(filename)
   end
 
   def is_pdf?
@@ -423,31 +435,26 @@ class Attachment < ActiveRecord::Base
   private
 
   def reuse_existing_file_if_possible
-    original_diskfile = nil
-
+    original_diskfile = diskfile
+    original_filename = disk_filename
     reused = with_lock do
       if existing = Attachment
                       .where(digest: self.digest, filesize: self.filesize)
-                      .where('id <> ? and disk_filename <> ?',
-                             self.id, self.disk_filename)
+                      .where.not(disk_filename: original_filename)
                       .order(:id)
                       .last
         existing.with_lock do
-
-          original_diskfile = self.diskfile
           existing_diskfile = existing.diskfile
-
           if File.readable?(original_diskfile) &&
             File.readable?(existing_diskfile) &&
             FileUtils.identical?(original_diskfile, existing_diskfile)
-
             self.update_columns disk_directory: existing.disk_directory,
                                 disk_filename: existing.disk_filename
           end
         end
       end
     end
-    if reused
+    if reused && Attachment.where(disk_filename: original_filename).none?
       File.delete(original_diskfile)
     end
   rescue ActiveRecord::StatementInvalid, ActiveRecord::RecordNotFound
@@ -457,12 +464,19 @@ class Attachment < ActiveRecord::Base
     # anymore, thats why this is caught and ignored as well.
   end
 
-
   # Physically deletes the file from the file system
   def delete_from_disk!
     if disk_filename.present? && File.exist?(diskfile)
       File.delete(diskfile)
     end
+    Dir[thumbnail_path("*")].each do |thumb|
+      File.delete(thumb)
+    end
+  end
+
+  def thumbnail_path(size)
+    File.join(self.class.thumbnails_storage_path,
+              "#{digest}_#{filesize}_#{size}.thumb")
   end
 
   def sanitize_filename(value)
@@ -479,21 +493,25 @@ class Attachment < ActiveRecord::Base
     time.strftime("%Y/%m")
   end
 
-  # Returns an ASCII or hashed filename that do not
-  # exists yet in the given subdirectory
-  def self.disk_filename(filename, directory=nil)
-    timestamp = DateTime.now.strftime("%y%m%d%H%M%S")
-    ascii = ''
-    if filename =~ %r{^[a-zA-Z0-9_\.\-]*$} && filename.length <= 50
-      ascii = filename
-    else
-      ascii = Digest::MD5.hexdigest(filename)
-      # keep the extension if any
-      ascii << $1 if filename =~ %r{(\.[a-zA-Z0-9]+)$}
+  # Singleton class method is public
+  class << self
+    # Returns an ASCII or hashed filename that do not
+    # exists yet in the given subdirectory
+    def disk_filename(filename, directory=nil)
+      timestamp = DateTime.now.strftime("%y%m%d%H%M%S")
+      ascii = ''
+      if %r{^[a-zA-Z0-9_\.\-]*$}.match?(filename) && filename.length <= 50
+        ascii = filename
+      else
+        ascii = Digest::MD5.hexdigest(filename)
+        # keep the extension if any
+        ascii << $1 if filename =~ %r{(\.[a-zA-Z0-9]+)$}
+      end
+      while File.exist?(File.join(storage_path, directory.to_s,
+                                  "#{timestamp}_#{ascii}"))
+        timestamp.succ!
+      end
+      "#{timestamp}_#{ascii}"
     end
-    while File.exist?(File.join(storage_path, directory.to_s, "#{timestamp}_#{ascii}"))
-      timestamp.succ!
-    end
-    "#{timestamp}_#{ascii}"
   end
 end

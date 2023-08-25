@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -193,7 +195,7 @@ module Redmine
 
         def target(path, sq=true)
           path ||= ''
-          base = path.match(/^\//) ? root_url : url
+          base = /^\//.match?(path) ? root_url : url
           str = "#{base}/#{path}".gsub(/[?<>\*]/, '')
           if sq
             str = shell_quote(str)
@@ -209,10 +211,6 @@ module Redmine
           self.class.shellout(cmd, options, &block)
         end
 
-        def self.logger
-          Rails.logger
-        end
-
         # Path to the file where scm stderr output is logged
         # Returns nil if the log file is not writable
         def self.stderr_log_file
@@ -221,7 +219,7 @@ module Redmine
             path = Redmine::Configuration['scm_stderr_log_file'].presence
             path ||= Rails.root.join("log/#{Rails.env}.scm.stderr.log").to_s
             if File.exists?(path)
-              if File.file?(path) && File.writable?(path) 
+              if File.file?(path) && File.writable?(path)
                 writable = true
               else
                 logger.warn("SCM log file (#{path}) is not writable")
@@ -238,37 +236,41 @@ module Redmine
           end
           @stderr_log_file || nil
         end
+        private_class_method :stderr_log_file
 
-        def self.shellout(cmd, options = {}, &block)
-          if logger && logger.debug?
-            logger.debug "Shelling out: #{strip_credential(cmd)}"
-            # Capture stderr in a log file
-            if stderr_log_file
-              cmd = "#{cmd} 2>>#{shell_quote(stderr_log_file)}"
-            end
+        # Singleton class method is public
+        class << self
+          def logger
+            Rails.logger
           end
-          begin
-            mode = "r+"
-            IO.popen(cmd, mode) do |io|
-              io.set_encoding("ASCII-8BIT") if io.respond_to?(:set_encoding)
-              io.close_write unless options[:write_stdin]
-              block.call(io) if block_given?
+
+          def shellout(cmd, options = {}, &block)
+            if logger && logger.debug?
+              logger.debug "Shelling out: #{strip_credential(cmd)}"
+              # Capture stderr in a log file
+              if stderr_log_file
+                cmd = "#{cmd} 2>>#{shell_quote(stderr_log_file)}"
+              end
             end
-          ## If scm command does not exist,
-          ## Linux JRuby 1.6.2 (ruby-1.8.7-p330) raises java.io.IOException
-          ## in production environment.
-          # rescue Errno::ENOENT => e
-          rescue Exception => e
-            msg = strip_credential(e.message)
-            # The command failed, log it and re-raise
-            logmsg = "SCM command failed, "
-            logmsg += "make sure that your SCM command (e.g. svn) is "
-            logmsg += "in PATH (#{ENV['PATH']})\n"
-            logmsg += "You can configure your scm commands in config/configuration.yml.\n"
-            logmsg += "#{strip_credential(cmd)}\n"
-            logmsg += "with: #{msg}"
-            logger.error(logmsg)
-            raise CommandFailed.new(msg)
+            begin
+              mode = "r+"
+              IO.popen(cmd, mode) do |io|
+                io.set_encoding("ASCII-8BIT") if io.respond_to?(:set_encoding)
+                io.close_write unless options[:write_stdin]
+                yield(io) if block_given?
+              end
+            rescue => e
+              msg = strip_credential(e.message)
+              # The command failed, log it and re-raise
+              logmsg = "SCM command failed, "
+              logmsg += "make sure that your SCM command (e.g. svn) is "
+              logmsg += "in PATH (#{ENV['PATH']})\n"
+              logmsg += "You can configure your scm commands in config/configuration.yml.\n"
+              logmsg += "#{strip_credential(cmd)}\n"
+              logmsg += "with: #{msg}"
+              logger.error(logmsg)
+              raise CommandFailed.new(msg)
+            end
           end
         end
 
@@ -277,18 +279,20 @@ module Redmine
           q = (Redmine::Platform.mswin? ? '"' : "'")
           cmd.to_s.gsub(/(\-\-(password|username))\s+(#{q}[^#{q}]+#{q}|[^#{q}]\S+)/, '\\1 xxxx')
         end
+        private_class_method :strip_credential
 
         def strip_credential(cmd)
           self.class.strip_credential(cmd)
         end
 
         def scm_iconv(to, from, str)
-          return nil if str.nil?
+          return if str.nil?
           return str if to == from && str.encoding.to_s == from
+          str = str.dup
           str.force_encoding(from)
           begin
             str.encode(to)
-          rescue Exception => err
+          rescue => err
             logger.error("failed to convert from #{from} to #{to}. #{err}")
             nil
           end
@@ -338,11 +342,11 @@ module Redmine
         end
 
         def is_file?
-          'file' == self.kind
+           self.kind == 'file'
         end
 
         def is_dir?
-          'dir' == self.kind
+           self.kind == 'dir'
         end
 
         def is_text?

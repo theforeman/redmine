@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -87,7 +89,7 @@ class WikiController < ApplicationController
     end
     @content = @page.content_for_version(params[:version])
     if @content.nil?
-      if User.current.allowed_to?(:edit_wiki_pages, @project) && editable? && !api_request?
+      if params[:version].blank? && User.current.allowed_to?(:edit_wiki_pages, @project) && editable? && !api_request?
         edit
         render :action => 'edit'
       else
@@ -334,7 +336,7 @@ class WikiController < ApplicationController
     redirect_to :action => 'show', :id => @page.title, :project_id => @project
   end
 
-private
+  private
 
   def find_wiki
     @project = Project.find(params[:project_id])

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -106,7 +108,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
         put '/projects/ecookbook/wiki/CookBook_documentation.xml',
           :params => {:wiki_page => {:text => 'New content from API', :comments => 'API update'}},
           :headers => credentials('jsmith')
-        assert_response 200
+        assert_response :no_content
       end
     end
 
@@ -117,13 +119,24 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
     assert_equal 'jsmith', page.content.author.login
   end
 
+  test "GET /projects/:project_id/wiki/:title/:version.xml should not includ author if not exists" do
+    WikiContentVersion.find_by_id(2).update(author_id: nil)
+
+    get '/projects/ecookbook/wiki/CookBook_documentation/2.xml'
+    assert_response 200
+    assert_equal 'application/xml', response.media_type
+    assert_select 'wiki_page' do
+      assert_select 'author', 0
+    end
+  end
+
   test "PUT /projects/:project_id/wiki/:title.xml with current versino should update wiki page" do
     assert_no_difference 'WikiPage.count' do
       assert_difference 'WikiContent::Version.count' do
         put '/projects/ecookbook/wiki/CookBook_documentation.xml',
           :params => {:wiki_page => {:text => 'New content from API', :comments => 'API update', :version => '3'}},
           :headers => credentials('jsmith')
-        assert_response 200
+        assert_response :no_content
       end
     end
 
@@ -201,7 +214,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "DELETE /projects/:project_id/wiki/:title.xml should destroy the page" do
     assert_difference 'WikiPage.count', -1 do
       delete '/projects/ecookbook/wiki/CookBook_documentation.xml', :headers => credentials('jsmith')
-      assert_response 200
+      assert_response :no_content
     end
 
     assert_nil WikiPage.find_by_id(1)

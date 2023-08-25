@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -113,20 +113,16 @@ module SettingsHelper
     tag_data = notifiable.parent.present? ?
       {:parent_notifiable => notifiable.parent} :
       {:disables => "input[data-parent-notifiable=#{notifiable.name}]"}
-
     tag = check_box_tag('settings[notified_events][]',
-      notifiable.name,
-      setting_value('notified_events').include?(notifiable.name),
-      :id => nil,
-      :data => tag_data)
-
+                        notifiable.name,
+                        setting_value('notified_events').include?(notifiable.name),
+                        :id => nil,
+                        :data => tag_data)
     text = l_or_humanize(notifiable.name, :prefix => 'label_')
-
     options = {}
     if notifiable.parent.present?
       options[:class] = "parent"
     end
-
     content_tag(:label, tag + text, options)
   end
 
@@ -207,5 +203,14 @@ module SettingsHelper
       end
       ["#{today} (#{format})", f]
     end
+  end
+
+  def gravatar_default_setting_options
+    [['Identicons', 'identicon'],
+     ['Monster ids', 'monsterid'],
+     ['Mystery man', 'mm'],
+     ['Retro', 'retro'],
+     ['Robohash', 'robohash'],
+     ['Wavatars', 'wavatar']]
   end
 end

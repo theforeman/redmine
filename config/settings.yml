@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,6 +36,10 @@ lost_password:
   security_notifications: 1
 unsubscribe:
   default: 1
+password_required_char_classes:
+  serialized: true
+  default: []
+  security_notifications: 1
 password_min_length:
   format: int
   default: 8
@@ -105,6 +109,9 @@ feeds_limit:
 gantt_items_limit:
   format: int
   default: 500
+gantt_months_limit:
+  format: int
+  default: 24
 # Maximum size of files that can be displayed
 # inline through the file viewer (in KB)
 file_max_size_displayed:
@@ -195,6 +202,8 @@ mail_handler_api_enabled:
 mail_handler_api_key:
   default:
   security_notifications: 1
+mail_handler_preferred_body_part:
+  default: plain
 issue_list_default_columns:
   serialized: true
   default:
@@ -221,6 +230,13 @@ time_entry_list_defaults:
     - hours
     totalable_names:
     - hours
+project_list_defaults:
+  serialized: true
+  default:
+    column_names:
+    - name
+    - identifier
+    - short_description
 issue_done_ratio:
   default: 'issue_field'
 default_projects_public:
@@ -289,7 +305,7 @@ default_notification_option:
 emails_header:
   default: ''
 thumbnails_enabled:
-  default: 0
+  default: 1
 thumbnails_size:
   format: int
   default: 100
@@ -308,3 +324,7 @@ timelog_accept_0_hours:
 timelog_max_hours_per_day:
   format: int
   default: 999
+timelog_accept_future_dates:
+  default: 1
+show_status_changes_in_mail_subject:
+  default: 1

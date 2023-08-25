@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -72,8 +74,8 @@ class IssueStatusesController < ApplicationController
   def destroy
     IssueStatus.find(params[:id]).destroy
     redirect_to issue_statuses_path
-  rescue
-    flash[:error] = l(:error_unable_delete_issue_status)
+  rescue => e
+    flash[:error] = l(:error_unable_delete_issue_status, ERB::Util.h(e.message))
     redirect_to issue_statuses_path
   end
 

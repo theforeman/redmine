@@ -152,6 +152,10 @@ pt-BR:
         earlier_than_minimum_start_date: "não pode ser anterior a %{date} por causa de tarefas anteriores"
         not_a_regexp: "não é uma expressão regular válida"
         open_issue_with_closed_parent: "Uma tarefa aberta não pode ser associada à uma tarefa pai fechada"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Selecione
 
@@ -390,7 +394,6 @@ pt-BR:
   label_enumeration_new: Novo
   label_information: Informação
   label_information_plural: Informações
-  label_please_login: Efetue o login
   label_register: Cadastre-se
   label_password_lost: Perdi minha senha
   label_home: Página inicial
@@ -501,7 +504,6 @@ pt-BR:
   label_in_more_than: menor que
   label_in: em
   label_today: hoje
-  label_all_time: tudo
   label_yesterday: ontem
   label_this_week: esta semana
   label_last_week: última semana
@@ -711,12 +713,13 @@ pt-BR:
   text_select_project_modules: 'Selecione módulos para habilitar para este projeto:'
   text_default_administrator_account_changed: Conta padrão do administrador alterada
   text_file_repository_writable: Repositório com permissão de escrita
-  text_rmagick_available: RMagick disponível (opcional)
+  text_minimagick_available: MiniMagick disponível (opcional)
   text_destroy_time_entries_question: "%{hours} horas de trabalho foram registradas nas tarefas que você está excluindo. O que você deseja fazer?"
   text_destroy_time_entries: Excluir horas de trabalho
   text_assign_time_entries_to_project: Atribuir estas horas de trabalho para outro projeto
   text_reassign_time_entries: 'Atribuir horas reportadas para esta tarefa:'
   text_user_wrote: "%{value} escreveu:"
+  text_user_wrote_in: "%{value} escreveu (%{link}):"
   text_enumeration_destroy_question: "%{count} objetos estão atribuídos a este valor."
   text_enumeration_category_reassign_to: 'Reatribuí-los ao valor:'
   text_email_delivery_not_configured: "O envio de e-mail não está configurado, e as notificações estão inativas.\nConfigure seu servidor SMTP no arquivo config/configuration.yml e reinicie a aplicação para ativá-las."
@@ -864,7 +867,6 @@ pt-BR:
   label_version_sharing_tree: Com a árvore do projeto
   label_version_sharing_none: Sem compartilhamento
   error_can_not_archive_project: Este projeto não pode ser arquivado
-  button_duplicate: Duplicar
   button_copy_and_follow: Copiar e seguir
   label_copy_source: Origem
   setting_issue_done_ratio: Calcular o percentual de conclusão da tarefa
@@ -903,7 +905,7 @@ pt-BR:
   permission_export_wiki_pages: Exportar páginas wiki
   setting_cache_formatted_text: Realizar cache de texto formatado
   permission_manage_project_activities: Gerenciar atividades do projeto
-  error_unable_delete_issue_status: Não foi possível excluir situação da tarefa
+  error_unable_delete_issue_status: Não foi possível excluir situação da tarefa (%{value})
   label_profile: Perfil
   permission_manage_subtasks: Gerenciar subtarefas
   field_parent_issue: Tarefa pai
@@ -1036,7 +1038,6 @@ pt-BR:
   setting_session_timeout: Tempo limite de inatividade da sessão
   label_session_expiration: "Expiração da sessão"
   permission_close_project: Fechar / reabrir o projeto
-  label_show_closed_projects: Visualizar projetos fechados
   button_close: Fechar
   button_reopen: Reabrir
   project_status_active: ativo
@@ -1260,3 +1261,60 @@ pt-BR:
   label_ldaps_warning: É recomendado utilizar uma conexão LDAPS criptografada com verificação de certificado para evitar qualquer manipulação durante o processo de autenticação.
   label_nothing_to_preview: Nada para visualizar
   error_token_expired: Este link de recuperação de senha expirou. Por favor, tente novamente.
+  error_spent_on_future_date: Não é possível registrar o tempo em uma data futura
+  setting_timelog_accept_future_dates: Permitir registros de tempo em datas futuras
+  label_delete_link_to_subtask: Excluir relação
+  error_not_allowed_to_log_time_for_other_users: Você não possuí permissão para registrar o tempo
+    para outros usuários
+  permission_log_time_for_other_users: Tempo de registro gasto para outros usuários
+  label_tomorrow: amanhã
+  label_next_week: próxima semana
+  label_next_month: próximo mês
+  text_role_no_workflow: Não foi definido fluxo de trabalho para este papel
+  text_status_no_workflow: Nenhum tipo de tarefa utiliza esta situação nos fluxos de trabalho
+  setting_mail_handler_preferred_body_part: Parte preferida de e-mails multipartes (HTML)
+  setting_show_status_changes_in_mail_subject: Exibir mudança de situação no título do email de notificação
+    data tarefa
+  label_inherited_from_parent_project: Herdado do projeto pai
+  label_inherited_from_group: Herdado do grupo %{name}
+  label_trackers_description: Descrição dos tipos de tarefa
+  label_open_trackers_description: Ver todas as descrições dos tipos de tarefas
+  label_preferred_body_part_text: Texto
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Assunto da tarefa pai
+  permission_edit_own_issues: Editar as próprias tarefas
+  text_select_apply_tracker: Selecione o tipo de tarefa
+  label_updated_issues: Tarefas atualizadas
+  text_avatar_server_config_html: O servidor de avatar atual é <a href="%{url}">% {url} </a>.
+     Você pode configurá-lo em config / configuration.yml.
+  setting_gantt_months_limit: Número máximo de meses exibidos no gráfico de Gantt
+  permission_import_time_entries: Importar tempo gasto
+  label_import_notifications: Enviar notificações por e-mail durante a importação
+  text_gs_available: Suporte ao ImageMagick PDF disponível (opcional)
+  field_recently_used_projects: Número de projetos usados recentemente no acesso rápido
+  label_optgroup_bookmarks: Marcadores
+  label_optgroup_others: Outros projetos
+  label_optgroup_recents: Recentes
+  button_project_bookmark: Adicionar marcador
+  button_project_bookmark_delete: Remover marcador
+  field_history_default_tab: Aba padrão no histórico das tarefas
+  label_issue_history_properties: Campos alterados
+  label_issue_history_notes: Notas
+  label_last_tab_visited: Última aba visitada
+  field_unique_id: ID único
+  text_no_subject: sem assunto
+  setting_password_required_char_classes: Classes de caracteres obrigatórias para as senhas
+  label_password_char_class_uppercase: Letras maiúsculas
+  label_password_char_class_lowercase: Letras minúsculas
+  label_password_char_class_digits: digitos
+  label_password_char_class_special_chars: caracteres especiais
+  text_characters_must_contain: Precisa conter %{character_classes}.
+  label_starts_with: começando com
+  label_ends_with: terminando com
+  label_issue_fixed_version_updated: Versão atualizada
+  setting_project_list_defaults: Padrão da lista de projetos
+  label_display_type: Exibir resultados como
+  label_display_type_list: Lista
+  label_display_type_board: Quadro
+  label_my_bookmarks: Meus marcaroes
+  label_import_time_entries: Importar tempo gasto

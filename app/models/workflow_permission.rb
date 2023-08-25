@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -62,7 +64,7 @@ class WorkflowPermission < WorkflowRule
   protected
 
   def validate_field_name
-    unless Tracker::CORE_FIELDS_ALL.include?(field_name) || field_name.to_s.match(/^\d+$/)
+    unless Tracker::CORE_FIELDS_ALL.include?(field_name) || /^\d+$/.match?(field_name.to_s)
       errors.add :field_name, :invalid
     end
   end

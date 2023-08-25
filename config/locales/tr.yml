@@ -146,6 +146,10 @@ tr:
         earlier_than_minimum_start_date: "cannot be earlier than %{date} because of preceding issues"
         not_a_regexp: "is not a valid regular expression"
         open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
       models:
 
   actionview_instancetag_blank_option: Lütfen Seçin
@@ -371,7 +375,6 @@ tr:
   label_enumeration_new: Yeni değer
   label_information: Bilgi
   label_information_plural: Bilgi
-  label_please_login: Lütfen giriş yapın
   label_register: Kayıt
   label_password_lost: Parolamı unuttum
   label_home: Anasayfa
@@ -481,7 +484,6 @@ tr:
   label_in_more_than: büyüktür
   label_in: içinde
   label_today: bugün
-  label_all_time: Tüm Zamanlar
   label_yesterday: Dün
   label_this_week: Bu hafta
   label_last_week: Geçen hafta
@@ -686,7 +688,7 @@ tr:
   text_select_project_modules: 'Bu proje için etkinleştirmek istediğiniz modülleri seçin:'
   text_default_administrator_account_changed: Varsayılan yönetici hesabı değişti
   text_file_repository_writable: Dosya deposu yazılabilir
-  text_rmagick_available: RMagick Kullanılabilir (isteğe bağlı)
+  text_minimagick_available: MiniMagick Kullanılabilir (isteğe bağlı)
   text_destroy_time_entries_question: Silmek üzere olduğunuz işler üzerine %{hours} saat raporlandı.Ne yapmak istersiniz ?
   text_destroy_time_entries: Raporlanmış süreleri sil
   text_assign_time_entries_to_project: Raporlanmış süreleri projeye ata
@@ -730,6 +732,7 @@ tr:
   label_duplicated_by: yineleyen
   text_enumeration_destroy_question: "Bu nesneye %{count} değer bağlanmış."
   text_user_wrote: "%{value} demiş ki:"
+  text_user_wrote_in: "%{value} demiş ki (%{link}):"
   setting_mail_handler_api_enabled: Gelen e-postalar için WS'yi aç
   label_and_its_subprojects: "%{value} ve alt projeleri"
   mail_subject_reminder: "%{count} iş bir kaç güne bitecek"
@@ -856,7 +859,6 @@ tr:
   label_version_sharing_tree: Proje ağacı ile
   label_version_sharing_none: Paylaşılmamış
   error_can_not_archive_project: Bu proje arşivlenemez
-  button_duplicate: Yinele
   button_copy_and_follow: Kopyala ve takip et
   label_copy_source: Kaynak
   setting_issue_done_ratio: İş tamamlanma oranını şununla hesapla
@@ -892,7 +894,7 @@ tr:
   permission_export_wiki_pages: Wiki sayfalarını dışarı aktar
   setting_cache_formatted_text: Biçimlendirilmiş metni önbelleğe al
   permission_manage_project_activities: Proje faaliyetlerini yönetme
-  error_unable_delete_issue_status: İş durumu silinemiyor
+  error_unable_delete_issue_status: İş durumu silinemiyor (%{value})
   label_profile: Profil
   permission_manage_subtasks: Alt işleri yönetme
   field_parent_issue: Üst iş
@@ -1023,7 +1025,6 @@ tr:
   setting_session_timeout: Maksimum hareketsizlik zaman aşımı
   label_session_expiration: Oturum süre sonu
   permission_close_project: Projeyi kapat/yeniden aç
-  label_show_closed_projects: Kapatılmış projeleri göster
   button_close: Kapat
   button_reopen: Yeniden aç
   project_status_active: etkin
@@ -1262,3 +1263,60 @@ tr:
     check to prevent any manipulation during the authentication process.
   label_nothing_to_preview: Nothing to preview
   error_token_expired: This password recovery link has expired, please try again.
+  error_spent_on_future_date: Cannot log time on a future date
+  setting_timelog_accept_future_dates: Accept time logs on future dates
+  label_delete_link_to_subtask: İlişkiyi sil
+  error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
+    for other users
+  permission_log_time_for_other_users: Log spent time for other users
+  label_tomorrow: tomorrow
+  label_next_week: next week
+  label_next_month: next month
+  text_role_no_workflow: No workflow defined for this role
+  text_status_no_workflow: No tracker uses this status in the workflows
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: Show status changes in issue mail notifications
+    subject
+  label_inherited_from_parent_project: Inherited from parent project
+  label_inherited_from_group: Inherited from group %{name}
+  label_trackers_description: Trackers description
+  label_open_trackers_description: View all trackers description
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Parent task subject
+  permission_edit_own_issues: Edit own issues
+  text_select_apply_tracker: Select tracker
+  label_updated_issues: Updated issues
+  text_avatar_server_config_html: The current avatar server is <a href="%{url}">%{url}</a>.
+    You can configure it in config/configuration.yml.
+  setting_gantt_months_limit: Maximum number of months displayed on the gantt chart
+  permission_import_time_entries: Import time entries
+  label_import_notifications: Send email notifications during the import
+  text_gs_available: ImageMagick PDF support available (optional)
+  field_recently_used_projects: Number of recently used projects in jump box
+  label_optgroup_bookmarks: Bookmarks
+  label_optgroup_others: Other projects
+  label_optgroup_recents: Recently used
+  button_project_bookmark: Add bookmark
+  button_project_bookmark_delete: Remove bookmark
+  field_history_default_tab: Issue's history default tab
+  label_issue_history_properties: Property changes
+  label_issue_history_notes: Notes
+  label_last_tab_visited: Last visited tab
+  field_unique_id: Unique ID
+  text_no_subject: no subject
+  setting_password_required_char_classes: Required character classes for passwords
+  label_password_char_class_uppercase: uppercase letters
+  label_password_char_class_lowercase: lowercase letters
+  label_password_char_class_digits: digits
+  label_password_char_class_special_chars: special characters
+  text_characters_must_contain: Must contain %{character_classes}.
+  label_starts_with: starts with
+  label_ends_with: ends with
+  label_issue_fixed_version_updated: Target version updated
+  setting_project_list_defaults: Projects list defaults
+  label_display_type: Display results as
+  label_display_type_list: List
+  label_display_type_board: Board
+  label_my_bookmarks: My bookmarks
+  label_import_time_entries: Import time entries

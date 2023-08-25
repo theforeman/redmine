@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -106,6 +108,16 @@ class Member < ActiveRecord::Base
   # Returns true if the member has the role and if it's inherited
   def has_inherited_role?(role)
     member_roles.any? {|mr| mr.role_id == role.id && mr.inherited_from.present?}
+  end
+
+  # Returns an Array of Project and/or Group from which the given role
+  # was inherited, or an empty Array if the role was not inherited
+  def role_inheritance(role)
+    member_roles.
+      select {|mr| mr.role_id == role.id && mr.inherited_from.present?}.
+      map {|mr| mr.inherited_from_member_role.try(:member)}.
+      compact.
+      map {|m| m.project == project ? m.principal : m.project}
   end
 
   # Returns true if the member's role is editable by user

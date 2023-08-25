@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +24,7 @@ class ContextMenusController < ApplicationController
   before_action :find_issues, :only => :issues
 
   def issues
-    if (@issues.size == 1)
+    if @issues.size == 1
       @issue = @issues.first
     end
     @issue_ids = @issues.map(&:id).sort
@@ -66,7 +68,7 @@ class ContextMenusController < ApplicationController
       preload(:user).to_a
 
     (render_404; return) unless @time_entries.present?
-    if (@time_entries.size == 1)
+    if @time_entries.size == 1
       @time_entry = @time_entries.first
     end
 

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -132,7 +134,9 @@ class WatchersController < ApplicationController
 
   def find_objets_from_params
     klass = Object.const_get(params[:object_type].camelcase) rescue nil
-    return unless klass && klass.respond_to?('watched_by')
+    return unless klass && Class === klass # rubocop:disable Style/CaseEquality
+    return unless klass < ActiveRecord::Base
+    return unless klass < Redmine::Acts::Watchable::InstanceMethods
 
     scope = klass.where(:id => Array.wrap(params[:object_id]))
     if klass.reflect_on_association(:project)

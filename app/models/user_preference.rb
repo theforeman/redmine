@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,12 +27,15 @@ class UserPreference < ActiveRecord::Base
 
   before_save :set_others_hash, :clear_unused_block_settings
 
-  safe_attributes 'hide_mail',
+  safe_attributes(
+    'hide_mail',
     'time_zone',
     'comments_sorting',
     'warn_on_leaving_unsaved',
     'no_self_notified',
-    'textarea_font'
+    'textarea_font',
+    'recently_used_projects',
+    'history_default_tab')
 
   TEXTAREA_FONT_OPTIONS = ['monospace', 'proportional']
 
@@ -87,6 +92,11 @@ class UserPreference < ActiveRecord::Base
 
   def textarea_font; self[:textarea_font] end
   def textarea_font=(value); self[:textarea_font]=value; end
+
+  def recently_used_projects; (self[:recently_used_projects] || 3).to_i; end
+  def recently_used_projects=(value); self[:recently_used_projects] = value.to_i; end
+  def history_default_tab; self[:history_default_tab]; end
+  def history_default_tab=(value); self[:history_default_tab]=value; end
 
   # Returns the names of groups that are displayed on user's page
   # Example:

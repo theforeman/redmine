@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,14 +20,17 @@
 require 'uri'
 require 'cgi'
 
-class Unauthorized < Exception; end
+class Unauthorized < StandardError; end
 
 class ApplicationController < ActionController::Base
   include Redmine::I18n
   include Redmine::Pagination
   include Redmine::Hook::Helper
   include RoutesHelper
+  include AvatarsHelper
+
   helper :routes
+  helper :avatars
 
   class_attribute :accept_api_auth_actions
   class_attribute :accept_rss_auth_actions
@@ -52,6 +57,7 @@ class ApplicationController < ActionController::Base
   end
 
   before_action :session_expiration, :user_setup, :check_if_login_required, :set_localization, :check_password_change
+  after_action :record_project_usage
 
   rescue_from ::Unauthorized, :with => :deny_access
   rescue_from ::ActionView::MissingTemplate, :with => :missing_template
@@ -112,7 +118,7 @@ class ApplicationController < ActionController::Base
       if (key = api_key_from_request)
         # Use API key
         user = User.find_by_api_key(key)
-      elsif request.authorization.to_s =~ /\ABasic /i
+      elsif /\ABasic /i.match?(request.authorization.to_s)
         # HTTP Basic, either username/password or API key/random
         authenticate_with_http_basic do |username, password|
           user = User.try_to_login(username, password) || User.find_by_api_key(username)
@@ -229,9 +235,14 @@ class ApplicationController < ActionController::Base
         format.any(:atom, :pdf, :csv) {
           redirect_to signin_path(:back_url => url)
         }
-        format.xml  { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
+        format.api  {
+          if Setting.rest_api_enabled? && accept_api_auth?
+            head(:unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"')
+          else
+            head(:forbidden)
+          end
+        }
         format.js   { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
-        format.json { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
         format.any  { head :unauthorized }
       end
       return false
@@ -393,6 +404,13 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def record_project_usage
+    if @project && @project.id && User.current.logged? && User.current.allowed_to?(:view_project, @project)
+      Redmine::ProjectJumpBox.new(User.current).project_used(@project)
+    end
+    true
+  end
+
   def back_url
     url = params[:back_url]
     if url.nil? && referer = request.env['HTTP_REFERER']
@@ -446,11 +464,11 @@ class ApplicationController < ActionController::Base
     path = uri.to_s
     # Ensure that the remaining URL starts with a slash, followed by a
     # non-slash character or the end
-    if path !~ %r{\A/([^/]|\z)}
+    if !%r{\A/([^/]|\z)}.match?(path)
       return false
     end
 
-    if path.match(%r{/(login|account/register|account/lost_password)})
+    if %r{/(login|account/register|account/lost_password)}.match?(path)
       return false
     end
 
@@ -477,7 +495,7 @@ class ApplicationController < ActionController::Base
       if args.any?
         redirect_to *args
       elsif block_given?
-        block.call
+        yield
       else
         raise "#redirect_to_referer_or takes arguments or a block"
       end
@@ -633,7 +651,7 @@ class ApplicationController < ActionController::Base
 
   # Returns a string that can be used as filename value in Content-Disposition header
   def filename_for_content_disposition(name)
-    request.env['HTTP_USER_AGENT'] =~ %r{(MSIE|Trident|Edge)} ? ERB::Util.url_encode(name) : name
+    %r{(MSIE|Trident|Edge)}.match?(request.env['HTTP_USER_AGENT']) ? ERB::Util.url_encode(name) : name
   end
 
   def api_request?
@@ -666,9 +684,9 @@ class ApplicationController < ActionController::Base
     render_error "An error occurred while executing the query and has been logged. Please report this error to your Redmine administrator."
   end
 
-  # Renders a 200 response for successful updates or deletions via the API
+  # Renders a 204 response for successful updates or deletions via the API
   def render_api_ok
-    render_api_head :ok
+    render_api_head :no_content
   end
 
   # Renders a head API response

@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ module QueriesHelper
         group = :label_relations
       elsif field_options[:type] == :tree
         group = query.is_a?(IssueQuery) ? :label_relations : nil
-      elsif field =~ /^cf_\d+\./
+      elsif /^cf_\d+\./.match?(field)
         group = (field_options[:through] || field_options[:field]).try(:name)
       elsif field =~ /^(.+)\./
         # association filters
@@ -39,6 +39,8 @@ module QueriesHelper
         group = :field_assigned_to
       elsif field_options[:type] == :date_past || field_options[:type] == :date
         group = :label_date
+      elsif %w(estimated_hours spent_time).include?(field)
+        group = :label_time_tracking
       end
       if group
         (grouped[group] ||= []) << [field_options[:name], field]
@@ -118,6 +120,15 @@ module QueriesHelper
     render :partial => 'queries/columns', :locals => {:query => query, :tag_name => tag_name}
   end
 
+  def available_display_types_tags(query)
+    tags = ''.html_safe
+    query.available_display_types.each do |t|
+      tags << radio_button_tag('display_type', t, @query.display_type == t, :id => "display_type_#{t}") +
+        content_tag('label', l(:"label_display_type_#{t}"), :for => "display_type_#{t}", :class => "inline")
+    end
+    tags
+  end
+
   def grouped_query_results(items, query, &block)
     result_count_by_group = query.result_count_by_group
     previous_group, first = false, true
@@ -128,7 +139,7 @@ module QueriesHelper
     items.each do |item|
       group_name = group_count = nil
       if query.grouped?
-        group = query.group_by_column.value(item)
+        group = query.group_by_column.group_value(item)
         if first || group != previous_group
           if group.blank? && group != false
             group_name = "(#{l(:label_blank_value)})"
@@ -155,11 +166,12 @@ module QueriesHelper
 
   def total_tag(column, value)
     label = content_tag('span', "#{column.caption}:")
-    value = if [:hours, :spent_hours, :total_spent_hours, :estimated_hours].include? column.name
-      format_hours(value)
-    else
-      format_object(value)
-    end
+    value =
+      if [:hours, :spent_hours, :total_spent_hours, :estimated_hours, :total_estimated_hours].include? column.name
+        format_hours(value)
+      else
+        format_object(value)
+      end
     value = content_tag('span', value, :class => 'value')
     content_tag('span', label + " " + value, :class => "total-for-#{column.name.to_s.dasherize}")
   end
@@ -169,18 +181,16 @@ module QueriesHelper
       css, order = nil, column.default_order
       if column.name.to_s == query.sort_criteria.first_key
         if query.sort_criteria.first_asc?
-          css = 'sort asc'
+          css = 'sort asc icon icon-sorted-desc'
           order = 'desc'
         else
-          css = 'sort desc'
+          css = 'sort desc icon icon-sorted-asc'
           order = 'asc'
         end
       end
       param_key = options[:sort_param] || :sort
-      sort_param = { param_key => query.sort_criteria.add(column.name, order).to_param }
-      while sort_param.keys.first.to_s =~ /^(.+)\[(.+)\]$/
-        sort_param = {$1 => {$2 => sort_param.values.first}}
-      end
+      sort_param = {param_key => query.sort_criteria.add(column.name, order).to_param}
+      sort_param = {$1 => {$2 => sort_param.values.first}} while sort_param.keys.first.to_s =~ /^(.+)\[(.+)\]$/
       link_options = {
           :title => l(:label_sort_by, "\"#{column.caption}\""),
           :class => css
@@ -188,7 +198,8 @@ module QueriesHelper
       if options[:sort_link_options]
         link_options.merge! options[:sort_link_options]
       end
-      content = link_to(column.caption,
+      content = link_to(
+          column.caption,
           {:params => request.query_parameters.deep_merge(sort_param)},
           link_options
         )
@@ -223,10 +234,11 @@ module QueriesHelper
     when :done_ratio
       progress_bar(value)
     when :relations
-      content_tag('span',
+      content_tag(
+        'span',
         value.to_s(item) {|other| link_to_issue(other, :subject => false, :tracker => false)}.html_safe,
         :class => value.css_classes_for(item))
-    when :hours, :estimated_hours
+    when :hours, :estimated_hours, :total_estimated_hours
       format_hours(value)
     when :spent_hours
       link_to_if(value > 0, format_hours(value), project_time_entries_path(item.project, :issue_id => "#{item.id}"))
@@ -290,9 +302,9 @@ module QueriesHelper
     session_key = klass.name.underscore.to_sym
 
     if params[:query_id].present?
-      cond = "project_id IS NULL"
-      cond << " OR project_id = #{@project.id}" if @project
-      @query = klass.where(cond).find(params[:query_id])
+      scope = klass.where(:project_id => nil)
+      scope = scope.or(klass.where(:project_id => @project)) if @project
+      @query = scope.find(params[:query_id])
       raise ::Unauthorized unless @query.visible?
       @query.project = @project
       session[session_key] = {:id => @query.id, :project_id => @query.project_id} if use_session
@@ -384,17 +396,39 @@ module QueriesHelper
   def query_links(title, queries)
     return '' if queries.empty?
     # links to #index on issues/show
-    url_params = controller_name == 'issues' ? {:controller => 'issues', :action => 'index', :project_id => @project} : {}
-
+    url_params =
+      if controller_name == 'issues'
+        {:controller => 'issues', :action => 'index', :project_id => @project}
+      else
+        {}
+      end
     content_tag('h3', title) + "\n" +
-      content_tag('ul',
+      content_tag(
+        'ul',
         queries.collect {|query|
-            css = 'query'
-            css << ' selected' if query == @query
-            content_tag('li', link_to(query.name, url_params.merge(:query_id => query), :class => css))
-          }.join("\n").html_safe,
+          css = +'query'
+          clear_link = +''
+          if query == @query
+            css << ' selected'
+            clear_link += link_to_clear_query
+          end
+          content_tag('li',
+                      link_to(query.name,
+                              url_params.merge(:query_id => query),
+                              :class => css) +
+                        clear_link.html_safe)
+        }.join("\n").html_safe,
         :class => 'queries'
       ) + "\n"
+  end
+
+  def link_to_clear_query
+    link_to(
+      l(:button_clear),
+      {:set_filter => 1, :sort => '', :project_id => @project},
+      :class => 'icon-only icon-clear-query',
+      :title => l(:button_clear)
+    )
   end
 
   # Renders the list of queries for the sidebar

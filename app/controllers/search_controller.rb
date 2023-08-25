@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,8 +22,7 @@ class SearchController < ApplicationController
   accept_api_auth :index
 
   def index
-    @question = params[:q] || ""
-    @question.strip!
+    @question = params[:q]&.strip || ""
     @all_words = params[:all_words] ? params[:all_words].present? : true
     @titles_only = params[:titles_only] ? params[:titles_only].present? : false
     @search_attachments = params[:attachments].presence || '0'

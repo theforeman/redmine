@@ -159,8 +159,12 @@ gl:
         circular_dependency: "Esta relación podería crear unha dependencia circular"
         cant_link_an_issue_with_a_descendant: "As peticións non poden estar ligadas coas súas subtarefas"
         earlier_than_minimum_start_date: "Non pode ser antes de %{date} por mor de peticións anteriores"
-        not_a_regexp: "is not a valid regular expression"
-        open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        not_a_regexp: "non é unha expresión regular válida"
+        open_issue_with_closed_parent: "Unha petición aberta non pode ser asignada a unha tarefa pai pechada"
+        must_contain_uppercase: "debe conter letras maiúsculas (A-Z)"
+        must_contain_lowercase: "debe conter letras minúsculas (a-z)"
+        must_contain_digits: "debe conter díxitos (0-9)"
+        must_contain_special_chars: "debe conter caracteres especiais (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Por favor seleccione
 
@@ -335,7 +339,6 @@ gl:
   label_age: Idade
   label_ago: "hai"
   label_all: todos
-  label_all_time: todo o tempo
   label_all_words: Tódalas palabras
   label_and_its_subprojects: "%{value} e proxectos secundarios"
   label_applied_status: Aplicar estado
@@ -522,7 +525,6 @@ gl:
   label_password_lost: "Esqueceu o contrasinal?"
   label_permissions: Permisos
   label_permissions_report: Informe de permisos
-  label_please_login: "Acceder"
   label_plugins: Complementos
   label_precedes: anterior a
   label_preferences: Preferencias
@@ -779,7 +781,7 @@ gl:
   text_reassign_time_entries: 'Reasignar as horas a esta petición:'
   text_regexp_info: ex. ^[A-Z0-9]+$
   text_repository_usernames_mapping: "Estableza a correspondencia entre os usuarios de Redmine e os presentes no historial do repositorio.\nOs usuarios co mesmo nome ou correo en Redmine e no repositorio serán asociados automaticamente."
-  text_rmagick_available: RMagick dispoñíbel (opcional)
+  text_minimagick_available: MiniMagick dispoñíbel (opcional)
   text_select_mail_notifications: Seleccionar os eventos a notificar
   text_select_project_modules: 'Seleccione os módulos a activar para este proxecto:'
   text_status_changed_by_changeset: "Aplicado nos cambios %{value}"
@@ -791,6 +793,7 @@ gl:
   text_unallowed_characters: Caracteres non permitidos
   text_user_mail_option: "Dos proxectos non seleccionados, só recibirá notificacións sobre elementos monitorizados ou elementos nos que estea involucrado (por exemplo, peticións das que vostede sexa autor ou asignadas a vostede)."
   text_user_wrote: "%{value} escribiu:"
+  text_user_wrote_in: "%{value} escribiu (%{link}):"
   text_wiki_destroy_confirmation: Seguro que quere borrar o wiki e todo o seu contido?
   text_workflow_edit: Seleccionar un fluxo de traballo para actualizar
   warning_attachments_not_saved: "Non foi posíbel gardar %{count} ficheiros."
@@ -857,7 +860,6 @@ gl:
   label_version_sharing_tree: "Coa árbore de proxectos"
   label_version_sharing_none: "Non compartir"
   error_can_not_archive_project: "Non é posíbel arquivar este proxecto."
-  button_duplicate: "Duplicado"
   button_copy_and_follow: "Copiar e seguir"
   label_copy_source: "Fonte"
   setting_issue_done_ratio: "Calcular a proporción de peticións completadas mediante"
@@ -896,7 +898,7 @@ gl:
   permission_export_wiki_pages: "Exportar as páxinas do wiki"
   setting_cache_formatted_text: "Gardar o texto formatado na caché."
   permission_manage_project_activities: "Xestionar as actividades do proxecto"
-  error_unable_delete_issue_status: "Non foi posíbel eliminar o estado da petición."
+  error_unable_delete_issue_status: "Non foi posíbel eliminar o estado da petición. (%{value})"
   label_profile: "Perfil"
   permission_manage_subtasks: "Xestionar as subtarefas"
   field_parent_issue: "Tarefa superior"
@@ -1026,7 +1028,6 @@ gl:
   setting_session_timeout: "Tempo de inactividade máximo das sesións"
   label_session_expiration: "Caducidade das sesións"
   permission_close_project: "Pechar ou volver abrir o proxecto"
-  label_show_closed_projects: "Ver os proxectos pechados"
   button_close: "Pechar"
   button_reopen: "Volver abrir"
   project_status_active: "activo"
@@ -1198,11 +1199,11 @@ gl:
   button_filter: Filtro
   mail_body_password_updated: A súa contrasinal foi cambiada.
   label_no_preview: Non hai vista previa dispoñible
-  error_no_tracker_allowed_for_new_issue_in_project: O proxecto non ten ningún tipo 
+  error_no_tracker_allowed_for_new_issue_in_project: O proxecto non ten ningún tipo
     para que poida crear unha petición
   label_tracker_all: Tódolos tipos
   label_new_project_issue_tab_enabled: Amosar a lapela "Nova petición"
-  setting_new_item_menu_tab: Lapela no menú de cada proxecto para creación de novos obxectos 
+  setting_new_item_menu_tab: Lapela no menú de cada proxecto para creación de novos obxectos
   label_new_object_tab_enabled: Amosar a lista despregable "+"
   error_no_projects_with_tracker_allowed_for_new_issue: Non hai proxectos con tipos
     para as que poida crear unha petición
@@ -1263,3 +1264,59 @@ gl:
     certificado para evitar calquera manipulación durante o proceso de autenticación.
   label_nothing_to_preview: Nada que previsualizar
   error_token_expired: Esta ligazón para recuperar a contrasinal ten caducado, por favor, tente de novo.
+  error_spent_on_future_date: Non pode imputar tempo nunha data futura
+  setting_timelog_accept_future_dates: Permitir imputar tempo en datas futuras
+  label_delete_link_to_subtask: Eliminar relación
+  error_not_allowed_to_log_time_for_other_users: Vostede non ten permitido imputar tempo para outros usuarios
+  permission_log_time_for_other_users: Imputar tempo dedicado a outros usuarios
+  label_tomorrow: mañá
+  label_next_week: próxima semana
+  label_next_month: próximo mes
+  text_role_no_workflow: Non hai fluxo de traballo definido para este rol
+  text_status_no_workflow: Ningún tipo de tarefa usa este estado nos fluxos de traballo
+  setting_mail_handler_preferred_body_part: Parte preferida dos correos multiparte (HTML)
+  setting_show_status_changes_in_mail_subject: Amosar os cambios de estado no asunto das notificacións de correo das
+    tarefas
+  label_inherited_from_parent_project: Herdado do proxecto pai
+  label_inherited_from_group: Herdado do grupo %{name}
+  label_trackers_description: Descricións dos tipos de tarefas
+  label_open_trackers_description: Ver as descricións de todos os tipos de tarefas
+  label_preferred_body_part_text: Texto
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Asunto da tarefa pai
+  permission_edit_own_issues: Editar as propias tarefas
+  text_select_apply_tracker: Seleccionar o tipo de tarefa
+  label_updated_issues: Tarefas actualizadas
+  text_avatar_server_config_html: O servidor de avatares é actualmente <a href="%{url}">%{url}</a>.
+    Vostede o pode configurar en config/configuration.yml.
+  setting_gantt_months_limit: Máximo número de meses amosados no diagrama de gantt
+  permission_import_time_entries: Importar tempos dedicados
+  label_import_notifications: Enviar notificacións de correo durante a importación
+  text_gs_available: Soporte de PDF ImageMagick dispoñible (opcional)
+  field_recently_used_projects: Número de proxectos recentemente usados no despregable de proxectos
+  label_optgroup_bookmarks: Favoritos
+  label_optgroup_others: Outros proxectos
+  label_optgroup_recents: Usado recentemente
+  button_project_bookmark: Engadir favoritos
+  button_project_bookmark_delete: Borrar favoritos
+  field_history_default_tab: Lapela por defecto no histórico de tarefas
+  label_issue_history_properties: Cambios nas propiedades
+  label_issue_history_notes: Notas
+  label_last_tab_visited: Última lapela visitada
+  field_unique_id: ID único
+  text_no_subject: sen asunto
+  setting_password_required_char_classes: Clases de caracteres requeridos para as contrasinais
+  label_password_char_class_uppercase: letras maiúsculas
+  label_password_char_class_lowercase: letras minúsculas
+  label_password_char_class_digits: díxitos
+  label_password_char_class_special_chars: caracteres especiais
+  text_characters_must_contain: Debe conter %{character_classes}.
+  label_starts_with: comeza con
+  label_ends_with: finaliza con
+  label_issue_fixed_version_updated: Versión destino actualizada
+  setting_project_list_defaults: Listaxes por defecto dos proxectos
+  label_display_type: Amosar os resultados coma
+  label_display_type_list: Listaxe
+  label_display_type_board: Taboleiro
+  label_my_bookmarks: Meus favoritos
+  label_import_time_entries: Importar tempos dedicados

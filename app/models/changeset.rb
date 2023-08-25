@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -159,11 +161,7 @@ class Changeset < ActiveRecord::Base
     if repository && repository.identifier.present?
       repo = "#{repository.identifier}|"
     end
-    tag = if scmid?
-      "commit:#{repo}#{scmid}"
-    else
-      "#{repo}r#{revision}"
-    end
+    tag = scmid? ? "commit:#{repo}#{scmid}" : "#{repo}r#{revision}"
     if ref_project && project && ref_project != project
       tag = "#{project.identifier}:#{tag}"
     end
@@ -282,14 +280,15 @@ class Changeset < ActiveRecord::Base
     return @short_comments, @long_comments
   end
 
-  public
+  # Singleton class method is public
+  class << self
+    # Strips and reencodes a commit log before insertion into the database
+    def normalize_comments(str, encoding)
+      Changeset.to_utf8(str.to_s.strip, encoding)
+    end
 
-  # Strips and reencodes a commit log before insertion into the database
-  def self.normalize_comments(str, encoding)
-    Changeset.to_utf8(str.to_s.strip, encoding)
-  end
-
-  def self.to_utf8(str, encoding)
-    Redmine::CodesetUtil.to_utf8(str, encoding)
+    def to_utf8(str, encoding)
+      Redmine::CodesetUtil.to_utf8(str, encoding)
+    end
   end
 end

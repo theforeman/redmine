@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,6 +31,15 @@ module UsersHelper
 
   def textarea_font_options
     [[l(:label_font_default), '']] + UserPreference::TEXTAREA_FONT_OPTIONS.map {|o| [l("label_font_#{o}"), o]}
+  end
+
+  def history_default_tab_options
+    [[l('label_issue_history_notes'), 'notes'],
+     [l('label_history'), 'history'],
+     [l('label_issue_history_properties'), 'properties'],
+     [l('label_time_entry_plural'), 'time_entries'],
+     [l('label_associated_revisions'), 'changesets'],
+     [l('label_last_tab_visited'), 'last_tab_visited']]
   end
 
   def change_status_link(user)

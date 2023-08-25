@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -614,7 +614,7 @@ namespace :redmine do
         raise "This directory doesn't exist!" unless File.directory?(path)
         raise "#{trac_attachments_directory} doesn't exist!" unless File.directory?(trac_attachments_directory)
         @@trac_directory
-      rescue Exception => e
+      rescue => e
         puts e
         return false
       end
@@ -629,7 +629,7 @@ namespace :redmine do
         # If adapter is sqlite or sqlite3, make sure that trac.db exists
         raise "#{trac_db_path} doesn't exist!" if %w(sqlite3).include?(adapter) && !File.exist?(trac_db_path)
         @@trac_adapter = adapter
-      rescue Exception => e
+      rescue => e
         puts e
         return false
       end

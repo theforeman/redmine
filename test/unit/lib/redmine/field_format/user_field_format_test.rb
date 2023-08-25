@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,10 +26,6 @@ class Redmine::UserFieldFormatTest < ActionView::TestCase
            :issue_statuses, :issue_categories, :issue_relations, :workflows,
            :enumerations,
            :custom_fields, :custom_fields_trackers, :custom_fields_projects
-
-  def setup
-    User.current = nil
-  end
 
   def setup
     User.current = nil
@@ -81,6 +79,15 @@ class Redmine::UserFieldFormatTest < ActionView::TestCase
     project = Project.find(1)
 
     assert_equal ['Dave Lopper'], field.possible_values_options(project).map(&:first)
+  end
+
+  def test_possible_values_options_should_return_project_members_and_me_if_logged_in
+    ::I18n.locale = 'en'
+    User.current = User.find(2)
+    field = IssueCustomField.new(:field_format => 'user')
+    project = Project.find(1)
+
+    assert_equal ['<< me >>', 'Dave Lopper', 'John Smith'], field.possible_values_options(project).map(&:first)
   end
 
   def test_value_from_keyword_should_return_user_id

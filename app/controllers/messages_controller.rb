@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -115,7 +117,11 @@ class MessagesController < ApplicationController
     @subject = @message.subject
     @subject = "RE: #{@subject}" unless @subject.starts_with?('RE:')
 
-    @content = "#{ll(Setting.default_language, :text_user_wrote, @message.author)}\n> "
+    if @message.root == @message
+      @content = +"#{ll(Setting.default_language, :text_user_wrote, @message.author)}\n> "
+    else
+      @content = +"#{ll(Setting.default_language, :text_user_wrote_in, {:value => @message.author, :link => "message##{@message.id}"})}\n> "
+    end
     @content << @message.content.to_s.strip.gsub(%r{<pre>(.*?)</pre>}m, '[...]').gsub(/(\r?\n|\r\n?)/, "\n> ") + "\n\n"
   end
 
@@ -126,7 +132,8 @@ class MessagesController < ApplicationController
     render :partial => 'common/preview'
   end
 
-private
+  private
+
   def find_message
     return unless find_board
     @message = @board.messages.includes(:parent).find(params[:id])

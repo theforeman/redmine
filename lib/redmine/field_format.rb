@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -183,7 +185,7 @@ module Redmine
 
       def parse_keyword(custom_field, keyword, &block)
         separator = Regexp.escape ","
-        keyword = keyword.to_s
+        keyword = keyword.dup.to_s
 
         if custom_field.multiple?
           values = []
@@ -249,7 +251,7 @@ module Redmine
             [text, url]
           end
           links = texts_and_urls.sort_by(&:first).map do |text, url|
-            css_class = (url =~ /^https?:\/\//) ? 'external' : nil
+            css_class = (/^https?:\/\//.match?(url)) ? 'external' : nil
             view.link_to_if uri_with_safe_scheme?(url), text, url, :class => css_class
           end
           links.join(', ').html_safe
@@ -303,8 +305,12 @@ module Redmine
         if custom_field.is_required?
           ''.html_safe
         else
-          view.content_tag('label',
-            view.check_box_tag(tag_name, '__none__', (value == '__none__'), :id => nil, :data => {:disables => "##{tag_id}"}) + l(:button_clear),
+          view.content_tag(
+            'label',
+            view.check_box_tag(
+              tag_name,
+              '__none__', (value == '__none__'), :id => nil,
+              :data => {:disables => "##{tag_id}"}) + l(:button_clear),
             :class => 'inline'
           )
         end
@@ -358,7 +364,7 @@ module Redmine
       def validate_single_value(custom_field, value, customized=nil)
         errs = super
         value = value.to_s
-        unless custom_field.regexp.blank? or value =~ Regexp.new(custom_field.regexp)
+        unless custom_field.regexp.blank? or Regexp.new(custom_field.regexp).match?(value)
           errs << ::I18n.t('activerecord.errors.messages.invalid')
         end
         if custom_field.min_length && value.length < custom_field.min_length
@@ -440,12 +446,12 @@ module Redmine
             url = url_from_pattern(custom_field, value, customized)
           else
             url = value.to_s
-            unless url =~ %r{\A[a-z]+://}i
+            unless %r{\A[a-z]+://}i.match?(url)
               # no protocol found, use http by default
               url = "http://" + url
             end
           end
-          css_class = (url =~ /^https?:\/\//) ? 'external' : nil
+          css_class = (/^https?:\/\//.match?(url)) ? 'external' : nil
           view.link_to value.to_s.truncate(40), url, :class => css_class
         else
           value.to_s
@@ -490,7 +496,7 @@ module Redmine
 
       def validate_single_value(custom_field, value, customized=nil)
         errs = super
-        errs << ::I18n.t('activerecord.errors.messages.not_a_number') unless value.to_s.strip =~ /^[+-]?\d+$/
+        errs << ::I18n.t('activerecord.errors.messages.not_a_number') unless /^[+-]?\d+$/.match?(value.to_s.strip)
         errs
       end
 
@@ -534,7 +540,7 @@ module Redmine
       end
 
       def validate_single_value(custom_field, value, customized=nil)
-        if value =~ /^\d{4}-\d{2}-\d{2}$/ && (value.to_date rescue false)
+        if /^\d{4}-\d{2}-\d{2}$/.match?(value) && (value.to_date rescue false)
           []
         else
           [::I18n.t('activerecord.errors.messages.not_a_date')]
@@ -816,7 +822,10 @@ module Redmine
       field_attributes :user_role
 
       def possible_values_options(custom_field, object=nil)
-        possible_values_records(custom_field, object).map {|u| [u.name, u.id.to_s]}
+        users = possible_values_records(custom_field, object)
+        options = users.map {|u| [u.name, u.id.to_s]}
+        options = [["<< #{l(:label_me)} >>", User.current.id]] + options if users.include?(User.current)
+        options
       end
 
       def possible_values_records(custom_field, object=nil)

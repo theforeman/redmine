@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,13 +33,12 @@ module AttachmentsHelper
   #   :thumbails -- display thumbnails if enabled in settings
   def link_to_attachments(container, options = {})
     options.assert_valid_keys(:author, :thumbnails)
-
-    attachments = if container.attachments.loaded?
-      container.attachments
-    else
-      container.attachments.preload(:author).to_a
-    end
-
+    attachments =
+      if container.attachments.loaded?
+        container.attachments
+      else
+        container.attachments.preload(:author).to_a
+      end
     if attachments.any?
       options = {
         :editable => container.attachments_editable?,
@@ -85,5 +84,15 @@ module AttachmentsHelper
       api.author(:id => attachment.author.id, :name => attachment.author.name)
     end
     api.created_on attachment.created_on
+  end
+
+  def render_file_content(attachment, content)
+    if attachment.is_markdown?
+      render :partial => 'common/markup', :locals => {:markup_text_formatting => 'markdown', :markup_text => content}
+    elsif attachment.is_textile?
+      render :partial => 'common/markup', :locals => {:markup_text_formatting => 'textile', :markup_text => content}
+    else
+      render :partial => 'common/file', :locals => {:content => content, :filename => attachment.filename}
+    end
   end
 end

@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,8 +30,9 @@ module JournalsHelper
     links = []
     if journal.notes.present?
       if options[:reply_links]
+        indice = journal.indice || @journal.issue.visible_journals_with_index.find{|j| j.id == @journal.id}.indice
         links << link_to(l(:button_quote),
-                         quoted_issue_path(issue, :journal_id => journal),
+                         quoted_issue_path(issue, :journal_id => journal, :journal_indice => indice),
                          :remote => true,
                          :method => 'post',
                          :title => l(:button_quote),
@@ -49,7 +50,7 @@ module JournalsHelper
         links << link_to(l(:button_delete),
                          journal_path(journal, :journal => {:notes => ""}),
                          :remote => true,
-                         :method => 'put', :data => {:confirm => l(:text_are_you_sure)}, 
+                         :method => 'put', :data => {:confirm => l(:text_are_you_sure)},
                          :title => l(:button_delete),
                          :class => 'icon-only icon-del'
                         )
@@ -64,7 +65,7 @@ module JournalsHelper
 
   def render_private_notes_indicator(journal)
     content = journal.private_notes? ? l(:field_is_private) : ''
-    css_classes = journal.private_notes? ? 'private' : ''
+    css_classes = journal.private_notes? ? 'badge badge-private private' : ''
     content_tag('span', content.html_safe, :id => "journal-#{journal.id}-private_notes", :class => css_classes)
   end
 end

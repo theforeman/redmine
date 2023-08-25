@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,7 +43,7 @@ module RepositoriesHelper
 
   def render_properties(properties)
     unless properties.nil? || properties.empty?
-      content = ''
+      content = +''
       properties.keys.sort.each do |property|
         content << content_tag('li', "<b>#{h property}</b>: <span>#{h properties[property]}</span>".html_safe)
       end
@@ -58,7 +58,7 @@ module RepositoriesHelper
         # Detects moved/copied files
         if !change.from_path.blank?
           change.action =
-             @changeset.filechanges.detect {|c| c.action == 'D' && c.path == change.from_path} ? 'R' : 'C'
+            @changeset.filechanges.detect {|c| c.action == 'D' && c.path == change.from_path} ? 'R' : 'C'
         end
         change
       when 'D'
@@ -87,10 +87,10 @@ module RepositoriesHelper
 
   def render_changes_tree(tree)
     return '' if tree.nil?
-    output = ''
+    output = +''
     output << '<ul>'
     tree.keys.sort.each do |file|
-      style = 'change'
+      style = +'change'
       text = File.basename(h(file))
       if s = tree[file][:s]
         style << ' folder'
@@ -139,7 +139,7 @@ module RepositoriesHelper
   def scm_select_tag(repository)
     scm_options = [["--- #{l(:actionview_instancetag_blank_option)} ---", '']]
     Redmine::Scm::Base.all.each do |scm|
-    if Setting.enabled_scm.include?(scm) ||
+      if Setting.enabled_scm.include?(scm) ||
           (repository && repository.class.name.demodulize == scm)
         scm_options << ["Repository::#{scm}".constantize.scm_name, scm]
       end

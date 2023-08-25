@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,11 +39,12 @@ class Group < Principal
   scope :named, lambda {|arg| where("LOWER(#{table_name}.lastname) = LOWER(?)", arg.to_s.strip)}
   scope :givable, lambda {where(:type => 'Group')}
 
-  safe_attributes 'name',
+  safe_attributes(
+    'name',
     'user_ids',
     'custom_field_values',
     'custom_fields',
-    :if => lambda {|group, user| user.admin? && !group.builtin?}
+    :if => lambda {|group, user| user.admin? && !group.builtin?})
 
   def to_s
     name.to_s

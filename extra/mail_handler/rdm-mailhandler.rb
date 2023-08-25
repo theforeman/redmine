@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: false
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -151,7 +153,7 @@ END_DESC
 
     headers = { 'User-Agent' => "Redmine mail handler/#{VERSION}" }
 
-    data = { 'key' => key, 'email' => email,
+    data = { 'key' => key, 'email' => email.gsub(/(?<!\r)\n|\r(?!\n)/, "\r\n"),
                            'allow_override' => allow_override,
                            'unknown_user' => unknown_user,
                            'default_group' => default_group,
@@ -202,7 +204,7 @@ END_DESC
   def read_key_from_file(filename)
     begin
       self.key = File.read(filename).strip
-    rescue Exception => e
+    rescue => e
       $stderr.puts "Unable to read the key from #{filename}:\n#{e.message}"
       exit 1
     end
@@ -210,4 +212,4 @@ END_DESC
 end
 
 handler = RedmineMailHandler.new
-exit(handler.submit(STDIN.read))
+exit(handler.submit(STDIN.read.force_encoding('ASCII-8BIT')))

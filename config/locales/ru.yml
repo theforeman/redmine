@@ -209,6 +209,10 @@ ru:
         earlier_than_minimum_start_date: "не может быть раньше %{date} из-за предыдущих задач"
         not_a_regexp: "не является допустимым регулярным выражением"
         open_issue_with_closed_parent: "Открытая задача не может быть добавлена к закрытой родительской задаче"
+        must_contain_uppercase: "должен содержать заглавные латинские буквы (A-Z)"
+        must_contain_lowercase: "должен содержать строчные латинские буквы (a-z)"
+        must_contain_digits: "должен содержать цифры (0-9)"
+        must_contain_special_chars: "должен содержать специальные символы (!, $, %, ...)"
 
   support:
     array:
@@ -299,7 +303,7 @@ ru:
   error_scm_command_failed: "Ошибка доступа к хранилищу: %{value}"
   error_scm_not_found: Хранилище не содержит записи и/или исправления.
   error_unable_to_connect: Невозможно подключиться (%{value})
-  error_unable_delete_issue_status: Невозможно удалить статус задачи
+  error_unable_delete_issue_status: Невозможно удалить статус задачи (%{value})
 
   field_account: Учётная запись
   field_activity: Деятельность
@@ -413,7 +417,6 @@ ru:
   label_administration: Администрирование
   label_age: Возраст
   label_ago: дней(я) назад
-  label_all_time: всё время
   label_all_words: Все слова
   label_all: все
   label_and_its_subprojects: "%{value} и все подпроекты"
@@ -602,7 +605,6 @@ ru:
   label_password_lost: Восстановление пароля
   label_permissions_report: Отчёт по правам доступа
   label_permissions: Права доступа
-  label_please_login: Пожалуйста, войдите.
   label_plugins: Модули
   label_precedes: следующая
   label_preferences: Предпочтения
@@ -909,7 +911,7 @@ ru:
   text_reassign_time_entries: 'Перенести зарегистрированное время на следующую задачу:'
   text_regexp_info: "например: ^[A-Z0-9]+$"
   text_repository_usernames_mapping: "Выберите или обновите пользователя Redmine, связанного с найденными именами в журнале хранилища.\nПользователи с одинаковыми именами или email в Redmine и хранилище связываются автоматически."
-  text_rmagick_available: Доступно использование RMagick (опционально)
+  text_minimagick_available: Доступно использование MiniMagick (опционально)
   text_select_mail_notifications: Выберите действия, при которых будет отсылаться уведомление на электронную почту.
   text_select_project_modules: 'Выберите модули, которые будут использованы в проекте:'
   text_status_changed_by_changeset: "Реализовано в %{value} редакции."
@@ -921,6 +923,7 @@ ru:
   text_unallowed_characters: Запрещенные символы
   text_user_mail_option: "Для невыбранных проектов, Вы будете получать уведомления только о том, что просматриваете или в чем участвуете (например, задачи, автором которых Вы являетесь, или которые Вам назначены)."
   text_user_wrote: "%{value} писал(а):"
+  text_user_wrote_in: "%{value} писал(а) (%{link}):"
   text_wiki_destroy_confirmation: Вы уверены, что хотите удалить данную Wiki и все её содержимое?
   text_workflow_edit: Выберите роль и трекер для редактирования последовательности состояний
 
@@ -967,7 +970,6 @@ ru:
   label_version_sharing_tree: С деревом проектов
   label_version_sharing_none: Без совместного использования
   error_can_not_archive_project: Этот проект не может быть заархивирован
-  button_duplicate: Дублировать
   button_copy_and_follow: Копировать и продолжить
   label_copy_source: Источник
   setting_issue_done_ratio:  Рассчитывать готовность задачи с помощью поля
@@ -1117,7 +1119,6 @@ ru:
   setting_session_timeout: Таймаут сессии
   label_session_expiration: Срок истечения сессии
   permission_close_project: Закрывать / открывать проекты
-  label_show_closed_projects: Просматривать закрытые проекты
   button_close: Сделать закрытым
   button_reopen: Сделать открытым
   project_status_active: открытые
@@ -1342,4 +1343,59 @@ ru:
   label_ldaps_verify_peer: LDAPS
   label_ldaps_warning: Рекомендуется использовать зашифрованное соединение LDAPS с проверкой сертификата для предотвращения любых посторонних вмешательств в процессе аутентификации.
   label_nothing_to_preview: Нет данных для предварительного просмотра
-  error_token_expired: This password recovery link has expired, please try again.
+  error_token_expired: Срок действия этой ссылки восстановления пароля истёк. Пожалуйста, попробуйте снова.
+  error_spent_on_future_date: Нельзя учитывать время в будущие даты
+  setting_timelog_accept_future_dates: Принимать трудозатраты на будущие даты
+  label_delete_link_to_subtask: Удалить связь
+  error_not_allowed_to_log_time_for_other_users: Вам не разрешено учитывать время для других пользователей
+  permission_log_time_for_other_users: Учитывать время других пользователей
+  label_tomorrow: завтра
+  label_next_week: следующая неделя
+  label_next_month: следующий месяц
+  text_role_no_workflow: Эта роль не имеет заданных последовательностей действий
+  text_status_no_workflow: Ни один трекер не использует этот стутус в последовательностях действий
+  setting_mail_handler_preferred_body_part: Предпочитаемая часть multipart (HTML) писем
+  setting_show_status_changes_in_mail_subject: Включать изменения статуса задачи в уведомления по email
+  label_inherited_from_parent_project: Наследуется из родительского проекта
+  label_inherited_from_group: Наследуется из группы %{name}
+  label_trackers_description: Описание трекеров
+  label_open_trackers_description: Показать описания трекеров
+  label_preferred_body_part_text: Текст
+  label_preferred_body_part_html: HTML (экспериментально)
+  field_parent_issue_subject: Тема родительской задачи
+  permission_edit_own_issues: Редактировать свои задачи
+  text_select_apply_tracker: Выбор этого трекера
+  label_updated_issues: Обновленные задачи
+  text_avatar_server_config_html: Текущий сервер аватар — <a href="%{url}">%{url}</a>.
+    Вы можете изменить его в config/configuration.yml.
+  setting_gantt_months_limit: Максимальное число месяцев на диаграмме Ганта
+  permission_import_time_entries: Импорт трудозатрат
+  label_import_notifications: Послать уведомления по email в течение импорта
+  text_gs_available: Доступно использование ImageMagick PDF (опционально)
+  field_recently_used_projects: Число последних проектов в выпадающем списке
+  label_optgroup_bookmarks: Закладки
+  label_optgroup_others: Другие проекты
+  label_optgroup_recents: Последние
+  button_project_bookmark: Добавить закладку
+  button_project_bookmark_delete: Удалить закладку
+  field_history_default_tab: Вкладка истории задачи по умолчанию
+  label_issue_history_properties: Изменения свойств
+  label_issue_history_notes: Примечания
+  label_last_tab_visited: Последняя посещённая вкладка
+  field_unique_id: Уникальный идентификатор
+  text_no_subject: Нет темы
+  setting_password_required_char_classes: Требуемые классы символов для паролей
+  label_password_char_class_uppercase: заглавные буквы
+  label_password_char_class_lowercase: строчные буквы
+  label_password_char_class_digits: цифры
+  label_password_char_class_special_chars: специальные символы
+  text_characters_must_contain: Должен содержать %{character_classes}.
+  label_starts_with: начинается с
+  label_ends_with: заканчивается на
+  label_issue_fixed_version_updated: Версии обновлены
+  setting_project_list_defaults: Опции списка проектов по умолчанию
+  label_display_type: Отображать как
+  label_display_type_list: Список
+  label_display_type_board: Панель
+  label_my_bookmarks: Мои закладки
+  label_import_time_entries: Импорт трудозатрат

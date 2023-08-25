@@ -149,6 +149,10 @@ et:
         earlier_than_minimum_start_date: "Tähtpäev ei saa olla varasem kui %{date} eelnevate teemade tähtpäevade tõttu"
         not_a_regexp: "is not a valid regular expression"
         open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   actionview_instancetag_blank_option: "Palun vali"
 
@@ -215,7 +219,7 @@ et:
   error_issue_done_ratios_not_updated: "Teema edenemise astmed jäid uuendamata."
   error_workflow_copy_source: "Palun vali algne valdkond või roll"
   error_workflow_copy_target: "Palun vali sihtvaldkon(na)d või -roll(id)"
-  error_unable_delete_issue_status: "Oleku kustutamine ei õnnestunud"
+  error_unable_delete_issue_status: "Oleku kustutamine ei õnnestunud (%{value})"
   error_unable_to_connect: "Ühenduse loomine ei õnnestunud (%{value})"
   error_attachment_too_big: "Faili ei saa üles laadida, sest see on lubatust (%{max_size}) mahukam"
   warning_attachments_not_saved: "%{count} faili salvestamine ei õnnestunud."
@@ -528,7 +532,6 @@ et:
   label_enumeration_new: "Lisa"
   label_information: "Teave"
   label_information_plural: "Teave"
-  label_please_login: "Palun logi sisse"
   label_register: "Registreeru"
   label_login_with_open_id_option: "või logi sisse OpenID-ga"
   label_password_lost: "Kui parool on ununud..."
@@ -652,7 +655,6 @@ et:
   label_between: "vahemikus"
   label_in: "sisaldub hulgas"
   label_today: "täna"
-  label_all_time: "piirideta"
   label_yesterday: "eile"
   label_this_week: "sel nädalal"
   label_last_week: "eelmisel nädalal"
@@ -892,7 +894,6 @@ et:
   button_update: "Muuda"
   button_configure: "Konfigureeri"
   button_quote: "Tsiteeri"
-  button_duplicate: "Duplitseeri"
   button_show: "Näita"
   button_edit_section: "Muuda seda sektsiooni"
   button_export: "Ekspordi"
@@ -950,12 +951,13 @@ et:
   text_default_administrator_account_changed: "Algne administraatori konto on muudetud"
   text_file_repository_writable: "Manuste kataloog on kirjutatav"
   text_plugin_assets_writable: "Lisamoodulite abifailide kataloog on kirjutatav"
-  text_rmagick_available: "RMagick on kasutatav (ei ole kohustuslik)"
+  text_minimagick_available: "MiniMagick on kasutatav (ei ole kohustuslik)"
   text_destroy_time_entries_question: "Kustutatavatele teemadele oli kirja pandud %{hours} tundi. Mis Sa soovid ette võtta?"
   text_destroy_time_entries: "Kustuta need tunnid"
   text_assign_time_entries_to_project: "Vii tunnid üle teise projekti"
   text_reassign_time_entries: "Määra tunnid sellele teemale:"
   text_user_wrote: "%{value} kirjutas:"
+  text_user_wrote_in: "%{value} kirjutas (%{link}):"
   text_enumeration_destroy_question: "Selle väärtusega on seotud %{count} objekt(i)."
   text_enumeration_category_reassign_to: "Seo nad teise väärtuse külge:"
   text_email_delivery_not_configured: "E-kirjade saatmine ei ole seadistatud ja teavitusi ei saadeta.\nKonfigureeri oma SMTP server failis config/configuration.yml ja taaskäivita Redmine."
@@ -1028,7 +1030,6 @@ et:
   setting_session_timeout: "Sessiooni aegumine jõudeoleku tõttu"
   label_session_expiration: "Sessiooni aegumine"
   permission_close_project: "Sule projekt/ava projekt uuesti"
-  label_show_closed_projects: "Näita ka suletud projekte"
   button_close: "Sulge"
   button_reopen: "Ava uuesti"
   project_status_active: "Aktiivne"
@@ -1260,3 +1261,60 @@ et:
     check to prevent any manipulation during the authentication process.
   label_nothing_to_preview: Nothing to preview
   error_token_expired: This password recovery link has expired, please try again.
+  error_spent_on_future_date: Cannot log time on a future date
+  setting_timelog_accept_future_dates: Accept time logs on future dates
+  label_delete_link_to_subtask: "Kustuta seos"
+  error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
+    for other users
+  permission_log_time_for_other_users: Log spent time for other users
+  label_tomorrow: tomorrow
+  label_next_week: next week
+  label_next_month: next month
+  text_role_no_workflow: No workflow defined for this role
+  text_status_no_workflow: No tracker uses this status in the workflows
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: Show status changes in issue mail notifications
+    subject
+  label_inherited_from_parent_project: Inherited from parent project
+  label_inherited_from_group: Inherited from group %{name}
+  label_trackers_description: Trackers description
+  label_open_trackers_description: View all trackers description
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Parent task subject
+  permission_edit_own_issues: Edit own issues
+  text_select_apply_tracker: Select tracker
+  label_updated_issues: Updated issues
+  text_avatar_server_config_html: The current avatar server is <a href="%{url}">%{url}</a>.
+    You can configure it in config/configuration.yml.
+  setting_gantt_months_limit: Maximum number of months displayed on the gantt chart
+  permission_import_time_entries: Import time entries
+  label_import_notifications: Send email notifications during the import
+  text_gs_available: ImageMagick PDF support available (optional)
+  field_recently_used_projects: Number of recently used projects in jump box
+  label_optgroup_bookmarks: Bookmarks
+  label_optgroup_others: Other projects
+  label_optgroup_recents: Recently used
+  button_project_bookmark: Add bookmark
+  button_project_bookmark_delete: Remove bookmark
+  field_history_default_tab: Issue's history default tab
+  label_issue_history_properties: Property changes
+  label_issue_history_notes: Notes
+  label_last_tab_visited: Last visited tab
+  field_unique_id: Unique ID
+  text_no_subject: no subject
+  setting_password_required_char_classes: Required character classes for passwords
+  label_password_char_class_uppercase: uppercase letters
+  label_password_char_class_lowercase: lowercase letters
+  label_password_char_class_digits: digits
+  label_password_char_class_special_chars: special characters
+  text_characters_must_contain: Must contain %{character_classes}.
+  label_starts_with: starts with
+  label_ends_with: ends with
+  label_issue_fixed_version_updated: Target version updated
+  setting_project_list_defaults: Projects list defaults
+  label_display_type: Display results as
+  label_display_type_list: List
+  label_display_type_board: Board
+  label_my_bookmarks: My bookmarks
+  label_import_time_entries: Import time entries

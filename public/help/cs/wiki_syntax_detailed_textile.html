@@ -9,6 +9,26 @@
 <body>
 <h1><a name="1" class="wiki-page"></a>Formátování Wiki</h1>
 
+    <ul class='toc'>
+        <li><a href='#2'>Odkazy</a></li>
+        <ul>
+            <li><a href='#3'>Odkazy Redmine</a></li>
+            <li><a href='#4'>Externí odkazy</a></li>
+        </ul>
+        <li><a href='#5'>Formátování textu</a></li>
+        <ul>
+            <li><a href='#6'>Styly písma</a></li>
+            <li><a href='#7'>Vložené obrázky</a></li>
+            <li><a href='#8'>Nadpisy</a></li>
+            <li><a href='#9'>Odstavce</a></li>
+            <li><a href='#10'>Citace</a></li>
+            <li><a href='#11'>Obsah</a></li>
+            <li><a href='#14'>Vodorovná čára</a></li>
+        </ul>
+        <li><a href='#12'>Makra</a></li>
+        <li><a href='#13'>Zvýrazňování kódu</a></li>
+    </ul>
+
     <h2><a name="2" class="wiki-page"></a>Odkazy</h2>
 
         <h3><a name="3" class="wiki-page"></a>Odkazy Redmine</h3>
@@ -18,6 +38,7 @@
             <li>Odkaz na úkol: <strong>#124</strong> (zobrazí <del><a href="#" class="issue" title="Hromadná změna nezmění kategorii úkolů (Uzavřeno)">#124</a></del>, odkaz je přeškrtnutý, jestliže je úkol uzavřen)</li>
             <li>Link to an issue including tracker name and subject: <strong>##124</strong> (displays <a href="#" class="issue" title="bulk edit doesn't change the category or fixed version properties (New)">Bug #124</a>: bulk edit doesn't change the category or fixed version properties)</li>
             <li>Odkaz na poznámku k úkolu: <strong>#124-6</strong>, nebo <strong>#124#note-6</strong></li>
+            <li>Link to an issue note within the same issue: <strong>#note-6</strong></li>
         </ul>
 
         <p>Odkazy Wiki:</p>
@@ -205,6 +226,8 @@ http://www.redmine.org, someone@foo.bar
             <li><strong>!image_url!</strong> zobrazí obrázek z odkazu (syntaxe textile)</li>
             <li><strong>!&gt;image_url!</strong> obrázek zarovnaný napravo</li>
             <li>Jestliže máte obrázek přiložený k Wiki stránce, může být zobrazen jako vložený obrázek pomocí jeho jména: <strong>!prilozeny_obrazek.png!</strong></li>
+            <li>Images in your computer's clipboard can be pasted directly using Ctrl-v or Command-v (note that Internet Explorer is not supported).</li>
+            <li>Image files can be dragged onto the text area in order to be uploaded and embedded.</li>
         </ul>
 
         <h3><a name="8" class="wiki-page"></a>Nadpisy</h3>
@@ -292,6 +315,13 @@ Pro rozbalení klikněte na odkaz.
       <dd><p>Zobrazí klikací náhled obrázku. Např.:</p>
       <pre>{{thumbnail(image.png)}}
 {{thumbnail(image.png, size=300, title=Thumbnail)}}</pre></dd>
+
+      <dt><code>issue</code></dt>
+      <dd><p>Inserts a link to an issue with flexible text. Examples:</p>
+      <pre>{{issue(123)}}                              -- Issue #123: Enhance macro capabilities
+{{issue(123, project=true)}}                -- Andromeda - Issue #123:Enhance macro capabilities
+{{issue(123, tracker=false)}}               -- #123: Enhance macro capabilities
+{{issue(123, subject=false, project=true)}} -- Andromeda - Issue #123</pre></dd>
     </dl>
     </p>
 

@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -137,7 +137,12 @@ DESC
         abort "Plugin #{name} was not found."
       end
 
-      Rake::Task["db:schema:dump"].invoke
+      case ActiveRecord::Base.schema_format
+      when :ruby
+        Rake::Task["db:schema:dump"].invoke
+      when :sql
+        Rake::Task["db:structure:dump"].invoke
+      end
     end
 
     desc 'Copies plugins assets into the public directory.'
@@ -156,6 +161,7 @@ DESC
       Rake::Task["redmine:plugins:test:units"].invoke
       Rake::Task["redmine:plugins:test:functionals"].invoke
       Rake::Task["redmine:plugins:test:integration"].invoke
+      Rake::Task["redmine:plugins:test:system"].invoke
     end
 
     namespace :test do
@@ -175,6 +181,12 @@ DESC
       task :integration => "db:test:prepare" do |t|
         $: << "test"
         Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/integration/**/*_test.rb"]
+      end
+
+      desc 'Runs the plugins system tests.'
+      task :system => "db:test:prepare" do |t|
+        $: << "test"
+        Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/system/**/*_test.rb"]
       end
 
       desc 'Runs the plugins ui tests.'

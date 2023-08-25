@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class ScmFetchError < Exception; end
+class ScmFetchError < StandardError; end
 
 class Repository < ActiveRecord::Base
   include Redmine::Ciphering
@@ -49,15 +51,17 @@ class Repository < ActiveRecord::Base
   validate :repo_create_validation, :on => :create
   validate :validate_repository_path
 
-  safe_attributes 'identifier',
+  safe_attributes(
+    'identifier',
     'login',
     'password',
     'path_encoding',
     'log_encoding',
-    'is_default'
+    'is_default')
 
-  safe_attributes 'url',
-    :if => lambda {|repository, user| repository.new_record?}
+  safe_attributes(
+    'url',
+    :if => lambda {|repository, user| repository.new_record?})
 
   def repo_create_validation
     unless Setting.enabled_scm.include?(self.class.name.demodulize)
@@ -147,7 +151,7 @@ class Repository < ActiveRecord::Base
   end
 
   def self.find_by_identifier_param(param)
-    if param.to_s =~ /^\d+$/
+    if /^\d+$/.match?(param.to_s)
       find_by_id(param)
     else
       find_by_identifier(param)
@@ -232,8 +236,8 @@ class Repository < ActiveRecord::Base
 
   def diff_format_revisions(cs, cs_to, sep=':')
     text = ""
-    text << cs_to.format_identifier + sep if cs_to
-    text << cs.format_identifier if cs
+    text += cs_to.format_identifier + sep if cs_to
+    text += cs.format_identifier if cs
     text
   end
 
@@ -246,7 +250,7 @@ class Repository < ActiveRecord::Base
   def find_changeset_by_name(name)
     return nil if name.blank?
     s = name.to_s
-    if s.match(/^\d*$/)
+    if /^\d*$/.match?(s)
       changesets.find_by(:revision => s)
     else
       changesets.where("revision LIKE ?", s + '%').first
@@ -380,7 +384,7 @@ class Repository < ActiveRecord::Base
     ret = ""
     begin
       ret = self.scm_adapter_class.client_command if self.scm_adapter_class
-    rescue Exception => e
+    rescue => e
       logger.error "scm: error during get command: #{e.message}"
     end
     ret
@@ -390,7 +394,7 @@ class Repository < ActiveRecord::Base
     ret = ""
     begin
       ret = self.scm_adapter_class.client_version_string if self.scm_adapter_class
-    rescue Exception => e
+    rescue => e
       logger.error "scm: error during get version string: #{e.message}"
     end
     ret
@@ -400,7 +404,7 @@ class Repository < ActiveRecord::Base
     ret = false
     begin
       ret = self.scm_adapter_class.client_available if self.scm_adapter_class
-    rescue Exception => e
+    rescue => e
       logger.error "scm: error during get scm available: #{e.message}"
     end
     ret
@@ -419,19 +423,17 @@ class Repository < ActiveRecord::Base
   # Notes:
   # - this hash honnors the users mapping defined for the repository
   def stats_by_author
-    commits = Changeset.where("repository_id = ?", id).select("committer, user_id, count(*) as count").group("committer, user_id")
-
-    #TODO: restore ordering ; this line probably never worked
-    #commits.to_a.sort! {|x, y| x.last <=> y.last}
-
-    changes = Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", id).select("committer, user_id, count(*) as count").group("committer, user_id")
-
+    commits = Changeset.where("repository_id = ?", id).
+                select("committer, user_id, count(*) as count").group("committer, user_id")
+    # TODO: restore ordering ; this line probably never worked
+    # commits.to_a.sort! {|x, y| x.last <=> y.last}
+    changes = Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", id).
+                select("committer, user_id, count(*) as count").group("committer, user_id")
     user_ids = changesets.map(&:user_id).compact.uniq
     authors_names = User.where(:id => user_ids).inject({}) do |memo, user|
       memo[user.id] = user.to_s
       memo
     end
-
     (commits + changes).inject({}) do |hash, element|
       mapped_name = element.committer
       if username = authors_names[element.user_id.to_i]
@@ -471,7 +473,7 @@ class Repository < ActiveRecord::Base
     regexp = Redmine::Configuration["scm_#{scm_name.to_s.downcase}_path_regexp"]
     if changes[attribute] && regexp.present?
       regexp = regexp.to_s.strip.gsub('%project%') {Regexp.escape(project.try(:identifier).to_s)}
-      unless send(attribute).to_s.match(Regexp.new("\\A#{regexp}\\z"))
+      unless Regexp.new("\\A#{regexp}\\z").match?(send(attribute).to_s)
         errors.add(attribute, :invalid)
       end
     end

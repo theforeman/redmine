@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +23,7 @@ module FixedIssuesExtension
   def estimated_hours
     @estimated_hours ||= sum(:estimated_hours).to_f
   end
-  #
+
   # Returns the total amount of open issues for this version.
   def open_count
     load_counts
@@ -151,19 +153,54 @@ class Version < ActiveRecord::Base
   }
 
   safe_attributes 'name',
-    'description',
-    'effective_date',
-    'due_date',
-    'wiki_page_title',
-    'status',
-    'sharing',
-    'default_project_version',
-    'custom_field_values',
-    'custom_fields'
+                  'description',
+                  'effective_date',
+                  'due_date',
+                  'wiki_page_title',
+                  'status',
+                  'sharing',
+                  'default_project_version',
+                  'custom_field_values',
+                  'custom_fields'
+
+  def safe_attributes=(attrs, user=User.current)
+    if attrs.respond_to?(:to_unsafe_hash)
+      attrs = attrs.to_unsafe_hash
+    end
+
+    return unless attrs.is_a?(Hash)
+    attrs = attrs.deep_dup
+
+    # Reject custom fields values not visible by the user
+    if attrs['custom_field_values'].present?
+      editable_custom_field_ids = editable_custom_field_values(user).map {|v| v.custom_field_id.to_s}
+      attrs['custom_field_values'].reject! {|k, v| !editable_custom_field_ids.include?(k.to_s)}
+    end
+
+    # Reject custom fields not visible by the user
+    if attrs['custom_fields'].present?
+      editable_custom_field_ids = editable_custom_field_values(user).map {|v| v.custom_field_id.to_s}
+      attrs['custom_fields'].reject! {|c| !editable_custom_field_ids.include?(c['id'].to_s)}
+    end
+
+    super(attrs, user)
+  end
 
   # Returns true if +user+ or current user is allowed to view the version
   def visible?(user=User.current)
     user.allowed_to?(:view_issues, self.project)
+  end
+
+  # Returns the custom_field_values that can be edited by the given user
+  def editable_custom_field_values(user=nil)
+    visible_custom_field_values(user)
+  end
+
+  def visible_custom_field_values(user = nil)
+    user ||= User.current
+    custom_field_values.select do |value|
+      value.custom_field.visible_by?(project, user)
+    end
   end
 
   # Version files have same visibility as project files

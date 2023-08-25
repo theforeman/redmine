@@ -1,0 +1,103 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 2.3
+  TargetRailsVersion: 5.2
+
+  Exclude:
+    - '**/vendor/**/*'
+    - '**/tmp/**/*'
+    - '**/bin/**/*'
+    - '**/plugins/**/*'
+    - '**/extra/**/*'
+    - '**/lib/generators/**/templates/*'
+    - '**/lib/tasks/**/*'
+    - '**/files/**/*'
+    - 'db/schema.rb'
+
+# Enable extensions
+
+require:
+  - rubocop-performance
+  - rubocop-rails
+
+# Rules for Redmine
+
+Bundler/OrderedGems:
+  Enabled: false
+
+Layout/EmptyLineBetweenDefs:
+  AllowAdjacentOneLineDefs: true
+
+Layout/SpaceBeforeBlockBraces:
+  # "space" is used more than "no_space".
+  # But "no_space" is more natural in one liner.
+  #   str = path.to_s.split(%r{[/\\]}).select{|p| !p.blank?}.join("/")
+  Enabled: false
+
+# You can see results by "rubocop --only Layout/SpaceInsideBlockBraces"
+Layout/SpaceInsideBlockBraces:
+  EnforcedStyle: no_space
+  SpaceBeforeBlockParameters: false
+
+# You can see results by "rubocop --only Layout/SpaceInsideHashLiteralBraces"
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Layout/TrailingWhitespace:
+  AllowInHeredoc: true
+
+Lint/HandleExceptions:
+  AllowComments: true
+
+Metrics:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/BinaryOperatorParameterName:
+  Enabled: false
+
+Naming/PredicateName:
+  Enabled: false
+
+Rails/BulkChangeTable:
+  Exclude:
+    - 'db/migrate/20120714122200_add_workflows_rule_fields.rb'
+    - 'db/migrate/20131214094309_remove_custom_fields_min_max_length_default_values.rb'
+
+Rails/HelperInstanceVariable:
+  Enabled: false
+
+# Configuration parameters: AllowedChars.
+Style/AsciiComments:
+  Exclude:
+    # Copyright credit has non ascii character.
+    # We can not change nor remove it.
+    - 'app/models/repository/git.rb'
+
+Style/FormatStringToken:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+  Exclude:
+    - 'db/**/*.rb'
+    - 'Gemfile'
+    - 'Rakefile'
+    - 'config.ru'
+    - 'config/additional_environment.rb'
+
+Style/HashSyntax:
+  Enabled: true
+  EnforcedStyle: no_mixed_keys
+
+Style/IdenticalConditionalBranches:
+  Exclude:
+    - 'config/initializers/10-patches.rb'
+    - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false

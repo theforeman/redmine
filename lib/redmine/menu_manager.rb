@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -122,7 +124,7 @@ module Redmine
         else
           caption, url, selected = extract_node_details(node, project)
           return content_tag('li',
-                               render_single_menu_node(node, caption, url, selected))
+                             render_single_menu_node(node, caption, url, selected))
         end
       end
 
@@ -205,18 +207,19 @@ module Redmine
 
       def extract_node_details(node, project=nil)
         item = node
-        url = case item.url
-        when Hash
-          project.nil? ? item.url : {item.param => project}.merge(item.url)
-        when Symbol
-          if project
-            send(item.url, project)
+        url =
+          case item.url
+          when Hash
+            project.nil? ? item.url : {item.param => project}.merge(item.url)
+          when Symbol
+            if project
+              send(item.url, project)
+            else
+              send(item.url)
+            end
           else
-            send(item.url)
+            item.url
           end
-        else
-          item.url
-        end
         caption = item.caption(project)
         return [caption, url, (current_menu_item == item.name)]
       end

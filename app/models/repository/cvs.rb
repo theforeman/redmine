@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,8 +23,9 @@ require 'digest/sha1'
 class Repository::Cvs < Repository
   validates_presence_of :url, :root_url, :log_encoding
 
-  safe_attributes 'root_url',
-    :if => lambda {|repository, user| repository.new_record?}
+  safe_attributes(
+    'root_url',
+    :if => lambda {|repository, user| repository.new_record?})
 
   def self.human_attribute_name(attribute_key_name, *args)
     attr_name = attribute_key_name.to_s
@@ -55,7 +58,7 @@ class Repository::Cvs < Repository
     end
     entries = scm.entries(path, rev.nil? ? nil : rev.committed_on)
     if entries
-      entries.each() do |entry|
+      entries.each do |entry|
         if ( ! entry.lastrev.nil? ) && ( ! entry.lastrev.revision.nil? )
           change = filechanges.where(
                        :revision => entry.lastrev.revision,
@@ -98,7 +101,7 @@ class Repository::Cvs < Repository
     if rev_to.to_i > 0
       changeset_to = changesets.find_by_revision(rev_to)
     end
-    changeset_from.filechanges.each() do |change_from|
+    changeset_from.filechanges.each do |change_from|
       revision_from = nil
       revision_to   = nil
       if path.nil? || (change_from.path.starts_with? scm.with_leading_slash(path))
@@ -106,7 +109,7 @@ class Repository::Cvs < Repository
       end
       if revision_from
         if changeset_to
-          changeset_to.filechanges.each() do |change_to|
+          changeset_to.filechanges.each do |change_to|
             revision_to = change_to.revision if change_to.path == change_from.path
           end
         end
@@ -144,7 +147,7 @@ class Repository::Cvs < Repository
           cmt = Changeset.normalize_comments(revision.message, repo_log_encoding)
           author_utf8 = Changeset.to_utf8(revision.author, repo_log_encoding)
           cs  = changesets.where(
-                  :committed_on => tmp_time - time_delta .. tmp_time + time_delta,
+                  :committed_on => (tmp_time - time_delta)..(tmp_time + time_delta),
                   :committer    => author_utf8,
                   :comments     => cmt
                 ).first
@@ -188,7 +191,7 @@ class Repository::Cvs < Repository
         each do |changeset|
           changeset.update_attribute :revision, next_revision_number
         end
-    end # transaction
+    end
     @current_revision_number = nil
   end
 
@@ -205,8 +208,8 @@ class Repository::Cvs < Repository
   # Returns the next revision number to assign to a CVS changeset
   def next_revision_number
     # Need to retrieve existing revision numbers to sort them as integers
-    sql = "SELECT revision FROM #{Changeset.table_name} "
-    sql << "WHERE repository_id = #{id} AND revision NOT LIKE 'tmp%'"
+    sql = "SELECT revision FROM #{Changeset.table_name} " \
+          "WHERE repository_id = #{id} AND revision NOT LIKE 'tmp%'"
     @current_revision_number ||= (self.class.connection.select_values(sql).collect(&:to_i).max || 0)
     @current_revision_number += 1
   end

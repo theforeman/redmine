@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,10 +55,12 @@ class Journal < ActiveRecord::Base
       where(Journal.visible_notes_condition(user, :skip_pre_condition => true))
   }
 
-  safe_attributes 'notes',
-    :if => lambda {|journal, user| journal.new_record? || journal.editable_by?(user)}
-  safe_attributes 'private_notes',
-    :if => lambda {|journal, user| user.allowed_to?(:set_notes_private, journal.project)}
+  safe_attributes(
+    'notes',
+    :if => lambda {|journal, user| journal.new_record? || journal.editable_by?(user)})
+  safe_attributes(
+    'private_notes',
+    :if => lambda {|journal, user| user.allowed_to?(:set_notes_private, journal.project)})
 
   # Returns a SQL condition to filter out journals with notes that are not visible to user
   def self.visible_notes_condition(user=User.current, options={})
@@ -124,7 +128,7 @@ class Journal < ActiveRecord::Base
 
   # Returns a string of css classes
   def css_classes
-    s = 'journal'
+    s = +'journal'
     s << ' has-notes' unless notes.blank?
     s << ' has-details' unless details.blank?
     s << ' private-notes' if private_notes?
@@ -306,7 +310,8 @@ class Journal < ActiveRecord::Base
         (Setting.notified_events.include?('issue_note_added') && notes.present?) ||
         (Setting.notified_events.include?('issue_status_updated') && new_status.present?) ||
         (Setting.notified_events.include?('issue_assigned_to_updated') && detail_for_attribute('assigned_to_id').present?) ||
-        (Setting.notified_events.include?('issue_priority_updated') && new_value_for('priority_id').present?)
+        (Setting.notified_events.include?('issue_priority_updated') && new_value_for('priority_id').present?) ||
+        (Setting.notified_events.include?('issue_fixed_version_updated') && detail_for_attribute('fixed_version_id').present?)
       )
       Mailer.deliver_issue_edit(self)
     end

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: false
 
 require 'optparse'
 require 'find'
@@ -53,7 +54,7 @@ end
 def read_key_from_file(filename)
   begin
     $api_key = File.read(filename).strip
-  rescue Exception => e
+  rescue => e
     $stderr.puts "Unable to read the key from #{filename}: #{e.message}"
     exit 1
   end

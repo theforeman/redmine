@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class PreviewsController < ApplicationController
-  before_action :find_project, :except => :text 
+  before_action :find_project, :except => :text
   before_action :find_attachments
 
   def issue
@@ -40,6 +42,7 @@ class PreviewsController < ApplicationController
     @text = params[:text] ? params[:text] : nil
     render :partial => 'common/preview'
   end
+
   private
 
   def find_project

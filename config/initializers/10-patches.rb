@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_record'
 
 module ActiveRecord
@@ -95,7 +97,7 @@ module ActionView
       alias :options_for_select_without_non_empty_blank_option :options_for_select
       def options_for_select(container, selected = nil)
         if container.is_a?(Array)
-          container = container.map {|element| element.blank? ? ["&nbsp;".html_safe, ""] : element}
+          container = container.map {|element| element.presence || ["&nbsp;".html_safe, ""]}
         end
         options_for_select_without_non_empty_blank_option(container, selected)
       end
@@ -125,7 +127,7 @@ ActionMailer::Base.add_delivery_method :tmp_file, DeliveryMethods::TmpFile
 module ActionMailer
   class LogSubscriber < ActiveSupport::LogSubscriber
     def deliver(event)
-      recipients = [:to, :cc, :bcc].inject("") do |s, header|
+      recipients = [:to, :cc, :bcc].inject(+"") do |s, header|
         r = Array.wrap(event.payload[header])
         if r.any?
           s << "\n  #{header}: #{r.join(', ')}"
@@ -207,6 +209,20 @@ module ActionView
             asset_id
           end
         end
+      end
+    end
+  end
+end
+
+# https://github.com/rack/rack/pull/1703
+# TODO: remove this when Rack is updated to 3.0.0
+require 'rack'
+module Rack
+  class RewindableInput
+    unless method_defined?(:size)
+      def size
+        make_rewindable unless @rewindable_io
+        @rewindable_io.size
       end
     end
   end

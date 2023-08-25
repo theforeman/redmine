@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +26,7 @@ module Redmine
         # URLs relative to the current document or document root (without a protocol
         # separator, should be harmless
         return true unless uri.to_s.include? ":"
-    
+
         # Other URLs need to be parsed
         schemes.include? URI.parse(uri).scheme
       rescue URI::Error

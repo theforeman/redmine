@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 require 'diff'
-require 'enumerator'
 
 class WikiPage < ActiveRecord::Base
   include Redmine::SafeAttributes
@@ -40,7 +41,8 @@ class WikiPage < ActiveRecord::Base
                      :permission => :view_wiki_pages,
                      :project_key => "#{Wiki.table_name}.project_id"
 
-  attr_accessor :redirect_existing_links, :deleted_attachment_ids
+  attr_accessor :redirect_existing_links
+  attr_writer   :deleted_attachment_ids
 
   validates_presence_of :title
   validates_format_of :title, :with => /\A[^,\.\/\?\;\|\s]*\z/
@@ -60,13 +62,13 @@ class WikiPage < ActiveRecord::Base
   DEFAULT_PROTECTED_PAGES = %w(sidebar)
 
   safe_attributes 'parent_id', 'parent_title', 'title', 'redirect_existing_links', 'wiki_id',
-    :if => lambda {|page, user| page.new_record? || user.allowed_to?(:rename_wiki_pages, page.project)}
+                  :if => lambda {|page, user| page.new_record? || user.allowed_to?(:rename_wiki_pages, page.project)}
 
   safe_attributes 'is_start_page',
-    :if => lambda {|page, user| user.allowed_to?(:manage_wiki, page.project)}
+                  :if => lambda {|page, user| user.allowed_to?(:manage_wiki, page.project)}
 
   safe_attributes 'deleted_attachment_ids',
-    :if => lambda {|page, user| page.attachments_deletable?(user)}
+                  :if => lambda {|page, user| page.attachments_deletable?(user)}
 
   def initialize(attributes=nil, *args)
     super
@@ -153,11 +155,7 @@ class WikiPage < ActiveRecord::Base
   end
 
   def content_for_version(version=nil)
-    if content
-      result = content.versions.find_by_version(version.to_i) if version
-      result ||= content
-      result
-    end
+    (content && version) ? content.versions.find_by_version(version.to_i) : content
   end
 
   def diff(version_to=nil, version_from=nil)
@@ -302,7 +300,7 @@ class WikiAnnotate
     @lines = current_lines.collect {|t| [nil, nil, t]}
     positions = []
     current_lines.size.times {|i| positions << i}
-    while (current.previous)
+    while current.previous
       d = current.previous.text.split(/\r?\n/).diff(current.text.split(/\r?\n/)).diffs.flatten
       d.each_slice(3) do |s|
         sign, line = s[0], s[1]

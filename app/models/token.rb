@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -110,7 +112,7 @@ class Token < ActiveRecord::Base
   def self.find_token(action, key, validity_days=nil)
     action = action.to_s
     key = key.to_s
-    return nil unless action.present? && key =~ /\A[a-z0-9]+\z/i
+    return nil unless action.present? && /\A[a-z0-9]+\z/i.match?(key)
 
     token = Token.find_by(:action => action, :value => key)
     return unless token

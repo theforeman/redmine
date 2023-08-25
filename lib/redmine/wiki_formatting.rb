@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,7 +21,7 @@ require 'digest/md5'
 
 module Redmine
   module WikiFormatting
-    class StaleSectionError < Exception; end
+    class StaleSectionError < StandardError; end
 
     @@formatters = {}
 
@@ -32,13 +34,13 @@ module Redmine
         options = args.last.is_a?(Hash) ? args.pop : {}
         name = name.to_s
         raise ArgumentError, "format name '#{name}' is already taken" if @@formatters[name]
-
-        formatter, helper, parser = args.any? ?
-          args :
-          %w(Formatter Helper HtmlParser).map {|m| "Redmine::WikiFormatting::#{name.classify}::#{m}".constantize rescue nil}
-
+        formatter, helper, parser =
+          if args.any?
+            args
+          else
+            %w(Formatter Helper HtmlParser).map {|m| "Redmine::WikiFormatting::#{name.classify}::#{m}".constantize rescue nil}
+          end
         raise "A formatter class is required" if formatter.nil?
-
         @@formatters[name] = {
           :formatter => formatter,
           :helper => helper,
@@ -79,15 +81,17 @@ module Redmine
       end
 
       def to_html(format, text, options = {})
-        text = if Setting.cache_formatted_text? && text.size > 2.kilobyte && cache_store && cache_key = cache_key_for(format, text, options[:object], options[:attribute])
-          # Text retrieved from the cache store may be frozen
-          # We need to dup it so we can do in-place substitutions with gsub!
-          cache_store.fetch cache_key do
+        text =
+          if Setting.cache_formatted_text? && text.size > 2.kilobyte && cache_store &&
+              cache_key = cache_key_for(format, text, options[:object], options[:attribute])
+            # Text retrieved from the cache store may be frozen
+            # We need to dup it so we can do in-place substitutions with gsub!
+            cache_store.fetch cache_key do
+              formatter_for(format).new(text).to_html
+            end.dup
+          else
             formatter_for(format).new(text).to_html
-          end.dup
-        else
-          formatter_for(format).new(text).to_html
-        end
+          end
         text
       end
 
@@ -125,7 +129,7 @@ module Redmine
                         ([^<]\S*?)               # url
                         (\/)?                    # slash
                       )
-                      ((?:&gt;)?|[^[:alnum:]_\=\/;\(\)]*?)               # post
+                      ((?:&gt;)?|[^[:alnum:]_\=\/;\(\)\-]*?)             # post
                       (?=<|\s|$)
                      }x unless const_defined?(:AUTO_LINK_RE)
 
@@ -133,16 +137,16 @@ module Redmine
       def auto_link!(text)
         text.gsub!(AUTO_LINK_RE) do
           all, leading, proto, url, post = $&, $1, $2, $3, $6
-          if leading =~ /<a\s/i || leading =~ /![<>=]?/
+          if /<a\s/i.match?(leading) || /![<>=]?/.match?(leading)
             # don't replace URLs that are already linked
             # and URLs prefixed with ! !> !< != (textile images)
             all
           else
             # Idea below : an URL with unbalanced parenthesis and
             # ending by ')' is put into external parenthesis
-            if ( url[-1]==?) and ((url.count("(") - url.count(")")) < 0 ) )
-              url=url[0..-2] # discard closing parenthesis from url
-              post = ")"+post # add closing parenthesis to post
+            if url[-1] == ")" and ((url.count("(") - url.count(")")) < 0)
+              url = url[0..-2] # discard closing parenthesis from url
+              post = ")" + post # add closing parenthesis to post
             end
             content = proto + url
             href = "#{proto=="www."?"http://www.":proto}#{url}"
@@ -155,7 +159,7 @@ module Redmine
       def auto_mailto!(text)
         text.gsub!(/([\w\.!#\$%\-+.\/]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+)/) do
           mail = $1
-          if text.match(/<a\b[^>]*>(.*)(#{Regexp.escape(mail)})(.*)<\/a>/)
+          if /<a\b[^>]*>(.*)(#{Regexp.escape(mail)})(.*)<\/a>/.match?(text)
             mail
           else
             %(<a class="email" href="mailto:#{ERB::Util.html_escape mail}">#{ERB::Util.html_escape mail}</a>).html_safe

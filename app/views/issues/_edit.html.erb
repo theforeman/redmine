@@ -21,7 +21,7 @@
         </div>
         </div>
         <p><%= time_entry.text_field :comments, :size => 60 %></p>
-        <% @time_entry.custom_field_values.each do |value| %>
+        <% @time_entry.editable_custom_field_values.each do |value| %>
           <p><%= custom_field_tag_with_label :time_entry, value %></p>
         <% end %>
         <% end %>
@@ -29,7 +29,12 @@
     <% end %>
     <% if @issue.notes_addable? %>
       <fieldset><legend><%= l(:field_notes) %></legend>
-      <%= f.text_area :notes, :cols => 60, :rows => 10, :class => 'wiki-edit', :no_label => true %>
+      <%= f.text_area :notes, :cols => 60, :rows => 10, :class => 'wiki-edit',
+            :data => {
+                :auto_complete => true,
+                :issues_url => auto_complete_issues_path(:project_id => @issue.project, :q => '')
+            },
+            :no_label => true %>
       <%= wikitoolbar_for 'issue_notes', preview_issue_path(:project_id => @project, :issue_id => @issue) %>
 
       <% if @issue.safe_attribute? 'private_notes' %>
@@ -74,6 +79,4 @@
     <%= hidden_field_tag 'next_issue_id', @next_issue_id if @next_issue_id %>
     <%= hidden_field_tag 'issue_position', @issue_position if @issue_position %>
     <%= hidden_field_tag 'issue_count', @issue_count if @issue_count %>
-
 <% end %>
-

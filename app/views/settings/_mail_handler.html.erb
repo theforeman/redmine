@@ -10,7 +10,7 @@
     <em class="info"><%= l(:text_line_separated) %></em>
   </p>
   <p>
-    <%= setting_text_field :mail_handler_excluded_filenames, :size => 60 %>
+    <%= setting_text_area :mail_handler_excluded_filenames %>
     <label class="block">
       <%= setting_check_box :mail_handler_enable_regex_excluded_filenames, :label => false %>
       <%= l(:setting_mail_handler_enable_regex) %>
@@ -18,6 +18,7 @@
     <em class="info"><%= l(:text_comma_separated) %>
     <%= l(:label_example) %>: smime.p7s, *.vcf</em>
   </p>
+  <p><%= setting_select :mail_handler_preferred_body_part, [[l(:label_preferred_body_part_text), 'plain'], [l(:label_preferred_body_part_html), 'html']] %></p>
 </div>
 
 <div class="box tabular settings">

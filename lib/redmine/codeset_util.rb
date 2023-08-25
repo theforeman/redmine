@@ -1,9 +1,11 @@
+# frozen_string_literal: true
 
 module Redmine
   module CodesetUtil
 
     def self.replace_invalid_utf8(str)
-      return str if str.nil?
+      return nil if str.nil?
+      str = str.dup
       str.force_encoding('UTF-8')
       if ! str.valid_encoding?
         str = str.encode("UTF-16LE", :invalid => :replace,
@@ -13,14 +15,14 @@ module Redmine
     end
 
     def self.to_utf8(str, encoding)
-      return str if str.nil?
-      str.force_encoding("ASCII-8BIT")
+      return if str.nil?
+      str = str.b
       if str.empty?
         str.force_encoding("UTF-8")
         return str
       end
       enc = encoding.blank? ? "UTF-8" : encoding
-      if enc.upcase != "UTF-8"
+      if enc.casecmp("UTF-8") != 0
         str.force_encoding(enc)
         str = str.encode("UTF-8", :invalid => :replace,
               :undef => :replace, :replace => '?')
@@ -31,15 +33,16 @@ module Redmine
     end
 
     def self.to_utf8_by_setting(str)
-      return str if str.nil?
+      return if str.nil?
+      str = str.dup
       self.to_utf8_by_setting_internal(str).force_encoding('UTF-8')
     end
 
     def self.to_utf8_by_setting_internal(str)
-      return str if str.nil?
-      str.force_encoding('ASCII-8BIT')
+      return if str.nil?
+      str = str.b
       return str if str.empty?
-      return str if /\A[\r\n\t\x20-\x7e]*\Z/n.match(str) # for us-ascii
+      return str if /\A[\r\n\t\x20-\x7e]*\Z/n.match?(str) # for us-ascii
       str.force_encoding('UTF-8')
       encodings = Setting.repositories_encodings.split(',').collect(&:strip)
       encodings.each do |encoding|
@@ -55,9 +58,11 @@ module Redmine
     end
 
     def self.from_utf8(str, encoding)
+      return if str.nil?
+      str = str.dup
       str ||= ''
       str.force_encoding('UTF-8')
-      if encoding.upcase != 'UTF-8'
+      if encoding.casecmp('UTF-8') != 0
         str = str.encode(encoding, :invalid => :replace,
                          :undef => :replace, :replace => '?')
       else

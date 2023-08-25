@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -56,7 +58,7 @@ module Redmine
             # The hg version is expressed either as a
             # release number (eg 0.9.5 or 1.0) or as a revision
             # id composed of 12 hexa characters.
-            theversion = hgversion_from_command_line.dup.force_encoding('ASCII-8BIT')
+            theversion = hgversion_from_command_line.b
             if m = theversion.match(%r{\A(.*?)((\d+\.)+\d+)})
               m[2].scan(%r{\d+}).collect(&:to_i)
             end
@@ -90,7 +92,7 @@ module Redmine
                    :lastrev => Revision.new(:revision => tip['revision'],
                                             :scmid => tip['node']))
         # rescue HgCommandAborted
-        rescue Exception => e
+        rescue => e
           logger.error "hg: error during getting info: #{e.message}"
           nil
         end
@@ -133,6 +135,7 @@ module Redmine
             begin
               @summary = parse_xml(output)['rhsummary']
             rescue
+              # do nothing
             end
           end
         end
@@ -146,6 +149,7 @@ module Redmine
             begin
               parse_xml(output)['rhmanifest']['repository']['manifest']
             rescue
+              # do nothing
             end
           end
           path_prefix = path.blank? ? '' : with_trailling_slash(path)
@@ -191,6 +195,7 @@ module Redmine
               # Mercurial < 1.5 does not support footer template for '</log>'
               parse_xml("#{output}</log>")['log']
             rescue
+              # do nothing
             end
           end
           as_ary(log['logentry']).each do |le|
@@ -201,19 +206,25 @@ module Redmine
             end
             cpmap = Hash[*cpalist.flatten]
             paths = as_ary(le['paths']['path']).map do |e|
-              p = scm_iconv('UTF-8', @path_encoding, CGI.unescape(e['__content__']) )
+              p = scm_iconv('UTF-8', @path_encoding, CGI.unescape(e['__content__']))
               {:action        => e['action'],
                :path          => with_leading_slash(p),
                :from_path     => (cpmap.member?(p) ? with_leading_slash(cpmap[p]) : nil),
                :from_revision => (cpmap.member?(p) ? le['node'] : nil)}
-            end.sort_by { |e| e[:path] }
+            end
+            paths.sort_by!{|e| e[:path]}
             parents_ary = []
             as_ary(le['parents']['parent']).map do |par|
               parents_ary << par['__content__'] if par['__content__'] != "0000000000000000000000000000000000000000"
             end
             yield Revision.new(:revision => le['revision'],
                                :scmid    => le['node'],
-                               :author   => (le['author']['__content__'] rescue ''),
+                               :author   =>
+                                         (begin
+                                            le['author']['__content__']
+                                          rescue
+                                            ''
+                                          end),
                                :time     => Time.parse(le['date']['__content__']),
                                :message  => le['msg']['__content__'],
                                :paths    => paths,
@@ -243,7 +254,7 @@ module Redmine
             hg_args << '--' << CGI.escape(hgtarget(p))
           end
           diff = []
-          hg *hg_args do |io|
+          hg(*hg_args) do |io|
             io.each_line do |line|
               diff << line
             end
@@ -268,8 +279,7 @@ module Redmine
           blame = Annotate.new
           hg 'rhannotate', '-ncu', "-r#{CGI.escape(hgrev(identifier))}", '--', hgtarget(p) do |io|
             io.each_line do |line|
-              line.force_encoding('ASCII-8BIT')
-              next unless line =~ %r{^([^:]+)\s(\d+)\s([0-9a-f]+):\s(.*)$}
+              next unless line.b =~ %r{^([^:]+)\s(\d+)\s([0-9a-f]+):\s(.*)$}
               r = Revision.new(:author => $1.strip, :revision => $2, :scmid => $3,
                                :identifier => $3)
               blame.add_line($4.rstrip, r)
@@ -305,10 +315,10 @@ module Redmine
         # Runs 'hg' command with the given args
         def hg(*args, &block)
           # as of hg 4.4.1, early parsing of bool options is not terminated at '--'
-          if args.any? { |s| s =~ HG_EARLY_BOOL_ARG }
+          if args.any? { |s| HG_EARLY_BOOL_ARG.match?(s) }
             raise HgCommandArgumentError, "malicious command argument detected"
           end
-          if args.take_while { |s| s != '--' }.any? { |s| s =~ HG_EARLY_LIST_ARG }
+          if args.take_while { |s| s != '--' }.any? { |s| HG_EARLY_LIST_ARG.match?(s) }
             raise HgCommandArgumentError, "malicious command argument detected"
           end
 

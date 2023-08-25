@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2019  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -77,6 +79,16 @@ class UsersController < ApplicationController
 
     # show projects based on current user visibility
     @memberships = @user.memberships.preload(:roles, :project).where(Project.visible_condition(User.current)).to_a
+
+    @issue_counts = {}
+    @issue_counts[:assigned] = {
+      :total  => Issue.visible.assigned_to(@user).count,
+      :open   => Issue.visible.open.assigned_to(@user).count
+    }
+    @issue_counts[:reported] = {
+      :total  => Issue.visible.where(:author_id => @user.id).count,
+      :open   => Issue.visible.open.where(:author_id => @user.id).count
+    }
 
     respond_to do |format|
       format.html {
