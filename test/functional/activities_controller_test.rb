@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -104,18 +104,6 @@ class ActivitiesControllerTest < Redmine::ControllerTest
         :user_id => 299
       }
     )
-    assert_response 404
-  end
-
-  def test_user_index_with_non_visible_user_id_should_respond_404
-    Role.anonymous.update! :users_visibility => 'members_of_visible_projects'
-    user = User.generate!
-
-    @request.session[:user_id] = nil
-    get :index, :params => {
-      :user_id => user.id
-    }
-
     assert_response 404
   end
 

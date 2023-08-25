@@ -336,7 +336,6 @@ lt:
   field_parent_title: Pagrindinis puslapis
   field_editable: Redaguojamas
   field_watcher: Stebėtojas
-  field_identity_url: OpenID URL
   field_content: Turinys
   field_group_by: Sugrupuoti pagal
   field_sharing: Dalijimasis
@@ -379,7 +378,6 @@ lt:
   setting_attachment_max_size: Priedo maksimalus dydis
   setting_issues_export_limit: Darbų eksportavimo riba
   setting_mail_from: Išleidimo elektroninio pašto adresas
-  setting_bcc_recipients: Nematomos kopijos (bcc) gavėjai
   setting_plain_text_mail: Tik tekstas laiške (be HTML)
   setting_host_name: Pagrindinio kompiuterio pavadinimas ir kelias
   setting_text_formatting: Teksto formatavimas
@@ -415,7 +413,6 @@ lt:
   setting_diff_max_lines_displayed: Maksimalus rodomas pakeitimų eilučių skaičius
   setting_file_max_size_displayed: Maksimalus tekstinių failų dydis rodomas vienoje eilutėje
   setting_repository_log_display_limit: Maksimalus revizijų skaičius rodomas failo žurnale
-  setting_openid: Leisti OpenID prisijungimą ir registraciją
   setting_password_max_age: Reikalauti slaptažodžio pakeitimo po
   setting_password_min_length: Minimalus slaptažodžio ilgis
   setting_lost_password: Leisti slaptažodžio atstatymą elektroninu laišku
@@ -582,7 +579,6 @@ lt:
   label_information: Informacija
   label_information_plural: Informacija
   label_register: Užsiregistruoti
-  label_login_with_open_id_option: arba prisijunkite su OpenID
   label_password_lost: Prarastas slaptažodis
   label_password_required: Norėdami tęsti, patvirtinkite savo slaptažodį
   label_home: Pagrindinis
@@ -1354,7 +1350,7 @@ lt:
   twofa_text_backup_codes_created_at: Atsarginiai kodai sukurti %{datetime}.
   twofa_backup_codes_already_shown: Atsarginiai kodai negali būti parodyti pakartotinai. Jei reikia - <a data-method="post"
     href="%{bc_path}">sugeneruokite naujus atsarginius kodus</a>.
-  error_can_not_execute_macro_html: Klaida vykdant <strong>%{name}</strong> mokrokomandą
+  error_can_not_execute_macro_html: Klaida vykdant <strong>%{name}</strong> makrokomandą
     (%{error})
   error_macro_does_not_accept_block: Ši makrokomanda nepriima teksto bloko
   error_childpages_macro_no_argument: Be jokių argumentų, šią makrokomandą gali iškviesti tik wiki puslapiai
@@ -1370,7 +1366,7 @@ lt:
   text_project_destroy_enter_identifier: Patvirtinimjui įveskite projekto identifikatorių (%{identifier}).
   button_add_subtask: Pridėti užduoties dedamąją
   notice_invalid_watcher: 'Neteisingas stebėtojas: Naudotojas negaus jokių pranešimų nes jam nėra suteikta prieiga prie šio objekto.'
-  button_fetch_changesets: Fetch commits
+  button_fetch_changesets: Gauti įkėlimus
   permission_view_message_watchers: Peržiūrėti pranešimo stebėtojų sąrašą
   permission_add_message_watchers: Pridėti pranešimo stebėtojus
   permission_delete_message_watchers: Pašalinti pranešimo stebėtojus
@@ -1379,3 +1375,36 @@ lt:
   error_invalid_authenticity_token: Netinkamas formos autentiškumo ženklas.
   error_query_statement_invalid: Užklausos vykdymo metu įvyko klaida kuri buvo įrašyta į įvykių žurnalą.
     Apie klaidą informuokite Redmine administratorių.
+  permission_view_wiki_page_watchers: Peržiūrėkite wiki puslapio stebėtojų sąrašą
+  permission_add_wiki_page_watchers: Papildyti wiki puslapio stebėtojų sąrašą
+  permission_delete_wiki_page_watchers: Pašalinti wiki puslapio stebėtojus iš sąrašo
+  label_wiki_page_watchers: Stebėtojai
+  label_attachment_description: Failo aprašymas
+  error_no_data_in_file: Faile nėra jokių duomenų
+  field_twofa_required: Reikalinga dviejų veiksnių autentifikacija
+  twofa_hint_optional_html: Nustatant <strong>%{label}</strong> leis vartotojams įjungti dviejų veiksnių autentifikavimą savo nuožiūra, nebent to reikalauja viena iš jų grupių.
+  twofa_text_group_required: Šis nustatymas galioja tik tada kai globalus dviejų veiksnių autentifikavimas įjuntas kaip 'neprivalomas'. Šiuo metu dviejų veiksnių autentifikavimas yra įjungtas kaip privalomas visiems naudotojams.
+  twofa_text_group_disabled:  Šis nustatymas galioja tik tada kai globalus dviejų veiksnių autentifikavimas įjuntas kaip 'neprivalomas'. Šiuo metu dviejų veiksnių autentifikavimas yra išjungtas pilnai.
+  field_default_issue_query: Numatytoji darbo užklausa
+  label_default_queries:
+    for_all_projects: Visiems projektams
+    for_current_project: Pasirinktam projektui
+    for_all_users: Visiems naudotojams
+    for_this_user: For this user
+  text_allowed_queries_to_select: Galima pasirinkti tik užklausas prieinamas (Viešas) visiems naudotojams
+  text_all_migrations_have_been_run: Buvo įvykdytos visos duomenų bazės migravimo procedūros
+  button_save_object: Išsaugoti %{object_name}
+  button_edit_object: Redaguoti %{object_name}
+  button_delete_object: Pašalinti %{object_name}
+  text_setting_config_change: Elgseną galite konfiguruoti faile config/configuration.yml.
+    Baigę redaguoti - nepamirškite perkrauti aplikacijos.
+  label_bulk_edit: Masinis redagavimas
+  button_create_and_follow: Kurti ir sekti
+  label_subtask: Subužduotis
+  label_default_query: Numatytoji užklausa
+  field_default_project_query: Numatytoji projekto užklausa
+  label_required_administrators: administratoriams privaloma
+  twofa_hint_required_administrators_html: Nustatymas <strong>%{label}</strong> veikia kaip neprivalomas, bet reikalauja, kad visi naudotojai
+    turintys administravimo teises kito prisijungimo metu aktyvuotų dviejų veiksnių autentifikaciją.
+  label_auto_watch_on: Automatinis stebėjimas
+  label_auto_watch_on_issue_contributed_to: Darbai prie kurių prisidėjau

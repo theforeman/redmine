@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -86,7 +86,7 @@ module Redmine
         end
 
         def supports_annotate?
-          respond_to?('annotate')
+          respond_to?(:annotate)
         end
 
         def root_url
@@ -184,14 +184,6 @@ module Redmine
           false
         end
 
-        def valid_name?(name)
-          return true if name.nil?
-          return true if name.is_a?(Integer) && name > 0
-          return true if name.is_a?(String) && name =~ /\A[0-9]*\z/
-
-          false
-        end
-
         private
 
         def retrieve_root_url
@@ -224,7 +216,7 @@ module Redmine
             writable = false
             path = Redmine::Configuration['scm_stderr_log_file'].presence
             path ||= Rails.root.join("log/#{Rails.env}.scm.stderr.log").to_s
-            if File.exists?(path)
+            if File.exist?(path)
               if File.file?(path) && File.writable?(path)
                 writable = true
               else

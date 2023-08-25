@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -916,30 +916,6 @@ class QueriesControllerTest < Redmine::ControllerTest
     assert_include ['Dave Lopper', '3', 'active'], json
     assert_include ['Dave2 Lopper2', '5', 'locked'], json
     assert_include ['A Team', '10', 'active'], json
-  end
-
-  def test_activity_filter_should_return_active_and_system_activity_ids
-    TimeEntryActivity.create!(:name => 'Design', :parent_id => 9, :project_id => 1)
-    TimeEntryActivity.create!(:name => 'QA', :active => false, :parent_id => 11, :project_id => 1)
-    TimeEntryActivity.create!(:name => 'Inactive Activity', :active => true, :parent_id => 14, :project_id => 1)
-
-    @request.session[:user_id] = 2
-    get(
-      :filter,
-      :params => {
-        :project_id => 1,
-        :type => 'TimeEntryQuery',
-        :name => 'activity_id'
-      }
-    )
-    assert_response :success
-    assert_equal 'application/json', response.media_type
-    json = ActiveSupport::JSON.decode(response.body)
-
-    assert_equal 3, json.count
-    assert_include ["Design", "9"], json
-    assert_include ["Development", "10"], json
-    assert_include ["Inactive Activity", "14"], json
   end
 
   def test_activity_filter_should_return_active_and_system_activity_ids

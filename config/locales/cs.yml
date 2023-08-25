@@ -308,7 +308,6 @@ cs:
   field_parent_title: Rodičovská stránka
   field_editable: Editovatelný
   field_watcher: Sleduje
-  field_identity_url: OpenID URL
   field_content: Obsah
   field_group_by: Seskupovat výsledky podle
   field_sharing: Sdílení
@@ -326,7 +325,6 @@ cs:
   setting_attachment_max_size: Maximální velikost přílohy
   setting_issues_export_limit: Limit pro export úkolů
   setting_mail_from: Odesílat emaily z adresy
-  setting_bcc_recipients: Příjemci jako skrytá kopie (bcc)
   setting_plain_text_mail: pouze prostý text (ne HTML)
   setting_host_name: Jméno serveru
   setting_text_formatting: Formátování textu
@@ -359,7 +357,6 @@ cs:
   setting_diff_max_lines_displayed: Maximální počet zobrazených řádků rozdílu
   setting_file_max_size_displayed: Maximální velikost textových souborů zobrazených přímo na stránce
   setting_repository_log_display_limit: Maximální počet revizí zobrazených v logu souboru
-  setting_openid: Umožnit přihlašování a registrace s OpenID
   setting_password_min_length: Minimální délka hesla
   setting_new_project_user_role_id: Role přiřazená uživateli bez práv administrátora, který projekt vytvořil
   setting_default_projects_modules: Výchozí zapnutné moduly pro nový projekt
@@ -488,7 +485,6 @@ cs:
   label_information: Informace
   label_information_plural: Informace
   label_register: Registrovat
-  label_login_with_open_id_option: nebo se přihlašte s OpenID
   label_password_lost: Zapomenuté heslo
   label_home: Úvodní
   label_my_page: Moje stránka
@@ -1400,3 +1396,42 @@ cs:
   error_invalid_authenticity_token: Neplatný token pravosti formuláře.
   error_query_statement_invalid: Nastala chyba při vykonávání dotazu a
     byla zaznamenána. Prosím oznamte tuto chybu svému Redmine administrátorovi.
+  permission_view_wiki_page_watchers: Zobrazení seznamu sledovatelů Wiki stránek
+  permission_add_wiki_page_watchers: Přidávání sledovatelů na Wiki stránky
+  permission_delete_wiki_page_watchers: Mazání sledovatelů Wiki stránek
+  label_wiki_page_watchers: Sledující
+  label_attachment_description: Popis souboru
+  error_no_data_in_file: Soubor neobsahuje žádná data
+  field_twofa_required: Vyžadovat dvou-fázové ověření
+  twofa_hint_optional_html: Nastavení <strong>%{label}</strong> nechá uživatele nastavit
+    dvou-fázové ověření dle přání, pokud není vyžadováno některou z jeho skupin.
+  twofa_text_group_required: Toto nastavení je účinné pouze pokud je globální nastavení dvou-fázového ověření
+    nastaveno jako 'volitelné'. Aktuálně je dvou-fázové ověření
+    vyžadováno pro všechny uživatele.
+  twofa_text_group_disabled: Toto nastavení je účinné pouze pokud je globální nastavení dvou-fázového ověření
+    nastaveno jako 'volitelné'. Aktuálně je dvou-fázové ověření
+    vypnuté.
+  field_default_issue_query: Výchozí dotaz úkolů
+  label_default_queries:
+    for_all_projects: Pro všechny projekty
+    for_current_project: Pro aktuální projekt
+    for_all_users: Pro všechny uživatele
+    for_this_user: For this user
+  text_allowed_queries_to_select: Lze vybrat pouze veřejné dotazy (viditelné pro všechny uživatele)
+  text_all_migrations_have_been_run: Všechny databázové migrace byly spušteny
+  button_save_object: Uložit %{object_name}
+  button_edit_object: Upravit %{object_name}
+  button_delete_object: Smazat %{object_name}
+  text_setting_config_change: Můžete nastavit chování v config/configuration.yml.
+    Po úpravě prosím restartujte aplikaci.
+  label_bulk_edit: Hromadná úprava
+  button_create_and_follow: Vytvořit a pokračovat
+  label_subtask: Podúkol
+  label_default_query: Výchozí dotaz
+  field_default_project_query: Výchozí dotaz projektů
+  label_required_administrators: vyžadováno pro administrátory
+  twofa_hint_required_administrators_html: Nastavení <strong>%{label}</strong> se chová
+    jako volitelné, ale bude vyžadovat od všech uživatelů s administrátorskými právy nastavení dvou-fázového ověření
+    při jejich příštím přihlášení.
+  label_auto_watch_on: Automaticky sledovat
+  label_auto_watch_on_issue_contributed_to: Úkoly ke kterým jsem přispěl

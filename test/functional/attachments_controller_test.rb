@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -157,7 +157,7 @@ class AttachmentsControllerTest < Redmine::ControllerTest
     assert_response :success
     assert_equal 'text/html', @response.media_type
     assert_select 'tr#L1' do
-      assert_select 'th.line-num', :text => '1'
+      assert_select 'th.line-num a[data-txt=?]', '1'
       assert_select 'td', :text => /日本語/
     end
   end
@@ -174,7 +174,7 @@ class AttachmentsControllerTest < Redmine::ControllerTest
       assert_response :success
       assert_equal 'text/html', @response.media_type
       assert_select 'tr#L7' do
-        assert_select 'th.line-num', :text => '7'
+        assert_select 'th.line-num a[data-txt=?]', '7'
         assert_select 'td', :text => /Demande cr\?\?e avec succ\?s/
       end
     end
@@ -192,7 +192,7 @@ class AttachmentsControllerTest < Redmine::ControllerTest
       assert_response :success
       assert_equal 'text/html', @response.media_type
       assert_select 'tr#L7' do
-        assert_select 'th.line-num', :text => '7'
+        assert_select 'th.line-num a[data-txt=?]', '7'
         assert_select 'td', :text => /Demande créée avec succès/
       end
     end
@@ -501,17 +501,6 @@ class AttachmentsControllerTest < Redmine::ControllerTest
     assert_select 'h2 a', :text => "Feature request #2"
   end
 
-  def test_edit_all_with_invalid_container_class_should_return_404
-    get(
-      :edit_all,
-      :params => {
-        :object_type => 'nuggets',
-        :object_id => '3'
-      }
-    )
-    assert_response 404
-  end
-
   def test_edit_all_with_invalid_object_should_return_404
     get(
       :edit_all,
@@ -642,6 +631,22 @@ class AttachmentsControllerTest < Redmine::ControllerTest
     )
     assert_equal Issue.find(1).attachments, []
     assert_response 404
+  end
+
+  def test_download_all_with_invisible_journal
+    Project.find(1).update_column :is_public, false
+    Member.delete_all
+    @request.session[:user_id] = 2
+    User.current = User.find(2)
+    assert_not Journal.find(3).journalized.visible?
+    get(
+      :download_all,
+      :params => {
+        :object_type => 'journals',
+        :object_id => '3'
+      }
+    )
+    assert_response 403
   end
 
   def test_download_all_with_maximum_bulk_download_size_larger_than_attachments

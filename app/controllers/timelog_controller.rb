@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,10 +28,11 @@ class TimelogController < ApplicationController
   before_action :find_optional_issue, :only => [:new, :create]
   before_action :find_optional_project, :only => [:index, :report]
 
-  accept_rss_auth :index
+  accept_atom_auth :index
   accept_api_auth :index, :show, :create, :update, :destroy
 
   rescue_from Query::StatementInvalid, :with => :query_statement_invalid
+  rescue_from Query::QueryError, :with => :query_error
 
   helper :issues
   include TimelogHelper
@@ -75,7 +76,7 @@ class TimelogController < ApplicationController
     retrieve_time_entry_query
     scope = time_entry_scope
 
-    @report = Redmine::Helpers::TimeReport.new(@project, @issue, params[:criteria], params[:columns], scope)
+    @report = Redmine::Helpers::TimeReport.new(@project, params[:criteria], params[:columns], scope)
 
     respond_to do |format|
       format.html {render :layout => !request.xhr?}
@@ -130,6 +131,7 @@ class TimelogController < ApplicationController
               :back_url => params[:back_url]
             }
             if params[:project_id] && @time_entry.project
+              options[:time_entry][:project_id] ||= @time_entry.project.id
               redirect_to new_project_time_entry_path(@time_entry.project, options)
             elsif params[:issue_id] && @time_entry.issue
               redirect_to new_issue_time_entry_path(@time_entry.issue, options)
@@ -302,5 +304,10 @@ class TimelogController < ApplicationController
 
   def retrieve_time_entry_query
     retrieve_query(TimeEntryQuery, false, :defaults => @default_columns_names)
+  end
+
+  def query_error(exception)
+    session.delete(:time_entry_query)
+    super
   end
 end

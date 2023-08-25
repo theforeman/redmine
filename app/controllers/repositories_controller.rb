@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2021  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -34,7 +34,7 @@ class RepositoriesController < ApplicationController
   before_action :find_project_repository, :except => [:new, :create, :edit, :update, :destroy, :committers]
   before_action :find_changeset, :only => [:revision, :add_related_issue, :remove_related_issue]
   before_action :authorize
-  accept_rss_auth :revisions
+  accept_atom_auth :revisions
   accept_api_auth :add_related_issue, :remove_related_issue
 
   rescue_from Redmine::Scm::Adapters::CommandFailed, :with => :show_error_command_failed
@@ -286,6 +286,7 @@ class RepositoriesController < ApplicationController
       @changeset = @repository.find_changeset_by_name(@rev)
       @changeset_to = @rev_to ? @repository.find_changeset_by_name(@rev_to) : nil
       @diff_format_revisions = @repository.diff_format_revisions(@changeset, @changeset_to)
+      # TODO: Fix DEPRECATION WARNING: Rendering actions with '.' in the name is deprecated
       render :diff, :formats => :html, :layout => 'base.html.erb'
     end
   end
@@ -337,7 +338,7 @@ class RepositoriesController < ApplicationController
     if params[:repository_id].present?
       @repository = @project.repositories.find_by_identifier_param(params[:repository_id])
     else
-      @repository = @project.repository
+      @repository = @project.repository || @project.repositories.first
     end
     (render_404; return false) unless @repository
     @path = params[:path].is_a?(Array) ? params[:path].join('/') : params[:path].to_s
