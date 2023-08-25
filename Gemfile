@@ -14,6 +14,7 @@ gem "mail", "~> 2.7.1"
 gem "csv", "~> 3.0.1" if RUBY_VERSION >= "2.3" && RUBY_VERSION < "2.6"
 
 gem "nokogiri", (RUBY_VERSION >= "2.3" ? "~> 1.10.0" : "~> 1.9.1")
+gem "loofah", '2.19.1'
 gem "i18n", "~> 0.7.0"
 gem "xpath", "< 3.2.0" if RUBY_VERSION < "2.3"
 
