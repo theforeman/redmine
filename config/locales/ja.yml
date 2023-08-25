@@ -38,14 +38,14 @@ ja:
     distance_in_words:
       half_a_minute: "30秒前後"
       less_than_x_seconds:
-        one:   "1秒以内"
-        other: "%{count}秒以内"
+        one:   "1秒未満"
+        other: "%{count}秒未満"
       x_seconds:
         one:   "1秒"
         other: "%{count}秒"
       less_than_x_minutes:
-        one:   "1分以内"
-        other: "%{count}分以内"
+        one:   "1分未満"
+        other: "%{count}分未満"
       x_minutes:
         one:   "1分"
         other: "%{count}分"
@@ -195,7 +195,6 @@ ja:
   notice_api_access_key_reseted: APIアクセスキーを初期化しました。
   notice_failed_to_save_issues: "全%{total}件中%{count}件のチケットが保存できませんでした: %{ids}。"
   notice_failed_to_save_members: "メンバーの保存に失敗しました: %{errors}。"
-  notice_no_issue_selected: "チケットが選択されていません! 更新対象のチケットを選択してください。"
   notice_account_pending: アカウントを作成しました。システム管理者の承認待ちです。
   notice_default_data_loaded: デフォルト設定をロードしました。
   notice_unable_delete_version: バージョンを削除できません
@@ -290,6 +289,7 @@ ja:
   field_password: パスワード
   field_new_password: 新しいパスワード
   field_password_confirmation: パスワードの確認
+  field_twofa_scheme: 二要素認証方式
   field_version: バージョン
   field_type: タイプ
   field_host: ホスト
@@ -300,7 +300,7 @@ ja:
   field_attr_firstname: 名の属性
   field_attr_lastname: 姓の属性
   field_attr_mail: メールアドレスの属性
-  field_onthefly: あわせてユーザーを作成
+  field_onthefly: ユーザーが存在しなければ作成
   field_start_date: 開始日
   field_done_ratio: 進捗率
   field_auth_source: 認証方式
@@ -534,7 +534,6 @@ ja:
   label_last_login: 最近の接続
   label_registered_on: 登録日
   label_activity: 活動
-  label_overall_activity: すべての活動
   label_user_activity: "%{value} の活動"
   label_new: 新しく作成
   label_logged_as: ログイン中：
@@ -696,7 +695,6 @@ ja:
   label_changes_details: 全変更の詳細
   label_issue_tracking: チケットトラッキング
   label_spent_time: 作業時間
-  label_overall_spent_time: すべての作業時間
   label_f_hour: "%{value}時間"
   label_f_hour_plural: "%{value}時間"
   label_time_tracking: 時間管理
@@ -796,6 +794,7 @@ ja:
   label_ascending: 昇順
   label_descending: 降順
   label_date_from_to: "%{start}から%{end}まで"
+  label_days_to_html: "%{date} までの%{days}日間"
   label_wiki_content_added: Wikiページの追加
   label_wiki_content_updated: Wikiページの更新
   label_group: グループ
@@ -882,7 +881,6 @@ ja:
 
   text_select_mail_notifications: メール通知の送信対象とする操作を選択してください。
   text_regexp_info: 例) ^[A-Z0-9]+$
-  text_min_max_length_info: 0だと無制限になります
   text_project_destroy_confirmation: 本当にこのプロジェクトと関連データを削除しますか？
   text_subprojects_destroy_warning: "サブプロジェクト %{value} も削除されます。"
   text_workflow_edit: ワークフローを編集するロールとトラッカーを選んでください
@@ -917,7 +915,7 @@ ja:
   text_issues_destroy_confirmation: '本当に選択したチケットを削除しますか？'
   text_select_project_modules: 'このプロジェクトで使用するモジュールを選択してください:'
   text_default_administrator_account_changed: デフォルト管理アカウントが変更済
-  text_file_repository_writable: ファイルリポジトリに書き込み可能
+  text_file_repository_writable: 添付ファイルディレクトリに書き込み可能
   text_plugin_assets_writable: Plugin assetsディレクトリに書き込み可能
   text_minimagick_available: MiniMagickが利用可能 (オプション)
   text_destroy_time_entries_question: このチケットの%{hours}時間分の作業記録の扱いを選択してください。
@@ -1164,7 +1162,7 @@ ja:
   notice_import_finished: "%{count}件のデータをすべてインポートしました"
   notice_import_finished_with_errors: "全%{total}件中%{count}件のデータがインポートできませんでした"
   error_invalid_file_encoding: このファイルのエンコーディングは正しい%{encoding}ではありません
-  error_invalid_csv_file_or_settings: このファイルはCSVファイルではないか、以下の設定と一致していません
+  error_invalid_csv_file_or_settings: このファイルはCSVファイルではないか、以下の設定と一致していません (%{value})
   error_can_not_read_import_file: インポート元のファイルを読み込み中にエラーが発生しました
   permission_import_issues: チケットのインポート
   label_import_issues: チケットのインポート
@@ -1309,3 +1307,77 @@ ja:
   label_display_type_board: ボード
   label_my_bookmarks: My bookmarks
   label_import_time_entries: 作業時間のインポート
+  field_toolbar_language_options: ツールバーのコードハイライトボタンで使用する言語
+  label_user_mail_notify_about_high_priority_issues_html: 優先度が <em>%{prio}</em> 以上のチケットについても通知
+  label_assign_to_me: 自分に割り当て
+  notice_issue_not_closable_by_open_tasks: 未完了の子チケットがあるためこのチケットは完了にできません。
+  notice_issue_not_closable_by_blocking_issue: 未完了のブロック元チケットがあるためこのチケットは完了にできません。
+  notice_issue_not_reopenable_by_closed_parent_issue: 親チケットが完了しているためこのチケットは未完了に戻せません。
+  error_bulk_download_size_too_big: これらの添付ファイルは一括ダウンロードできません。ファイルサイズの合計が上限(%{max_size})を超えています。
+  setting_bulk_download_max_size: 一括ダウンロードの合計ファイルサイズの上限
+  label_download_all_attachments: 一括ダウンロード
+  error_attachments_too_many: このファイルはアップロードできません。同時にアップロードできるファイル数の上限(%{max_number_of_files})を超えています。
+  setting_email_domains_allowed: 許可するメールアドレスのドメイン
+  setting_email_domains_denied: 禁止するメールアドレスのドメイン
+  field_passwd_changed_on: パスワード更新日
+  label_relations_mapping: 関連の対応関係
+  label_import_users: ユーザーのインポート
+  setting_twofa: 二要素認証
+  label_optional: 任意
+  label_required_lower: 必須
+  button_disable: 無効化
+  twofa__totp__name: 認証アプリ
+  twofa__totp__text_pairing_info_html: TOTPアプリ (<a href="https://support.google.com/accounts/answer/1066447">Google認証システム</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a> など) でQRコードを読み取るかテキストキーを入力してください。その後、アプリに表示されているコードをこの下の入力欄に入力して二要素認証を有効にしてください。
+  twofa__totp__label_plain_text_key: テキストキー
+  twofa__totp__label_activate: 二要素認証を有効にする
+  twofa_currently_active: '有効 (方式: %{twofa_scheme_name})'
+  twofa_not_active: 無効
+  twofa_label_code: コード
+  twofa_hint_disabled_html: <strong>%{label}</strong> に設定すると全ユーザーの二要素認証を無効にし認証デバイスの関連づけも解除します。
+  twofa_hint_required_html: <strong>%{label}</strong> に設定するとユーザーに対し二要素認証の有効化を次回ログイン時に要求します。
+  twofa_label_setup: 二要素認証の有効化
+  twofa_label_deactivation_confirmation: 二要素認証の無効化
+  twofa_notice_select: 'どの方式で二要素認証を行うか選択してください:'
+  twofa_warning_require: システム管理者が二要素認証を有効にすることを求めています。
+  twofa_activated: 二要素認証が有効になりました。このアカウント用の <a data-method="post" href="%{bc_path}">バックアップコードの生成</a> をお勧めします。
+  twofa_deactivated: 二要素認証が無効になりました。
+  twofa_mail_body_security_notification_paired: "%{field}による二要素認証が有効になりました。"
+  twofa_mail_body_security_notification_unpaired: あなたのアカウントの二要素認証が無効になりました。
+  twofa_mail_body_backup_codes_generated: 二要素認証の新しいバックアップコードが生成されました。
+  twofa_mail_body_backup_code_used: 二要素認証のバックアップコードが使用されました。
+  twofa_invalid_code: 認証コードが無効または期限切れです。
+  twofa_label_enter_otp: 二要素認証の認証コードを入力してください。
+  twofa_too_many_tries: 試行回数が多すぎます。
+  twofa_resend_code: 認証コードの再送信
+  twofa_code_sent: 認証コードを送信しました。
+  twofa_generate_backup_codes: バックアップコードの生成
+  twofa_text_generate_backup_codes_confirmation: この操作は既存のすべてのバックアップコードを無効化して新しく生成します。続行しますか?
+  twofa_notice_backup_codes_generated: バックアップコードを生成しました。
+  twofa_warning_backup_codes_generated_invalidated: 新しいバックアップコードを生成しました。%{time} に生成したバックアップコードは無効になりました。
+  twofa_label_backup_codes: 二要素認証のバックアップコード
+  twofa_text_backup_codes_hint: 二要素認証アプリが利用できないときは以下のコードを認証コードの代わりに使用してください。それぞれのコードは1回だけ使用できます。バックアップコードは印刷して安全な場所に保管しておくことをお勧めします。
+  twofa_text_backup_codes_created_at: "バックアップコード生成日時: %{datetime}"
+  twofa_backup_codes_already_shown: バックアップコードの再表示はできません。必要があれば<a data-method="post" href="%{bc_path}">新しいバックアップコードの生成</a>を行ってください。
+  error_can_not_execute_macro_html: マクロ <strong>%{name}</strong> の実行中にエラーが発生しました (%{error})
+  error_macro_does_not_accept_block: このマクロにはテキストブロックを渡せません
+  error_childpages_macro_no_argument: Wikiページ以外から呼び出す場合は引数が必要です
+  error_circular_inclusion: 挿入対象ページの循環参照
+  error_page_not_found: ページが見つかりません
+  error_filename_required: ファイル名が必要です
+  error_invalid_size_parameter: sizeパラメータが無効です
+  error_attachment_not_found: 添付ファイル %{name} が見つかりません
+  permission_delete_project: プロジェクトの削除
+  text_user_destroy_confirmation: 本当にこのユーザーとこのユーザーへのすべての参照を削除しますか? 削除後は元に戻せません。通常は削除よりロックのほうが適切です。削除する場合は確認のためログインID (%{login}) を入力してください。
+  text_project_destroy_enter_identifier: 確認のためプロジェクト識別子 (%{identifier}) を入力してください。
+  button_add_subtask: 子チケットを追加
+  notice_invalid_watcher: '無効なウォッチャー: このオブジェクトを表示できないユーザーですので通知は行われません。'
+  button_fetch_changesets: コミットを取得
+  permission_view_message_watchers: メッセージのウォッチャー一覧の閲覧
+  permission_add_message_watchers: メッセージのウォッチャーの追加
+  permission_delete_message_watchers: メッセージのウォッチャーの削除
+  label_message_watchers: ウォッチャー
+  button_copy_link: リンクをコピー
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.

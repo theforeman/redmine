@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ module Redmine
         ::I18n.t(*args)
       when 2
         if args.last.is_a?(Hash)
-          ::I18n.t(*args)
+          ::I18n.t(*args.first, **args.last)
         elsif args.last.is_a?(String)
           ::I18n.t(args.first, :value => args.last)
         else
@@ -56,8 +56,8 @@ module Redmine
 
     def ll(lang, str, arg=nil)
       options = arg.is_a?(Hash) ? arg : {:value => arg}
-      locale = lang.to_s.gsub(%r{(.+)\-(.+)$}) { "#{$1}-#{$2.upcase}" }
-      ::I18n.t(str.to_s, options.merge(:locale => locale))
+      locale = lang.to_s.gsub(%r{(.+)\-(.+)$}) {"#{$1}-#{$2.upcase}"}
+      ::I18n.t(str.to_s, **options, locale: locale)
     end
 
     # Localizes the given args with user's language
@@ -68,19 +68,21 @@ module Redmine
 
     def format_date(date)
       return nil unless date
+
       options = {}
       options[:format] = Setting.date_format unless Setting.date_format.blank?
-      ::I18n.l(date.to_date, options)
+      ::I18n.l(date.to_date, **options)
     end
 
     def format_time(time, include_date=true, user=nil)
       return nil unless time
+
       user ||= User.current
       options = {}
       options[:format] = (Setting.time_format.blank? ? :time : Setting.time_format)
       time = time.to_time if time.is_a?(String)
       local = user.convert_time_to_user_timezone(time)
-      (include_date ? "#{format_date(local)} " : "") + ::I18n.l(local, options)
+      (include_date ? "#{format_date(local)} " : "") + ::I18n.l(local, **options)
     end
 
     def format_hours(hours)
@@ -89,7 +91,7 @@ module Redmine
       if Setting.timespan_format == 'minutes'
         h = hours.floor
         m = ((hours - h) * 60).round
-        "%d:%02d" % [ h, m ]
+        "%d:%02d" % [h, m]
       else
         "%.2f" % hours.to_f
       end
@@ -133,7 +135,11 @@ module Redmine
     end
 
     def find_language(lang)
-      @@languages_lookup ||= valid_languages.inject({}) {|k, v| k[v.to_s.downcase] = v; k }
+      @@languages_lookup ||=
+        valid_languages.inject({}) do |k, v|
+          k[v.to_s.downcase] = v
+          k
+        end
       @@languages_lookup[lang.to_s.downcase]
     end
 

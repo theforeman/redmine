@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@ module ContextMenusHelper
   def context_menu_link(name, url, options={})
     options[:class] ||= ''
     if options.delete(:selected)
-      options[:class] += ' icon-checked disabled'
+      options[:class] += ' icon icon-checked disabled'
       options[:disabled] = true
     end
     if options.delete(:disabled)

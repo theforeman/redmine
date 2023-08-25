@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,10 +26,9 @@ class SysController < ActionController::Base
     p = Project.active.has_module(:repository).
           order("#{Project.table_name}.identifier").preload(:repository).to_a
     # extra_info attribute from repository breaks activeresource client
-    render :json => p.to_json(
-                       :only => [:id, :identifier, :name, :is_public, :status],
-                       :include => {:repository => {:only => [:id, :url]}}
-                     )
+    render :json =>
+              p.to_json(:only => [:id, :identifier, :name, :is_public, :status],
+                        :include => {:repository => {:only => [:id, :url]}})
   end
 
   def create_project_repository
@@ -60,6 +59,7 @@ class SysController < ActionController::Base
         project = scope.find_by_identifier(params[:id])
       end
       raise ActiveRecord::RecordNotFound unless project
+
       projects << project
     else
       projects = scope.to_a

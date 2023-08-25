@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -222,6 +222,19 @@ class TimelogReportTest < Redmine::ControllerTest
 
     assert_select 'th', :text => 'Status'
     assert_select 'td', :text => 'New'
+  end
+
+  def test_report_activity_criterion_should_aggregate_system_activity_and_project_activity
+    activity = TimeEntryActivity.create!(:name => 'Design', :parent_id => 9, :project_id => 3)
+    TimeEntry.generate!(:project_id => 3, :issue_id => 5, :activity_id => activity.id, :spent_on => '2007-05-23', :hours => 10.0)
+
+    get :report, :params => {:project_id => 1, :criteria => ['activity']}
+    assert_response :success
+
+    assert_select 'tr.last-level:first' do
+      assert_select 'td.name', :text => 'Design'
+      assert_select 'td.hours:last', :text => '165.25'
+    end
   end
 
   def test_report_all_projects_csv_export

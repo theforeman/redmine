@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -146,6 +146,7 @@ module Redmine
           end
           self.custom_values = target_custom_values
           custom_values.each(&:save)
+          touch if !saved_changes? && custom_values.any?(&:saved_changes?)
           @custom_field_values_changed = false
           true
         end

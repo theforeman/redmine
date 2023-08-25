@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,32 +28,24 @@ module Redmine
       @user.pref.recently_used_projects
     end
 
-    def recently_used_projects(query = nil)
+    def recently_used_projects
       project_ids = recently_used_project_ids
-      projects = Project.where(id: project_ids)
-      if query
-        projects = projects.like(query)
-      end
-      projects.
+      Project.where(id: project_ids).
         visible.
         index_by(&:id).
         values_at(*project_ids). # sort according to stored order
         compact
     end
 
-    def bookmarked_projects(query = nil)
-      projects = Project.where(id: bookmarked_project_ids).visible
-      if query
-        projects = projects.like(query)
-      end
-      projects.to_a
+    def bookmarked_projects
+      Project.where(id: bookmarked_project_ids).visible.to_a
     end
 
     def project_used(project)
       return if project.blank? || project.id.blank?
 
       id_array = recently_used_project_ids
-      id_array.reject!{ |i| i == project.id }
+      id_array.reject!{|i| i == project.id}
       # we dont want bookmarks in the recently used list:
       id_array.unshift(project.id) unless bookmark?(project)
       self.recently_used_project_ids = id_array[0, recent_projects_count]

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,23 +19,31 @@
 
 module SettingsHelper
   def administration_settings_tabs
-    tabs = [{:name => 'general', :partial => 'settings/general', :label => :label_general},
-            {:name => 'display', :partial => 'settings/display', :label => :label_display},
-            {:name => 'authentication', :partial => 'settings/authentication', :label => :label_authentication},
-            {:name => 'api', :partial => 'settings/api', :label => :label_api},
-            {:name => 'projects', :partial => 'settings/projects', :label => :label_project_plural},
-            {:name => 'users', :partial => 'settings/users', :label => :label_user_plural},
-            {:name => 'issues', :partial => 'settings/issues', :label => :label_issue_tracking},
-            {:name => 'timelog', :partial => 'settings/timelog', :label => :label_time_tracking},
-            {:name => 'attachments', :partial => 'settings/attachments', :label => :label_attachment_plural},
-            {:name => 'notifications', :partial => 'settings/notifications', :label => :field_mail_notification},
-            {:name => 'mail_handler', :partial => 'settings/mail_handler', :label => :label_incoming_emails},
-            {:name => 'repositories', :partial => 'settings/repositories', :label => :label_repository_plural}
-            ]
+    tabs =
+      [
+        {:name => 'general', :partial => 'settings/general', :label => :label_general},
+        {:name => 'display', :partial => 'settings/display', :label => :label_display},
+        {:name => 'authentication', :partial => 'settings/authentication',
+         :label => :label_authentication},
+        {:name => 'api', :partial => 'settings/api', :label => :label_api},
+        {:name => 'projects', :partial => 'settings/projects', :label => :label_project_plural},
+        {:name => 'users', :partial => 'settings/users', :label => :label_user_plural},
+        {:name => 'issues', :partial => 'settings/issues', :label => :label_issue_tracking},
+        {:name => 'timelog', :partial => 'settings/timelog', :label => :label_time_tracking},
+        {:name => 'attachments', :partial => 'settings/attachments',
+         :label => :label_attachment_plural},
+        {:name => 'notifications', :partial => 'settings/notifications',
+         :label => :field_mail_notification},
+        {:name => 'mail_handler', :partial => 'settings/mail_handler',
+         :label => :label_incoming_emails},
+        {:name => 'repositories', :partial => 'settings/repositories',
+         :label => :label_repository_plural}
+      ]
   end
 
   def render_settings_error(errors)
     return if errors.blank?
+
     s = ''.html_safe
     errors.each do |name, message|
       s << content_tag('li', content_tag('b', l("setting_#{name}")) + " " + message)
@@ -72,13 +80,13 @@ module SettingsHelper
         content_tag(
           'label',
           check_box_tag(
-             "settings[#{setting}][]",
-             value,
-             setting_values.include?(value),
-             :id => nil
-           ) + text.to_s,
+            "settings[#{setting}][]",
+            value,
+            setting_values.include?(value),
+            :id => nil
+          ) + text.to_s,
           :class => (options[:inline] ? 'inline' : 'block')
-         )
+        )
       end.join.html_safe
   end
 
@@ -110,9 +118,12 @@ module SettingsHelper
 
   # Renders a notification field for a Redmine::Notifiable option
   def notification_field(notifiable)
-    tag_data = notifiable.parent.present? ?
-      {:parent_notifiable => notifiable.parent} :
-      {:disables => "input[data-parent-notifiable=#{notifiable.name}]"}
+    tag_data =
+      if notifiable.parent.present?
+        {:parent_notifiable => notifiable.parent}
+      else
+        {:disables => "input[data-parent-notifiable=#{notifiable.name}]"}
+      end
     tag = check_box_tag('settings[notified_events][]',
                         notifiable.name,
                         setting_value('notified_events').include?(notifiable.name),
@@ -128,20 +139,20 @@ module SettingsHelper
 
   def session_lifetime_options
     options = [[l(:label_disabled), 0]]
-    options += [4, 8, 12].map {|hours|
+    options += [4, 8, 12].map do |hours|
       [l('datetime.distance_in_words.x_hours', :count => hours), (hours * 60).to_s]
-    }
-    options += [1, 7, 30, 60, 365].map {|days|
+    end
+    options += [1, 7, 30, 60, 365].map do |days|
       [l('datetime.distance_in_words.x_days', :count => days), (days * 24 * 60).to_s]
-    }
+    end
     options
   end
 
   def session_timeout_options
     options = [[l(:label_disabled), 0]]
-    options += [1, 2, 4, 8, 12, 24, 48].map {|hours|
+    options += [1, 2, 4, 8, 12, 24, 48].map do |hours|
       [l('datetime.distance_in_words.x_hours', :count => hours), (hours * 60).to_s]
-    }
+    end
     options
   end
 
@@ -198,7 +209,7 @@ module SettingsHelper
   def date_format_setting_options(locale)
     Setting::DATE_FORMATS.map do |f|
       today = ::I18n.l(User.current.today, :locale => locale, :format => f)
-      format = f.gsub('%', '').gsub(/[dmY]/) do
+      format = f.delete('%').gsub(/[dmY]/) do
         {'d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy'}[$&]
       end
       ["#{today} (#{format})", f]

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -58,9 +58,11 @@ class Mailer < ActionMailer::Base
     options = {:protocol => Setting.protocol}
     if Setting.host_name.to_s =~ /\A(https?\:\/\/)?(.+?)(\:(\d+))?(\/.+)?\z/i
       host, port, prefix = $2, $4, $5
-      options.merge!({
-        :host => host, :port => port, :script_name => prefix
-      })
+      options.merge!(
+        {
+          :host => host, :port => port, :script_name => prefix
+        }
+      )
     else
       options[:host] = Setting.host_name
     end
@@ -292,8 +294,11 @@ class Mailer < ActionMailer::Base
     @wiki_content_url = url_for(:controller => 'wiki', :action => 'show',
                                       :project_id => wiki_content.project,
                                       :id => wiki_content.page.title)
-    mail :to => user,
-      :subject => "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_added, :id => wiki_content.page.pretty_title)}"
+    mail(
+      :to => user,
+      :subject =>
+        "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_added, :id => wiki_content.page.pretty_title)}"
+    )
   end
 
   # Notifies users about a new wiki content (wiki page added).
@@ -315,14 +320,19 @@ class Mailer < ActionMailer::Base
     message_id wiki_content
     @wiki_content = wiki_content
     @user = user
-    @wiki_content_url = url_for(:controller => 'wiki', :action => 'show',
-                                      :project_id => wiki_content.project,
-                                      :id => wiki_content.page.title)
-    @wiki_diff_url = url_for(:controller => 'wiki', :action => 'diff',
-                                   :project_id => wiki_content.project, :id => wiki_content.page.title,
-                                   :version => wiki_content.version)
-    mail :to => user,
-      :subject => "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_updated, :id => wiki_content.page.pretty_title)}"
+    @wiki_content_url =
+      url_for(:controller => 'wiki', :action => 'show',
+              :project_id => wiki_content.project,
+              :id => wiki_content.page.title)
+    @wiki_diff_url =
+      url_for(:controller => 'wiki', :action => 'diff',
+              :project_id => wiki_content.project, :id => wiki_content.page.title,
+              :version => wiki_content.version)
+    mail(
+      :to => user,
+      :subject =>
+        "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_updated, :id => wiki_content.page.pretty_title)}"
+    )
   end
 
   # Notifies users about the update of the specified wiki content
@@ -405,8 +415,8 @@ class Mailer < ActionMailer::Base
   # The email will be sent to the email address specifiedby recipient if provided.
   #
   # Exemple:
-  #   Mailer.deliver_account_activated(user, token)
-  #   Mailer.deliver_account_activated(user, token, 'foo@example.net')
+  #   Mailer.deliver_lost_password(user, token)
+  #   Mailer.deliver_lost_password(user, token, 'foo@example.net')
   def self.deliver_lost_password(user, token, recipient=nil)
     lost_password(user, token, recipient).deliver_later
   end
@@ -487,7 +497,7 @@ class Mailer < ActionMailer::Base
   def self.deliver_security_notification(users, sender, options={})
     # Symbols cannot be serialized:
     # ActiveJob::SerializationError: Unsupported argument type: Symbol
-    options = options.transform_values {|v| v.is_a?(Symbol) ? v.to_s : v }
+    options = options.transform_values {|v| v.is_a?(Symbol) ? v.to_s : v}
     # sender's remote_ip would be lost on serialization/deserialization
     # we have to pass it with options
     options[:remote_ip] ||= sender.remote_ip
@@ -553,9 +563,15 @@ class Mailer < ActionMailer::Base
   def reminder(user, issues, days)
     @issues = issues
     @days = days
-    @issues_url = url_for(:controller => 'issues', :action => 'index',
+    @open_issues_url = url_for(:controller => 'issues', :action => 'index',
                                 :set_filter => 1, :assigned_to_id => 'me',
                                 :sort => 'due_date:asc')
+    @reminder_issues_url = url_for(:controller => 'issues', :action => 'index',
+      :set_filter => 1, :sort => 'due_date:asc',
+      :f => ['status_id', 'assigned_to_id', "due_date"],
+      :op => {'status_id' => 'o', 'assigned_to_id' => '=', 'due_date' => '<t+'},
+      :v =>{'assigned_to_id' => ['me'], 'due_date' => [days]})
+
     query = IssueQuery.new(:name => '_')
     query.add_filter('assigned_to_id', '=', ['me'])
     @open_issues_count = query.issue_count
@@ -578,12 +594,15 @@ class Mailer < ActionMailer::Base
     if options[:version] && target_version_id.blank?
       raise ActiveRecord::RecordNotFound.new("Couldn't find Version named #{options[:version]}")
     end
+
     user_ids = options[:users]
 
-    scope = Issue.open.where("#{Issue.table_name}.assigned_to_id IS NOT NULL" +
-      " AND #{Project.table_name}.status = #{Project::STATUS_ACTIVE}" +
-      " AND #{Issue.table_name}.due_date <= ?", days.day.from_now.to_date
-    )
+    scope =
+      Issue.open.where(
+        "#{Issue.table_name}.assigned_to_id IS NOT NULL" \
+          " AND #{Project.table_name}.status = #{Project::STATUS_ACTIVE}" \
+          " AND #{Issue.table_name}.due_date <= ?", days.day.from_now.to_date
+      )
     scope = scope.where(:assigned_to_id => user_ids) if user_ids.present?
     scope = scope.where(:project_id => project.id) if project
     scope = scope.where(:fixed_version_id => target_version_id) if target_version_id.present?
@@ -704,6 +723,7 @@ class Mailer < ActionMailer::Base
 
   def self.deliver_mail(mail)
     return false if mail.to.blank? && mail.cc.blank? && mail.bcc.blank?
+
     begin
       # Log errors when raise_delivery_errors is set to false, Rails does not
       mail.raise_delivery_errors = true
@@ -740,7 +760,7 @@ class Mailer < ActionMailer::Base
 
   # Appends a Redmine header field (name is prepended with 'X-Redmine-')
   def redmine_headers(h)
-    h.each { |k,v| headers["X-Redmine-#{k}"] = v.to_s }
+    h.each {|k, v| headers["X-Redmine-#{k}"] = v.to_s}
   end
 
   # Singleton class method is public

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -61,9 +61,9 @@ class WorkflowsController < ApplicationController
 
     if request.post? && @roles && @trackers && params[:permissions]
       permissions = params[:permissions].deep_dup
-      permissions.each { |field, rule_by_status_id|
+      permissions.each do |field, rule_by_status_id|
         rule_by_status_id.reject! {|status_id, rule| rule == 'no_change'}
-      }
+      end
       WorkflowPermission.replace_permissions(@trackers, @roles, permissions)
       flash[:notice] = l(:notice_successful_update)
       redirect_to_referer_or workflows_permissions_path
@@ -92,19 +92,31 @@ class WorkflowsController < ApplicationController
     else
       @source_role = Role.find_by_id(params[:source_role_id].to_i)
     end
-    @target_trackers = params[:target_tracker_ids].blank? ?
-        nil : Tracker.where(:id => params[:target_tracker_ids]).to_a
-    @target_roles = params[:target_role_ids].blank? ?
-        nil : Role.where(:id => params[:target_role_ids]).to_a
+    @target_trackers =
+      if params[:target_tracker_ids].blank?
+        nil
+      else
+        Tracker.where(:id => params[:target_tracker_ids]).to_a
+      end
+    @target_roles =
+      if params[:target_role_ids].blank?
+        nil
+      else
+        Role.where(:id => params[:target_role_ids]).to_a
+      end
     if request.post?
-      if params[:source_tracker_id].blank? || params[:source_role_id].blank? || (@source_tracker.nil? && @source_role.nil?)
+      if params[:source_tracker_id].blank? || params[:source_role_id].blank? ||
+           (@source_tracker.nil? && @source_role.nil?)
         flash.now[:error] = l(:error_workflow_copy_source)
       elsif @target_trackers.blank? || @target_roles.blank?
         flash.now[:error] = l(:error_workflow_copy_target)
       else
         WorkflowRule.copy(@source_tracker, @source_role, @target_trackers, @target_roles)
         flash[:notice] = l(:notice_successful_update)
-        redirect_to workflows_copy_path(:source_tracker_id => @source_tracker, :source_role_id => @source_role)
+        redirect_to(
+          workflows_copy_path(:source_tracker_id => @source_tracker,
+                              :source_role_id => @source_role)
+        )
       end
     end
   end

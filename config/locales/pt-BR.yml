@@ -151,7 +151,7 @@ pt-BR:
         cant_link_an_issue_with_a_descendant: "Uma tarefa não pode ser relacionada a uma de suas subtarefas"
         earlier_than_minimum_start_date: "não pode ser anterior a %{date} por causa de tarefas anteriores"
         not_a_regexp: "não é uma expressão regular válida"
-        open_issue_with_closed_parent: "Uma tarefa aberta não pode ser associada à uma tarefa pai fechada"
+        open_issue_with_closed_parent: "Uma tarefa aberta não pode ser associada à uma tarefa mãe fechada"
         must_contain_uppercase: "must contain uppercase letters (A-Z)"
         must_contain_lowercase: "must contain lowercase letters (a-z)"
         must_contain_digits: "must contain digits (0-9)"
@@ -191,7 +191,6 @@ pt-BR:
   notice_email_error: "Ocorreu um erro ao enviar o e-mail (%{value})"
   notice_feeds_access_key_reseted: Sua chave Atom foi reconfigurada.
   notice_failed_to_save_issues: "Problema ao salvar %{count} tarefa(s) de %{total} selecionadas: %{ids}."
-  notice_no_issue_selected: "Nenhuma tarefa selecionada! Por favor, marque as tarefas que você deseja editar."
   notice_account_pending: "Sua conta foi criada e está aguardando aprovação do administrador."
   notice_default_data_loaded: Configuração padrão carregada com sucesso.
 
@@ -409,7 +408,6 @@ pt-BR:
   label_last_login: Última conexão
   label_registered_on: Registrado em
   label_activity: Atividade
-  label_overall_activity: Atividades gerais
   label_new: Novo
   label_logged_as: "Acessando como:"
   label_environment: Ambiente
@@ -684,7 +682,6 @@ pt-BR:
 
   text_select_mail_notifications: Ações a serem notificadas por e-mail
   text_regexp_info: ex. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 = sem restrição
   text_project_destroy_confirmation: Você tem certeza que deseja excluir este projeto e todos os dados relacionados?
   text_subprojects_destroy_warning: "Seu(s) subprojeto(s): %{value} também serão excluídos."
   text_workflow_edit: Selecione um papel e um tipo de tarefa para editar o fluxo de trabalho
@@ -908,7 +905,7 @@ pt-BR:
   error_unable_delete_issue_status: Não foi possível excluir situação da tarefa (%{value})
   label_profile: Perfil
   permission_manage_subtasks: Gerenciar subtarefas
-  field_parent_issue: Tarefa pai
+  field_parent_issue: Tarefa mãe
   label_subtask_plural: Subtarefas
   label_project_copy_notifications: Enviar notificações por e-mail ao copiar projeto
   error_can_not_delete_custom_field: Não foi possível excluir o campo personalizado
@@ -920,7 +917,6 @@ pt-BR:
   text_zoom_out: Afastar zoom
   text_zoom_in: Aproximar zoom
   notice_unable_delete_time_entry: Não foi possível excluir a entrada no registro de horas trabalhadas.
-  label_overall_spent_time: Tempo gasto geral
   field_time_entries: Registro de horas
   project_module_gantt: Gantt
   project_module_calendar: Calendário
@@ -1147,7 +1143,7 @@ pt-BR:
   error_password_expired: Sua senha expirou ou requer atualização
   field_time_entries_visibility: Visibilidade do log de tempo
   setting_password_max_age: Requer troca de senha depois
-  label_parent_task_attributes: Atributos das tarefas pai
+  label_parent_task_attributes: Atributos das tarefas mãe
   label_parent_task_attributes_derived: Calculado das subtarefas
   label_parent_task_attributes_independent: Independente das subtarefas
   label_time_entries_visibility_all: Todas as entradas de tempo
@@ -1161,7 +1157,7 @@ pt-BR:
   notice_import_finished_with_errors: "%{count} fora de %{total} não puderam ser importados"
   error_invalid_file_encoding: O arquivo não é válido %{encoding} é a codificação do arquivo
   error_invalid_csv_file_or_settings: O arquivo não é um arquivo CSV ou não corresponde às
-    definições abaixo
+    definições abaixo (%{value})
   error_can_not_read_import_file: Ocorreu um erro ao ler o arquivo para importação
   permission_import_issues: Importar tarefas
   label_import_issues: Importar tarefas
@@ -1318,3 +1314,106 @@ pt-BR:
   label_display_type_board: Quadro
   label_my_bookmarks: Meus marcaroes
   label_import_time_entries: Importar tempo gasto
+  field_toolbar_language_options: Code highlighting toolbar languages
+  label_user_mail_notify_about_high_priority_issues_html: Also notify me about issues
+    with a priority of <em>%{prio}</em> or higher
+  label_assign_to_me: Assign to me
+  notice_issue_not_closable_by_open_tasks: This issue cannot be closed because it has
+    at least one open subtask.
+  notice_issue_not_closable_by_blocking_issue: This issue cannot be closed because it
+    is blocked by at least one open issue.
+  notice_issue_not_reopenable_by_closed_parent_issue: This issue cannot be reopened
+    because its parent issue is closed.
+  error_bulk_download_size_too_big: These attachments cannot be bulk downloaded because
+    the total file size exceeds the maximum allowed size (%{max_size})
+  setting_bulk_download_max_size: Maximum total size for bulk download
+  label_download_all_attachments: Download all files
+  error_attachments_too_many: This file cannot be uploaded because it exceeds the maximum
+    number of files that can be attached simultaneously (%{max_number_of_files})
+  setting_email_domains_allowed: Allowed email domains
+  setting_email_domains_denied: Disallowed email domains
+  field_passwd_changed_on: Password last changed
+  label_relations_mapping: Relations mapping
+  label_import_users: Import users
+  label_days_to_html: "%{days} days up to %{date}"
+  setting_twofa: Two-factor authentication
+  label_optional: optional
+  label_required_lower: required
+  button_disable: Disable
+  twofa__totp__name: Authenticator app
+  twofa__totp__text_pairing_info_html: Scan this QR code or enter the plain text key
+    into a TOTP app (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) and enter the code in the field below to activate two-factor authentication.
+  twofa__totp__label_plain_text_key: Plain text key
+  twofa__totp__label_activate: Enable authenticator app
+  twofa_currently_active: 'Currently active: %{twofa_scheme_name}'
+  twofa_not_active: Not activated
+  twofa_label_code: Code
+  twofa_hint_disabled_html: Setting <strong>%{label}</strong> will deactivate and unpair
+    two-factor authentication devices for all users.
+  twofa_hint_required_html: Setting <strong>%{label}</strong> will require all users
+    to set up two-factor authentication at their next login.
+  twofa_label_setup: Enable two-factor authentication
+  twofa_label_deactivation_confirmation: Disable two-factor authentication
+  twofa_notice_select: 'Please select the two-factor scheme you would like to use:'
+  twofa_warning_require: The administrator requires you to enable two-factor authentication.
+  twofa_activated: Two-factor authentication successfully enabled. It is recommended
+    to <a data-method="post" href="%{bc_path}">generate backup codes</a> for your account.
+  twofa_deactivated: Two-factor authentication disabled.
+  twofa_mail_body_security_notification_paired: Two-factor authentication successfully
+    enabled using %{field}.
+  twofa_mail_body_security_notification_unpaired: Two-factor authentication disabled
+    for your account.
+  twofa_mail_body_backup_codes_generated: New two-factor authentication backup codes
+    generated.
+  twofa_mail_body_backup_code_used: A two-factor authentication backup code has been
+    used.
+  twofa_invalid_code: Code is invalid or outdated.
+  twofa_label_enter_otp: Please enter your two-factor authentication code.
+  twofa_too_many_tries: Too many tries.
+  twofa_resend_code: Resend code
+  twofa_code_sent: An authentication code has been sent to you.
+  twofa_generate_backup_codes: Generate backup codes
+  twofa_text_generate_backup_codes_confirmation: This will invalidate all existing backup
+    codes and generate new ones. Would you like to continue?
+  twofa_notice_backup_codes_generated: Your backup codes have been generated.
+  twofa_warning_backup_codes_generated_invalidated: New backup codes have been generated.
+    Your existing codes from %{time} are now invalid.
+  twofa_label_backup_codes: Two-factor authentication backup codes
+  twofa_text_backup_codes_hint: Use these codes instead of a one-time password should
+    you not have access to your second factor. Each code can only be used once. It is
+    recommended to print and store them in a safe place.
+  twofa_text_backup_codes_created_at: Backup codes generated %{datetime}.
+  twofa_backup_codes_already_shown: Backup codes cannot be shown again, please <a data-method="post"
+    href="%{bc_path}">generate new backup codes</a> if required.
+  error_can_not_execute_macro_html: Error executing the <strong>%{name}</strong> macro
+    (%{error})
+  error_macro_does_not_accept_block: This macro does not accept a block of text
+  error_childpages_macro_no_argument: With no argument, this macro can be called from
+    wiki pages only
+  error_circular_inclusion: Circular inclusion detected
+  error_page_not_found: Page not found
+  error_filename_required: Filename required
+  error_invalid_size_parameter: Invalid size parameter
+  error_attachment_not_found: Attachment %{name} not found
+  permission_delete_project: Delete the project
+  field_twofa_scheme: Two-factor authentication scheme
+  text_user_destroy_confirmation: Are you sure you want to delete this user and remove
+    all references to them? This cannot be undone. Often, locking a user instead of
+    deleting them is the better solution. To confirm, please enter their login (%{login})
+    below.
+  text_project_destroy_enter_identifier: To confirm, please enter the project's identifier
+    (%{identifier}) below.
+  button_add_subtask: Add subtask
+  notice_invalid_watcher: 'Invalid watcher: User will not receive any notifications
+    because it does not have access to view this object.'
+  button_fetch_changesets: Fetch commits
+  permission_view_message_watchers: View message watchers list
+  permission_add_message_watchers: Add message watchers
+  permission_delete_message_watchers: Delete message watchers
+  label_message_watchers: Watchers
+  button_copy_link: Copy link
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.

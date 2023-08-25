@@ -6,8 +6,8 @@ module Redmine
   # @private
   module VERSION
     MAJOR = 4
-    MINOR = 1
-    TINY  = 7
+    MINOR = 2
+    TINY  = 9
 
     # Branch values:
     # * official release: nil

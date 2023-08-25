@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +31,6 @@ module Redmine
         class ScmCommandAborted < ::Redmine::Scm::Adapters::CommandFailed; end
 
         class << self
-
           def client_command
             ""
           end
@@ -68,7 +67,6 @@ module Redmine
           def client_available
             true
           end
-
         end
 
         def initialize(url, root_url=nil, login=nil, password=nil,
@@ -160,12 +158,12 @@ module Redmine
 
         def with_leading_slash(path)
           path ||= ''
-          (path[0,1]!="/") ? "/#{path}" : path
+          (path[0, 1]!="/") ? "/#{path}" : path
         end
 
         def with_trailling_slash(path)
           path ||= ''
-          (path[-1,1] == "/") ? path : "#{path}/"
+          (path[-1, 1] == "/") ? path : "#{path}/"
         end
 
         def without_leading_slash(path)
@@ -175,7 +173,15 @@ module Redmine
 
         def without_trailling_slash(path)
           path ||= ''
-          (path[-1,1] == "/") ? path[0..-2] : path
+          (path[-1, 1] == "/") ? path[0..-2] : path
+        end
+
+        def valid_name?(name)
+          return true if name.nil?
+          return true if name.is_a?(Integer) && name > 0
+          return true if name.is_a?(String) && name =~ /\A[0-9]*\z/
+
+          false
         end
 
         def valid_name?(name)
@@ -288,6 +294,7 @@ module Redmine
         def scm_iconv(to, from, str)
           return if str.nil?
           return str if to == from && str.encoding.to_s == from
+
           str = str.dup
           str.force_encoding(from)
           begin
@@ -308,13 +315,13 @@ module Redmine
 
       class Entries < Array
         def sort_by_name
-          dup.sort! {|x,y|
+          dup.sort! do |x, y|
             if x.kind == y.kind
               x.name.to_s <=> y.name.to_s
             else
               x.kind <=> y.kind
             end
-          }
+          end
         end
 
         def revisions
@@ -342,11 +349,11 @@ module Redmine
         end
 
         def is_file?
-           self.kind == 'file'
+          self.kind == 'file'
         end
 
         def is_dir?
-           self.kind == 'dir'
+          self.kind == 'dir'
         end
 
         def is_text?
@@ -364,13 +371,13 @@ module Redmine
 
       class Revisions < Array
         def latest
-          sort {|x,y|
+          sort do |x, y|
             unless x.time.nil? or y.time.nil?
               x.time <=> y.time
             else
               0
             end
-          }.last
+          end.last
         end
       end
 
@@ -439,7 +446,7 @@ module Redmine
       module ScmData
         def self.binary?(data)
           unless data.empty?
-            data.count( "^ -~", "^\r\n" ).fdiv(data.size) > 0.3 || data.index( "\x00" )
+            data.count("^ -~", "^\r\n").fdiv(data.size) > 0.3 || data.index("\x00")
           end
         end
       end

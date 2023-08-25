@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,6 +22,9 @@ Rails.application.routes.draw do
 
   match 'login', :to => 'account#login', :as => 'signin', :via => [:get, :post]
   match 'logout', :to => 'account#logout', :as => 'signout', :via => [:get, :post]
+  match 'account/twofa/confirm', :to => 'account#twofa_confirm', :via => :get
+  match 'account/twofa/resend', :to => 'account#twofa_resend', :via => :post
+  match 'account/twofa', :to => 'account#twofa', :via => [:get, :post]
   match 'account/register', :to => 'account#register', :via => [:get, :post], :as => 'register'
   match 'account/lost_password', :to => 'account#lost_password', :via => [:get, :post], :as => 'lost_password'
   match 'account/activate', :to => 'account#activate', :via => :get
@@ -43,8 +46,11 @@ Rails.application.routes.draw do
   post 'boards/:board_id/topics/:id/edit', :to => 'messages#edit'
   post 'boards/:board_id/topics/:id/destroy', :to => 'messages#destroy'
 
-  # Misc issue routes. TODO: move into resources
+  # Auto complate routes
   match '/issues/auto_complete', :to => 'auto_completes#issues', :via => :get, :as => 'auto_complete_issues'
+  match '/wiki_pages/auto_complete', :to => 'auto_completes#wiki_pages', :via => :get, :as => 'auto_complete_wiki_pages'
+
+  # Misc issue routes. TODO: move into resources
   match '/issues/context_menu', :to => 'context_menus#issues', :as => 'issues_context_menu', :via => [:get, :post]
   match '/issues/changes', :to => 'journals#index', :as => 'issue_changes', :via => :get
   match '/issues/:id/quoted', :to => 'journals#new', :id => /\d+/, :via => :post, :as => 'quoted_issue'
@@ -64,8 +70,12 @@ Rails.application.routes.draw do
   get 'projects/:id/issues/report', :to => 'reports#issue_report', :as => 'project_issues_report'
   get 'projects/:id/issues/report/:detail', :to => 'reports#issue_report_details', :as => 'project_issues_report_details'
 
-  get   '/issues/imports/new', :to => 'imports#new', :defaults => { :type => 'IssueImport' }, :as => 'new_issues_import'
-  get   '/time_entries/imports/new', :to => 'imports#new', :defaults => { :type => 'TimeEntryImport' }, :as => 'new_time_entries_import'
+  get   '/issues/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'IssueImport'}, :as => 'new_issues_import'
+  get   '/time_entries/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'TimeEntryImport'}, :as => 'new_time_entries_import'
+  get   '/users/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'UserImport'}, :as => 'new_users_import'
   post  '/imports', :to => 'imports#create', :as => 'imports'
   get   '/imports/:id', :to => 'imports#show', :as => 'import'
   match '/imports/:id/settings', :to => 'imports#settings', :via => [:get, :post], :as => 'import_settings'
@@ -84,6 +94,19 @@ Rails.application.routes.draw do
   match 'my/add_block', :controller => 'my', :action => 'add_block', :via => :post
   match 'my/remove_block', :controller => 'my', :action => 'remove_block', :via => :post
   match 'my/order_blocks', :controller => 'my', :action => 'order_blocks', :via => :post
+  match 'my/twofa/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/confirm', :controller => 'twofa', :action => 'activate_confirm', :via => :get
+  match 'my/twofa/:scheme/activate', :controller => 'twofa', :action => 'activate', :via => [:get, :post]
+  match 'my/twofa/:scheme/deactivate/init', :controller => 'twofa', :action => 'deactivate_init', :via => :post
+  match 'my/twofa/:scheme/deactivate/confirm', :controller => 'twofa', :action => 'deactivate_confirm', :via => :get
+  match 'my/twofa/:scheme/deactivate', :controller => 'twofa', :action => 'deactivate', :via => [:get, :post]
+  match 'my/twofa/select_scheme', :controller => 'twofa', :action => 'select_scheme', :via => :get
+  match 'my/twofa/backup_codes/init', :controller => 'twofa_backup_codes', :action => 'init', :via => :post
+  match 'my/twofa/backup_codes/confirm', :controller => 'twofa_backup_codes', :action => 'confirm', :via => :get
+  match 'my/twofa/backup_codes/create', :controller => 'twofa_backup_codes', :action => 'create', :via => [:get, :post]
+  match 'my/twofa/backup_codes', :controller => 'twofa_backup_codes', :action => 'show', :via => [:get]
+  match 'users/:user_id/twofa/deactivate', :controller => 'twofa', :action => 'admin_deactivate', :via => :post
 
   resources :users do
     resources :memberships, :controller => 'principal_memberships'
@@ -206,7 +229,7 @@ Rails.application.routes.draw do
   resources :queries, :except => [:show]
   get '/queries/filter', :to => 'queries#filter', :as => 'queries_filter'
 
-  resources :news, :only => [:index, :show, :edit, :update, :destroy]
+  resources :news, :only => [:index, :show, :edit, :update, :destroy, :create, :new]
   match '/news/:id/comments', :to => 'comments#create', :via => :post
   match '/news/:id/comments/:comment_id', :to => 'comments#destroy', :via => :delete
 
@@ -245,6 +268,7 @@ Rails.application.routes.draw do
   # repositories routes
   get 'projects/:id/repository/:repository_id/statistics', :to => 'repositories#stats'
   get 'projects/:id/repository/:repository_id/graph', :to => 'repositories#graph'
+  post 'projects/:id/repository/:repository_id/fetch_changesets', :to => 'repositories#fetch_changesets'
 
   get 'projects/:id/repository/:repository_id/revisions/:rev', :to => 'repositories#revision'
   get 'projects/:id/repository/:repository_id/revision', :to => 'repositories#revision'
@@ -289,6 +313,7 @@ Rails.application.routes.draw do
   resources :attachments, :only => [:show, :update, :destroy]
   get 'attachments/:object_type/:object_id/edit', :to => 'attachments#edit_all', :as => :object_attachments_edit
   patch 'attachments/:object_type/:object_id', :to => 'attachments#update_all', :as => :object_attachments
+  get 'attachments/:object_type/:object_id/download', :to => 'attachments#download_all', :as => :object_attachments_download
 
   resources :groups do
     resources :memberships, :controller => 'principal_memberships'

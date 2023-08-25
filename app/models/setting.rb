@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,30 +18,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Setting < ActiveRecord::Base
-
   PASSWORD_CHAR_CLASSES = {
-        'uppercase'     => /[A-Z]/,
-        'lowercase'     => /[a-z]/,
-        'digits'        => /[0-9]/,
-        'special_chars' => /[[:ascii:]&&[:graph:]&&[:^alnum:]]/
-    }
+    'uppercase'     => /[A-Z]/,
+    'lowercase'     => /[a-z]/,
+    'digits'        => /[0-9]/,
+    'special_chars' => /[[:ascii:]&&[:graph:]&&[:^alnum:]]/
+  }
 
   DATE_FORMATS = [
-        '%Y-%m-%d',
-        '%d/%m/%Y',
-        '%d.%m.%Y',
-        '%d-%m-%Y',
-        '%m/%d/%Y',
-        '%d %b %Y',
-        '%d %B %Y',
-        '%b %d, %Y',
-        '%B %d, %Y'
-    ]
+    '%Y-%m-%d',
+    '%d/%m/%Y',
+    '%d.%m.%Y',
+    '%d-%m-%Y',
+    '%m/%d/%Y',
+    '%d %b %Y',
+    '%d %B %Y',
+    '%b %d, %Y',
+    '%B %d, %Y'
+  ]
 
   TIME_FORMATS = [
     '%H:%M',
     '%I:%M %p'
-    ]
+  ]
 
   ENCODINGS =  %w(US-ASCII
                   windows-1250
@@ -55,7 +54,6 @@ class Setting < ActiveRecord::Base
                   windows-1258
                   windows-31j
                   ISO-2022-JP
-                  ISO-2022-KR
                   ISO-8859-1
                   ISO-8859-2
                   ISO-8859-3
@@ -77,7 +75,6 @@ class Setting < ActiveRecord::Base
                   CP932
                   GB18030
                   GBK
-                  ISCII91
                   EUC-KR
                   Big5
                   Big5-HKSCS
@@ -86,11 +83,19 @@ class Setting < ActiveRecord::Base
   cattr_accessor :available_settings
   self.available_settings ||= {}
 
-  validates_uniqueness_of :name, :if => Proc.new {|setting| setting.new_record? || setting.name_changed?}
+  validates_uniqueness_of(
+    :name,
+    :if => Proc.new do |setting|
+      setting.new_record? || setting.name_changed?
+    end
+  )
   validates_inclusion_of :name, :in => Proc.new {available_settings.keys}
-  validates_numericality_of :value, :only_integer => true, :if => Proc.new { |setting|
-    (s = available_settings[setting.name]) && s['format'] == 'int'
-  }
+  validates_numericality_of(
+    :value, :only_integer => true,
+    :if => Proc.new do |setting|
+      (s = available_settings[setting.name]) && s['format'] == 'int'
+    end
+  )
 
   # Hash used to cache setting values
   @cached_settings = {}
@@ -100,8 +105,7 @@ class Setting < ActiveRecord::Base
     v = read_attribute(:value)
     # Unserialize serialized settings
     if available_settings[name]['serialized'] && v.is_a?(String)
-      # YAML.load works as YAML.safe_load if Psych >= 4.0 is installed
-      v = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(v) : YAML.load(v)
+      v = YAML.safe_load(v, permitted_classes: Rails.configuration.active_record.yaml_column_permitted_classes)
       v = force_utf8_strings(v)
     end
     v = v.to_sym if available_settings[name]['format'] == 'symbol' && !v.blank?
@@ -129,6 +133,7 @@ class Setting < ActiveRecord::Base
   # Updates multiple settings from params and sends a security notification if needed
   def self.set_all_from_params(settings)
     return nil unless settings.is_a?(Hash)
+
     settings = settings.dup.symbolize_keys
 
     errors = validate_all_from_params(settings)
@@ -137,6 +142,7 @@ class Setting < ActiveRecord::Base
     changes = []
     settings.each do |name, value|
       next unless available_settings[name.to_s]
+
       previous_value = Setting[name]
       set_from_params name, value
       if available_settings[name.to_s]['security_notifications'] && Setting[name] != previous_value
@@ -152,8 +158,12 @@ class Setting < ActiveRecord::Base
   def self.validate_all_from_params(settings)
     messages = []
     [
-     [:mail_handler_enable_regex_delimiters,         :mail_handler_body_delimiters,    /[\r\n]+/],
-     [:mail_handler_enable_regex_excluded_filenames, :mail_handler_excluded_filenames, /\s*,\s*/]
+      [:mail_handler_enable_regex_delimiters,
+       :mail_handler_body_delimiters,
+       /[\r\n]+/],
+      [:mail_handler_enable_regex_excluded_filenames,
+       :mail_handler_excluded_filenames,
+       /\s*,\s*/]
     ].each do |enable_regex, regex_field, delimiter|
       if settings.key?(regex_field) || settings.key?(enable_regex)
         regexp = Setting.send("#{enable_regex}?")
@@ -174,7 +184,7 @@ class Setting < ActiveRecord::Base
     if settings.key?(:mail_from)
       begin
         mail_from = Mail::Address.new(settings[:mail_from])
-        raise unless mail_from.address =~ EmailAddress::EMAIL_REGEXP
+        raise unless EmailAddress::EMAIL_REGEXP.match?(mail_from.address)
       rescue
         messages << [:mail_from, l('activerecord.errors.messages.invalid')]
       end
@@ -185,7 +195,7 @@ class Setting < ActiveRecord::Base
   # Sets a setting value from params
   def self.set_from_params(name, params)
     params = params.dup
-    params.delete_if {|v| v.blank? } if params.is_a?(Array)
+    params.delete_if {|v| v.blank?} if params.is_a?(Array)
     params.symbolize_keys! if params.is_a?(Hash)
 
     m = "#{name}_from_params"
@@ -208,14 +218,21 @@ class Setting < ActiveRecord::Base
       attributes = params.except(:keywords).keys
       params[:keywords].each_with_index do |keywords, i|
         next if keywords.blank?
-        s << attributes.inject({}) {|h, a|
+
+        s << attributes.inject({}) do |h, a|
           value = params[a][i].to_s
           h[a.to_s] = value if value.present?
           h
-        }.merge('keywords' => keywords)
+        end.merge('keywords' => keywords)
       end
     end
     s
+  end
+
+  def self.twofa_from_params(params)
+    # unpair all current 2FA pairings when switching off 2FA
+    Redmine::Twofa.unpair_all! if params == '0' && self.twofa?
+    params
   end
 
   # Helper that returns an array based on per_page_options setting
@@ -229,10 +246,12 @@ class Setting < ActiveRecord::Base
     if commit_update_keywords.is_a?(Array)
       commit_update_keywords.each do |rule|
         next unless rule.is_a?(Hash)
+
         rule = rule.dup
         rule.delete_if {|k, v| v.blank?}
         keywords = rule['keywords'].to_s.downcase.split(",").map(&:strip).reject(&:blank?)
         next if keywords.empty?
+
         a << rule.merge('keywords' => keywords)
       end
     end
@@ -315,7 +334,7 @@ class Setting < ActiveRecord::Base
       end
     elsif arg.is_a?(Hash)
       arg = arg.dup
-      arg.each do |k,v|
+      arg.each do |k, v|
         arg[k] = force_utf8_strings(v)
       end
       arg
@@ -329,6 +348,7 @@ class Setting < ActiveRecord::Base
   def self.find_or_default(name)
     name = name.to_s
     raise "There's no setting named #{name}" unless available_settings.has_key?(name)
+
     setting = where(:name => name).order(:id => :desc).first
     unless setting
       setting = new

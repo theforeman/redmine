@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,9 +36,18 @@ module GroupsHelper
       content_tag('div', principals_check_box_tags('user_ids[]', principals), :id => 'principals'),
       :class => 'objects-selection'
     )
-    links = pagination_links_full(principal_pages, principal_count, :per_page_links => false) {|text, parameters, options|
-      link_to text, autocomplete_for_user_group_path(group, parameters.merge(:q => params[:q], :format => 'js')), :remote => true
-    }
+    links =
+      pagination_links_full(principal_pages, principal_count,
+                            :per_page_links => false) do |text, parameters, options|
+        link_to(
+          text,
+          autocomplete_for_user_group_path(
+            group,
+            parameters.merge(:q => params[:q], :format => 'js')
+          ),
+          :remote => true
+        )
+      end
     s + content_tag('span', links, :class => 'pagination')
   end
 end

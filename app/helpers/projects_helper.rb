@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -73,8 +73,12 @@ module ProjectsHelper
 
   # Renders the projects index
   def render_project_hierarchy(projects)
+    bookmarked_project_ids = User.current.bookmarked_project_ids
     render_project_nested_lists(projects) do |project|
-      s = link_to_project(project, {}, :class => "#{project.css_classes} #{User.current.member_of?(project) ? 'icon icon-user my-project' : nil}")
+      classes = project.css_classes.split
+      classes += %w(icon icon-user my-project) if User.current.member_of?(project)
+      classes += %w(icon icon-bookmarked-project) if bookmarked_project_ids.include?(project.id)
+      s = link_to_project(project, {}, :class => classes.uniq.join(' '))
       if project.description.present?
         s << content_tag('div', textilizable(project.short_description, :project => project), :class => 'wiki description')
       end
@@ -84,7 +88,7 @@ module ProjectsHelper
 
   # Returns a set of options for a select field, grouped by project.
   def version_options_for_select(versions, selected=nil)
-    grouped = Hash.new {|h,k| h[k] = []}
+    grouped = Hash.new {|h, k| h[k] = []}
     versions.each do |version|
       grouped[version.project.name] << [version.name, version.id]
     end
@@ -130,7 +134,7 @@ module ProjectsHelper
 
   def render_api_includes(project, api)
     api.array :trackers do
-      project.trackers.each do |tracker|
+      project.rolled_up_trackers(false).visible.each do |tracker|
         api.tracker(:id => tracker.id, :name => tracker.name)
       end
     end if include_in_api_response?('trackers')
@@ -152,10 +156,17 @@ module ProjectsHelper
         api.enabled_module(:id => enabled_module.id, :name => enabled_module.name)
       end
     end if include_in_api_response?('enabled_modules')
+
+    api.array :issue_custom_fields do
+      project.issue_custom_fields.each do |custom_field|
+        api.custom_field(:id => custom_field.id, :name => custom_field.name)
+      end
+    end if include_in_api_response?('issue_custom_fields')
   end
 
   def bookmark_link(project, user = User.current)
     return '' unless user && user.logged?
+
     @jump_box ||= Redmine::ProjectJumpBox.new user
     bookmarked = @jump_box.bookmark?(project)
     css = +"icon bookmark "

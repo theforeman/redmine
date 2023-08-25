@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,6 @@ module Redmine
   module Scm
     module Adapters
       class MercurialAdapter < AbstractAdapter
-
         # Mercurial executable name
         HG_BIN = Redmine::Configuration['scm_mercurial_command'] || "hg"
         HELPERS_DIR = File.dirname(__FILE__) + "/mercurial"
@@ -65,7 +64,7 @@ module Redmine
           end
 
           def hgversion_from_command_line
-            shellout("#{sq_bin} --version") { |io| io.read }.to_s
+            shellout("#{sq_bin} --version") {|io| io.read}.to_s
           end
 
           def template_path
@@ -98,21 +97,22 @@ module Redmine
         end
 
         def tags
-          as_ary(summary['repository']['tag']).map { |e| e['name'] }
+          as_ary(summary['repository']['tag']).map {|e| CGI.unescape(e['name'])}
         end
 
         # Returns map of {'tag' => 'nodeid', ...}
         def tagmap
-          alist = as_ary(summary['repository']['tag']).map do |e|
-            e.values_at('name', 'node')
+          map = {}
+          as_ary(summary['repository']['tag']).each do |e|
+            map[CGI.unescape(e['name'])] = e['node']
           end
-          Hash[*alist.flatten]
+          map
         end
 
         def branches
           brs = []
           as_ary(summary['repository']['branch']).each do |e|
-            br = Branch.new(e['name'])
+            br = Branch.new(CGI.unescape(e['name']))
             br.revision =  e['revision']
             br.scmid    =  e['node']
             brs << br
@@ -122,14 +122,16 @@ module Redmine
 
         # Returns map of {'branch' => 'nodeid', ...}
         def branchmap
-          alist = as_ary(summary['repository']['branch']).map do |e|
-            e.values_at('name', 'node')
+          map = {}
+          branches.each do |b|
+            map[b.to_s] = b.scmid
           end
-          Hash[*alist.flatten]
+          map
         end
 
         def summary
           return @summary if @summary
+
           hg 'rhsummary' do |io|
             output = io.read.force_encoding('UTF-8')
             begin
@@ -178,7 +180,7 @@ module Redmine
 
         def revisions(path=nil, identifier_from=nil, identifier_to=nil, options={})
           revs = Revisions.new
-          each_revision(path, identifier_from, identifier_to, options) { |e| revs << e }
+          each_revision(path, identifier_from, identifier_to, options) {|e| revs << e}
           revs
         end
 
@@ -220,13 +222,15 @@ module Redmine
             yield Revision.new(:revision => le['revision'],
                                :scmid    => le['node'],
                                :author   =>
-                                         (begin
-                                            le['author']['__content__']
-                                          rescue
-                                            ''
-                                          end),
+                                 CGI.unescape(
+                                   begin
+                                     le['author']['__content__']
+                                   rescue
+                                     ''
+                                   end
+                                 ),
                                :time     => Time.parse(le['date']['__content__']),
-                               :message  => le['msg']['__content__'],
+                               :message  => CGI.unescape(le['msg']['__content__']),
                                :paths    => paths,
                                :parents  => parents_ary)
           end
@@ -239,7 +243,7 @@ module Redmine
           hg_args << "--from=#{CGI.escape(branch)}"
           hg_args << '--to=0'
           hg_args << "--limit=#{options[:limit]}" if options[:limit]
-          hg(*hg_args) { |io| io.readlines.map { |e| e.chomp } }
+          hg(*hg_args) {|io| io.readlines.map {|e| e.chomp}}
         end
 
         def diff(path, identifier_from, identifier_to=nil)
@@ -280,6 +284,7 @@ module Redmine
           hg 'rhannotate', '-ncu', "-r#{CGI.escape(hgrev(identifier))}", '--', hgtarget(p) do |io|
             io.each_line do |line|
               next unless line.b =~ %r{^([^:]+)\s(\d+)\s([0-9a-f]+):\s(.*)$}
+
               r = Revision.new(:author => $1.strip, :revision => $2, :scmid => $3,
                                :identifier => $3)
               blame.add_line($4.rstrip, r)
@@ -315,10 +320,10 @@ module Redmine
         # Runs 'hg' command with the given args
         def hg(*args, &block)
           # as of hg 4.4.1, early parsing of bool options is not terminated at '--'
-          if args.any? { |s| HG_EARLY_BOOL_ARG.match?(s) }
+          if args.any? {|s| HG_EARLY_BOOL_ARG.match?(s)}
             raise HgCommandArgumentError, "malicious command argument detected"
           end
-          if args.take_while { |s| s != '--' }.any? { |s| HG_EARLY_LIST_ARG.match?(s) }
+          if args.take_while {|s| s != '--'}.any? {|s| HG_EARLY_LIST_ARG.match?(s)}
             raise HgCommandArgumentError, "malicious command argument detected"
           end
 
@@ -328,13 +333,15 @@ module Redmine
           full_args << '--config' << "extensions.redminehelper=#{HG_HELPER_EXT}"
           full_args << '--config' << 'diff.git=false'
           full_args += args
-          ret = shellout(
-                   self.class.sq_bin + ' ' + full_args.map { |e| shell_quote e.to_s }.join(' '),
-                   &block
-                   )
+          ret =
+            shellout(
+              self.class.sq_bin + ' ' + full_args.map {|e| shell_quote e.to_s}.join(' '),
+              &block
+            )
           if $? && $?.exitstatus != 0
             raise HgCommandAborted, "hg exited with non-zero status: #{$?.exitstatus}"
           end
+
           ret
         end
         private :hg
@@ -355,6 +362,7 @@ module Redmine
 
         def as_ary(o)
           return [] unless o
+
           o.is_a?(Array) ? o : Array[o]
         end
         private :as_ary

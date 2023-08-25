@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -44,11 +44,22 @@ class CalendarsController < ApplicationController
     @query.sort_criteria = nil
     if @query.valid?
       events = []
-      events += @query.issues(:include => [:tracker, :assigned_to, :priority],
-                              :conditions => ["((start_date BETWEEN ? AND ?) OR (due_date BETWEEN ? AND ?))", @calendar.startdt, @calendar.enddt, @calendar.startdt, @calendar.enddt]
-                              )
-      events += @query.versions(:conditions => ["effective_date BETWEEN ? AND ?", @calendar.startdt, @calendar.enddt])
-
+      events +=
+        @query.issues(
+          :include => [:tracker, :assigned_to, :priority],
+          :conditions => [
+            "((start_date BETWEEN ? AND ?) OR (due_date BETWEEN ? AND ?))",
+            @calendar.startdt, @calendar.enddt,
+            @calendar.startdt, @calendar.enddt
+          ]
+        )
+      events +=
+        @query.versions(
+          :conditions => [
+            "effective_date BETWEEN ? AND ?",
+            @calendar.startdt, @calendar.enddt
+          ]
+        )
       @calendar.events = events
     end
 

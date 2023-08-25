@@ -261,7 +261,6 @@
   notice_failed_to_save_issues: "無法儲存 %{count} 議題到下列所選取的 %{total} 個項目中： %{ids}。"
   notice_failed_to_save_time_entries: "無法儲存 %{count} 個工時到下列所選取的 %{total} 個項目中： %{ids}。"
   notice_failed_to_save_members: "成員儲存失敗: %{errors}."
-  notice_no_issue_selected: "未選擇任何議題！請勾選您想要編輯的議題。"
   notice_account_pending: "您的帳號已經建立，正在等待管理員的審核。"
   notice_default_data_loaded: 預設組態已載入成功。
   notice_unable_delete_version: 無法刪除版本。
@@ -299,7 +298,7 @@
   warning_attachments_not_saved: "%{count} 個附加檔案無法被儲存。"
   error_password_expired: "您的密碼已經過期或是管理員要求您變更密碼."
   error_invalid_file_encoding: "這個檔案不是一個有效的 %{encoding} 編碼檔案"
-  error_invalid_csv_file_or_settings: "這個檔案不是一個 CSV 檔案，或是未符合下面所列之設定值"
+  error_invalid_csv_file_or_settings: "這個檔案不是一個 CSV 檔案，或是未符合下面所列之設定值 (%{value})"
   error_can_not_read_import_file: "讀取匯入檔案時發生錯誤"
   error_attachment_extension_not_allowed: "附件之附檔名不允許使用 %{extension}"
   error_ldap_bind_credentials: "無效的 LDAP 帳號/密碼"
@@ -423,7 +422,7 @@
   field_comments_sorting: 回應排序
   field_parent_title: 父頁面
   field_editable: 可編輯
-  field_watcher: 觀察者
+  field_watcher: 監看員
   field_identity_url: OpenID 網址
   field_content: 內容
   field_group_by: 結果分組方式
@@ -581,9 +580,9 @@
   permission_save_queries: 儲存查詢
   permission_view_gantt: 檢視甘特圖
   permission_view_calendar: 檢視日曆
-  permission_view_issue_watchers: 檢視監看者清單
-  permission_add_issue_watchers: 新增監看者
-  permission_delete_issue_watchers: 刪除監看者
+  permission_view_issue_watchers: 檢視監看員清單
+  permission_add_issue_watchers: 新增監看員
+  permission_delete_issue_watchers: 刪除監看員
   permission_log_time: 紀錄耗用工時
   permission_view_time_entries: 檢視耗用工時
   permission_edit_time_entries: 編輯工時紀錄
@@ -705,7 +704,6 @@
   label_last_login: 最近一次連線
   label_registered_on: 註冊於
   label_activity: 活動
-  label_overall_activity: 整體活動
   label_user_activity: "%{value} 的活動"
   label_new: 建立新的...
   label_logged_as: 目前登入
@@ -887,7 +885,6 @@
   label_issue_tracking: 議題追蹤
   label_spent_time: 耗用工時
   label_total_spent_time: 耗用工時總計
-  label_overall_spent_time: 整體耗用工時
   label_f_hour: "%{value} 小時"
   label_f_hour_plural: "%{value} 小時"
   label_f_hour_short: "%{value} 小時"
@@ -962,9 +959,9 @@
   label_user_mail_option_all: "提醒與我的專案有關的全部事件"
   label_user_mail_option_selected: "只提醒我所選擇專案中的事件..."
   label_user_mail_option_none: "取消提醒"
-  label_user_mail_option_only_my_events: "只提醒我觀察中或參與中的事物"
-  label_user_mail_option_only_assigned: "只提醒我觀察中或分派給我的事物"
-  label_user_mail_option_only_owner: "只提醒我觀察中或擁有者為我的事物"
+  label_user_mail_option_only_my_events: "只提醒我監看中或參與中的事物"
+  label_user_mail_option_only_assigned: "只提醒我監看中或分派給我的事物"
+  label_user_mail_option_only_owner: "只提醒我監看中或擁有者為我的事物"
   label_user_mail_no_self_notified: "不提醒我自己所做的變更"
   label_registration_activation_by_email: 透過電子郵件啟用帳戶
   label_registration_manual_activation: 手動啟用帳戶
@@ -984,7 +981,7 @@
   label_reverse_chronological_order: 以時間由近至遠排序
   label_incoming_emails: 傳入的電子郵件
   label_generate_key: 產生金鑰
-  label_issue_watchers: 監看者
+  label_issue_watchers: 監看員
   label_example: 範例
   label_display: 顯示
   label_sort: 排序
@@ -1030,7 +1027,7 @@
   label_copy_subtasks: 複製子任務
   label_item_position: "%{position} / %{count}"
   label_completed_versions: 已完成版本
-  label_search_for_watchers: 搜尋可供加入的監看者
+  label_search_for_watchers: 搜尋可供加入的監看員
   label_session_expiration: 工作階段逾期
   label_status_transitions: 狀態轉換
   label_fields_permissions: 欄位權限
@@ -1139,8 +1136,8 @@
   button_sort: 排序
   button_log_time: 記錄時間
   button_rollback: 還原至此版本
-  button_watch: 觀察
-  button_unwatch: 取消觀察
+  button_watch: 監看
+  button_unwatch: 取消監看
   button_reply: 回應
   button_archive: 封存
   button_unarchive: 取消封存
@@ -1179,7 +1176,6 @@
 
   text_select_mail_notifications: 選擇欲寄送提醒通知郵件之動作
   text_regexp_info: eg. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 代表「不限制」
   text_project_destroy_confirmation: 您確定要刪除這個專案和其他相關資料？
   text_subprojects_destroy_warning: "下列子專案： %{value} 將一併被刪除。"
   text_workflow_edit: 選擇角色與追蹤標籤以設定其工作流程
@@ -1207,7 +1203,7 @@
   text_issue_category_destroy_question: "有 (%{count}) 個議題被分派到此分類. 請選擇您想要的動作？"
   text_issue_category_destroy_assignments: 移除這些議題的分類
   text_issue_category_reassign_to: 重新分派這些議題至其它分類
-  text_user_mail_option: "對於那些未被選擇的專案，將只會接收到您正在觀察中，或是參與中的議題通知。（「參與中的議題」包含您建立的或是分派給您的議題）"
+  text_user_mail_option: "對於那些未被選擇的專案，將只會接收到您正在監看中，或是參與中的議題通知。（「參與中的議題」包含您建立的或是分派給您的議題）"
   text_no_configuration_data: "角色、追蹤標籤、議題狀態與流程尚未被設定完成。\n強烈建議您先載入預設的組態。將預設組態載入之後，您可再變更其中之值。"
   text_load_default_configuration: 載入預設組態
   text_status_changed_by_changeset: "已套用至變更集 %{value}."
@@ -1369,3 +1365,81 @@
   label_display_type_board: 面板
   label_my_bookmarks: 我的書籤
   label_import_time_entries: 匯入工時項目紀錄
+  field_toolbar_language_options: 程式碼反白工具可用語言
+  label_user_mail_notify_about_high_priority_issues_html: "同時通知我關於議題之優先權等級為 <em>%{prio}</em> 或以上等級之事物"
+  label_assign_to_me: 分派給我
+  notice_issue_not_closable_by_open_tasks: 此議題無法被結束，因為它至少還有一個尚在進行中的子任務。
+  notice_issue_not_closable_by_blocking_issue: 此議題無法被結束，因為它被至少一個尚在進行中的議題所阻斷。
+  notice_issue_not_reopenable_by_closed_parent_issue: 此議題無法被重新開啟，因為它的父議題已結束。
+  error_bulk_download_size_too_big: 這些附件無法被大量下載，因為其檔案大小總計超過允許的最大值 (%{max_size}) 。
+  setting_bulk_download_max_size: 大量下載檔案大小總計最大值
+  label_download_all_attachments: 下載所有檔案
+  error_attachments_too_many: 此檔案無法被上傳，因為已經超出允許同時上傳之附加檔案數量的最大值 (%{max_number_of_files}) 。
+  setting_email_domains_allowed: 允許的電子郵件網域
+  setting_email_domains_denied: 封鎖的電子郵件網域
+  field_passwd_changed_on: 密碼上次變更於
+  label_relations_mapping: 關聯對應
+  label_import_users: 匯入用戶
+  label_days_to_html: "%{days} 天，最多至 %{date}"
+  setting_twofa: 雙因素驗證
+  label_optional: 選用項
+  label_required_lower: 必要項
+  button_disable: 關閉
+  twofa__totp__name: 驗證器應用程式
+  twofa__totp__text_pairing_info_html: 掃描這個 QR code 或將純文字金鑰輸入至 TOTP 應用程式
+    (例如 <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) 並將其顯示的代碼輸入至下面的欄位中, 以啟用雙因素驗證.
+  twofa__totp__label_plain_text_key: 純文字金鑰
+  twofa__totp__label_activate: 啟用驗證器應用程式
+  twofa_currently_active: '目前使用中: %{twofa_scheme_name}'
+  twofa_not_active: 尚未啟用
+  twofa_label_code: 代碼
+  twofa_hint_disabled_html: 設定為 <strong>%{label}</strong> 將會停用並解除所有用戶已配對之雙因素驗證裝置.
+  twofa_hint_required_html: 設定為 <strong>%{label}</strong> 將會要求所有用戶於下次登入時, 設置雙因素驗證.
+  twofa_label_setup: 開啟雙因素驗證
+  twofa_label_deactivation_confirmation: 關閉雙因素驗證
+  twofa_notice_select: '請選擇您想要使用的雙因素配置方式:'
+  twofa_warning_require: 管理員要求您開啟雙因素驗證.
+  twofa_activated: 雙因素驗證已開啟成功. 建議您為自己的帳戶 <a data-method="post" href="%{bc_path}">產生備用代碼</a>.
+  twofa_deactivated: 雙因素驗證已關閉.
+  twofa_mail_body_security_notification_paired: 雙因素驗證已使用 %{field} 開啟成功.
+  twofa_mail_body_security_notification_unpaired: 您帳戶的雙因素驗證已關閉.
+  twofa_mail_body_backup_codes_generated: 新雙因素驗證的備用代碼已產生.
+  twofa_mail_body_backup_code_used: 有個雙因素驗證的備用代碼被使用.
+  twofa_invalid_code: 代碼是無效的或過期的.
+  twofa_label_enter_otp: 請輸入您的雙因素驗證代碼.
+  twofa_too_many_tries: 重試次數過多.
+  twofa_resend_code: 重送代碼
+  twofa_code_sent: 有個驗證代碼已經傳送給您.
+  twofa_generate_backup_codes: 產生備用代碼
+  twofa_text_generate_backup_codes_confirmation: 這會將所有現存的備用代碼設為無效, 並產生新的備用代碼. 您要繼續嗎?
+  twofa_notice_backup_codes_generated: 您的備用代碼已產生.
+  twofa_warning_backup_codes_generated_invalidated: 新的備用代碼已產生. 您現存的備用代碼, 從 %{time} 起已經失效.
+  twofa_label_backup_codes: 雙因素驗證備用代碼
+  twofa_text_backup_codes_hint: 當您無法存取雙因素配置方式取得單次密碼時, 使用這些替代備用代碼. 每個代碼僅能被使用一次. 建議您將備用代碼列印出來, 並存放於安全的地點.
+  twofa_text_backup_codes_created_at: 備用代碼產生於 %{datetime}.
+  twofa_backup_codes_already_shown: 這些備用代碼不會再次出現, 再次需要時請重新 <a data-method="post" href="%{bc_path}">產生新的備用代碼</a>.
+  error_can_not_execute_macro_html: 執行 <strong>%{name}</strong> 巨集時, 發生錯誤 (%{error})
+  error_macro_does_not_accept_block: 此巨集不接受文字區塊
+  error_childpages_macro_no_argument: 缺少引數, 此巨集只能從 wiki 頁面中被呼叫
+  error_circular_inclusion: 偵測到循環引入內容
+  error_page_not_found: 找不到頁面
+  error_filename_required: 必須填入檔案名稱
+  error_invalid_size_parameter: 無效的尺寸大小參數
+  error_attachment_not_found: 找不到附件檔案 %{name}
+  permission_delete_project: 刪除專案
+  field_twofa_scheme: 雙因素驗證配置
+  text_user_destroy_confirmation: 您是否確定要刪除這個用戶並且移除該用戶所有的參照? 這是無法被復原的動作. 通常鎖定一個用戶是比較好的方案, 而非將用戶刪除. 若要確認, 請在下面輸入用戶的帳戶名稱 (%{login}).
+  text_project_destroy_enter_identifier: 若要確認, 請在下面輸入專案的代碼 (%{identifier}).
+  button_add_subtask: 新增子任務
+  notice_invalid_watcher: '無效的監看員: 監看用戶將無法收到任何通知, 因為該用戶沒有檢視此物件的存取權限.'
+  button_fetch_changesets: 擷取認可
+  permission_view_message_watchers: 檢視訊息監看員清單
+  permission_add_message_watchers: 新增訊息監看員
+  permission_delete_message_watchers: 刪除訊息監看員
+  label_message_watchers: 監看員
+  button_copy_link: 複製連結
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.

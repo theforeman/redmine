@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -167,6 +167,7 @@ class Repository < ActiveRecord::Base
   def merge_extra_info(arg)
     h = extra_info || {}
     return h if arg.nil?
+
     h.merge!(arg)
     write_attribute(:extra_info, h)
   end
@@ -249,6 +250,7 @@ class Repository < ActiveRecord::Base
   # Finds and returns a revision with a number or the beginning of a hash
   def find_changeset_by_name(name)
     return nil if name.blank?
+
     s = name.to_s
     if /^\d*$/.match?(s)
       changesets.find_by(:revision => s)
@@ -439,7 +441,7 @@ class Repository < ActiveRecord::Base
       if username = authors_names[element.user_id.to_i]
         mapped_name = username
       end
-      hash[mapped_name] ||= { :commits_count => 0, :changes_count => 0 }
+      hash[mapped_name] ||= {:commits_count => 0, :changes_count => 0}
       if element.is_a?(Changeset)
         hash[mapped_name][:commits_count] += element.count.to_i
       else

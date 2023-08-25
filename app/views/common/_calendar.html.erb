@@ -2,13 +2,22 @@
 <%= hidden_field_tag 'back_url', url_for(:params => request.query_parameters), :id => nil %>
 <table class="cal">
 <thead>
-<tr><th scope="col" title="<%= l(:label_week) %>" class="week-number"></th><% 7.times do |i| %><th scope="col"><%= day_name( (calendar.first_wday+i)%7 ) %></th><% end %></tr>
+  <tr>
+    <th scope="col" title="<%= l(:label_week) %>" class="week-number"></th>
+    <% 7.times do |i| %>
+      <th scope="col"><%= day_name((calendar.first_wday + i) % 7) %></th>
+    <% end %>
+  </tr>
 </thead>
 <tbody>
 <tr>
-<% day = calendar.startdt
-while day <= calendar.enddt %>
-<%= ("<td class='week-number' title='#{ l(:label_week) }'>#{(day+(11-day.cwday)%7).cweek}</td>".html_safe) if day.cwday == calendar.first_wday %>
+<% day = calendar.startdt %>
+<% while day <= calendar.enddt %>
+  <% if day.cwday == calendar.first_wday %>
+    <td class='week-number' title='<%= l(:label_week) %>'>
+      <%= (day + (11 - day.cwday) % 7).cweek %>
+    </td>
+  <% end %>
 <td class="<%= calendar_day_css_classes(calendar, day) %>">
 <p class="day-num"><%= day.day %></p>
 <% calendar.events_on(day).each do |i| %>
@@ -22,14 +31,16 @@ while day <= calendar.enddt %>
   <% else %>
   <span class="icon icon-package">
     <%= "#{i.project} -" unless @project && @project == i.project %>
-    <%= link_to_version i%>
+    <%= link_to_version i %>
   </span>
   <% end %>
 <% end %>
 </td>
-<%= '</tr><tr>'.html_safe if day.cwday==calendar.last_wday and day!=calendar.enddt %>
-<% day = day + 1
-end %>
+<% if day.cwday==calendar.last_wday and day!=calendar.enddt %>
+  </tr><tr>
+<% end %>
+<% day = day + 1 %>
+<% end %>
 </tr>
 </tbody>
 </table>

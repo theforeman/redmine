@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,7 +30,6 @@ module Redmine
         include Redmine::I18n
 
         class << self
-
           def generate(options = {}, &block)
             col_sep = l(:general_csv_separator)
             encoding = Encoding.find(options[:encoding]) rescue Encoding.find(l(:general_csv_encoding))

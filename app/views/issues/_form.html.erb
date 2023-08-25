@@ -9,7 +9,7 @@
 </p>
 <% end %>
 
-<% projects = @issue.allowed_target_projects(User.current, @project) %>
+<% projects = projects_for_select(@issue) %>
 <% if (@issue.safe_attribute?('project_id') || @issue.project_id_changed?) && (@project.nil? || projects.length > 1 || @issue.copy?) %>
 <p><%= f.select :project_id, project_tree_options_for_select(projects, :selected => @issue.project), {:required => true},
                 :onchange => "updateIssueFrom('#{escape_javascript update_issue_form_path(@project, @issue)}', this)" %></p>
@@ -38,7 +38,6 @@
                    :rows => [[10, @issue.description.to_s.length / 50].max, 20].min,
                    :data => {
                        :auto_complete => true,
-                       :issues_url => auto_complete_issues_path(:project_id => @issue.project, :q => '')
                    },
                    :no_label => true %>
   <% end %>
@@ -54,11 +53,32 @@
 <% end %>
 
 <% heads_for_wiki_formatter %>
+<%= heads_for_auto_complete(@issue.project) %>
 
 <%= javascript_tag do %>
 $(document).ready(function(){
   $("#issue_tracker_id, #issue_status_id").each(function(){
     $(this).val($(this).find("option[selected=selected]").val());
+  });
+  $(".assign-to-me-link").click(function(event){
+    event.preventDefault();
+    var element = $(event.target);
+    $('#issue_assigned_to_id').val(element.data('id'));
+    element.hide();
+  });
+  $('#issue_assigned_to_id').change(function(event){
+    var assign_to_me_link = $(".assign-to-me-link");
+
+    if (assign_to_me_link.length > 0) {
+      var user_id = $(event.target).val();
+      var current_user_id = assign_to_me_link.data('id');
+
+      if (user_id == current_user_id) {
+        assign_to_me_link.hide();
+      } else {
+        assign_to_me_link.show();
+      }
+    }
   });
 });
 <% end %>

@@ -32,6 +32,13 @@ module RedmineApp
 
     config.active_record.store_full_sti_class = true
     config.active_record.default_timezone = :local
+    config.active_record.yaml_column_permitted_classes = [
+      Date,
+      Time,
+      Symbol,
+      ActiveSupport::HashWithIndifferentAccess,
+      ActionController::Parameters
+    ]
 
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
     # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
@@ -77,10 +84,12 @@ module RedmineApp
     # can change it (environments/ENV.rb would take precedence over it)
     config.log_level = Rails.env.production? ? :info : :debug
 
-    config.session_store :cookie_store,
+    config.session_store(
+      :cookie_store,
       :key => '_redmine_session',
       :path => config.relative_url_root || '/',
       :same_site => :lax
+    )
 
     if File.exists?(File.join(File.dirname(__FILE__), 'additional_environment.rb'))
       instance_eval File.read(File.join(File.dirname(__FILE__), 'additional_environment.rb'))

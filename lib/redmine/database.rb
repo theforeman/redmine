@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,6 +21,11 @@ module Redmine
   # Helper module to get information about the Redmine database
   module Database
     class << self
+      # Returns true if the database is SQLite
+      def sqlite?
+        ActiveRecord::Base.connection.adapter_name =~ /sqlite/i
+      end
+
       # Returns true if the database is PostgreSQL
       def postgresql?
         /postgresql/i.match?(ActiveRecord::Base.connection.adapter_name)
@@ -35,9 +40,14 @@ module Redmine
       def postgresql_unaccent?
         if postgresql?
           return @postgresql_unaccent unless @postgresql_unaccent.nil?
+
           begin
-            sql = "SELECT name FROM pg_available_extensions WHERE installed_version IS NOT NULL and name = 'unaccent'"
-            @postgresql_unaccent = postgresql_version >= 90000 && ActiveRecord::Base.connection.select_value(sql).present?
+            sql =
+              "SELECT name FROM pg_available_extensions " \
+                "WHERE installed_version IS NOT NULL and name = 'unaccent'"
+            @postgresql_unaccent =
+              postgresql_version >= 90000 &&
+                ActiveRecord::Base.connection.select_value(sql).present?
           rescue
             false
           end

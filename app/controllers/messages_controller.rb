@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,7 +63,7 @@ class MessagesController < ApplicationController
     if request.post?
       @message.save_attachments(params[:attachments])
       if @message.save
-        call_hook(:controller_messages_new_after_save, { :params => params, :message => @message})
+        call_hook(:controller_messages_new_after_save, {:params => params, :message => @message})
         render_attachment_warning_if_needed(@message)
         flash[:notice] = l(:notice_successful_create)
         redirect_to board_message_path(@board, @message)
@@ -77,10 +77,10 @@ class MessagesController < ApplicationController
     @reply.author = User.current
     @reply.board = @board
     @reply.safe_attributes = params[:reply]
+    @reply.save_attachments(params[:attachments])
     @topic.children << @reply
     if !@reply.new_record?
-      call_hook(:controller_messages_reply_after_save, { :params => params, :message => @reply})
-      attachments = Attachment.attach_files(@reply, params[:attachments])
+      call_hook(:controller_messages_reply_after_save, {:params => params, :message => @reply})
       render_attachment_warning_if_needed(@reply)
     end
     flash[:notice] = l(:notice_successful_update)
@@ -91,12 +91,14 @@ class MessagesController < ApplicationController
   def edit
     (render_403; return false) unless @message.editable_by?(User.current)
     @message.safe_attributes = params[:message]
-    if request.post? && @message.save
-      attachments = Attachment.attach_files(@message, params[:attachments])
-      render_attachment_warning_if_needed(@message)
-      flash[:notice] = l(:notice_successful_update)
-      @message.reload
-      redirect_to board_message_path(@message.board, @message.root, :r => (@message.parent_id && @message.id))
+    if request.post?
+      @message.save_attachments(params[:attachments])
+      if @message.save
+        render_attachment_warning_if_needed(@message)
+        flash[:notice] = l(:notice_successful_update)
+        @message.reload
+        redirect_to board_message_path(@message.board, @message.root, :r => (@message.parent_id && @message.id))
+      end
     end
   end
 
@@ -136,6 +138,7 @@ class MessagesController < ApplicationController
 
   def find_message
     return unless find_board
+
     @message = @board.messages.includes(:parent).find(params[:id])
     @topic = @message.root
   rescue ActiveRecord::RecordNotFound

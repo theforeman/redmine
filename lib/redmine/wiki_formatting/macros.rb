@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,12 +45,12 @@ module Redmine
             if self.class.instance_method(method_name).arity == 3
               send(method_name, obj, args, text)
             elsif text
-              raise "This macro does not accept a block of text"
+              raise t(:error_macro_does_not_accept_block)
             else
               send(method_name, obj, args)
             end
           rescue => e
-            "<div class=\"flash error\">Error executing the <strong>#{h name}</strong> macro (#{h e.to_s})</div>".html_safe
+            %|<div class="flash error">#{t(:error_can_not_execute_macro_html, :name => name, :error => e.to_s)}</div>|.html_safe
           end
         end
 
@@ -157,6 +157,7 @@ module Redmine
           unless block_given?
             raise "Can not create a macro without a block!"
           end
+
           name = name.to_s.downcase.to_sym
           available_macros[name] = {:desc => @@desc || ''}.merge(options)
           @@desc = nil
@@ -172,7 +173,8 @@ module Redmine
       # Builtin macros
       desc "Sample macro."
       macro :hello_world do |obj, args, text|
-        h("Hello world! Object: #{obj.class.name}, " +
+        h(
+          "Hello world! Object: #{obj.class.name}, " +
           (args.empty? ? "Called with no argument" : "Arguments: #{args.join(', ')}") +
           " and " + (text.present? ? "a #{text.size} bytes long block of text." : "no block of text.")
         )
@@ -203,9 +205,10 @@ module Redmine
         elsif obj.is_a?(WikiContent) || obj.is_a?(WikiContent::Version)
           page = obj.page
         else
-          raise 'With no argument, this macro can be called from wiki pages only.'
+          raise t(:error_childpages_macro_no_argument)
         end
-        raise 'Page not found' if page.nil? || !User.current.allowed_to?(:view_wiki_pages, page.wiki.project)
+        raise t(:error_page_not_found) if page.nil? || !User.current.allowed_to?(:view_wiki_pages, page.wiki.project)
+
         pages = page.self_and_descendants(options[:depth]).group_by(&:parent_id)
         render_page_hierarchy(pages, options[:parent] ? page.parent_id : page.id)
       end
@@ -215,11 +218,20 @@ module Redmine
              "{{include(projectname:Foo)}} -- to include a page of a specific project wiki"
       macro :include do |obj, args|
         page = Wiki.find_page(args.first.to_s, :project => @project)
-        raise 'Page not found' if page.nil? || !User.current.allowed_to?(:view_wiki_pages, page.wiki.project)
+        raise t(:error_page_not_found) if page.nil? || !User.current.allowed_to?(:view_wiki_pages, page.wiki.project)
+
         @included_wiki_pages ||= []
-        raise 'Circular inclusion detected' if @included_wiki_pages.include?(page.id)
+        raise t(:error_circular_inclusion) if @included_wiki_pages.include?(page.id)
+
         @included_wiki_pages << page.id
-        out = textilizable(page.content, :text, :attachments => page.attachments, :headings => false,  :inline_attachments => @@inline_attachments)
+        out =
+          textilizable(
+            page.content,
+            :text,
+            :attachments => page.attachments,
+            :headings => false,
+            :inline_attachments => @@inline_attachments
+          )
         @included_wiki_pages.pop
         out
       end
@@ -234,8 +246,21 @@ module Redmine
         js = "$('##{html_id}-show, ##{html_id}-hide').toggle(); $('##{html_id}').fadeToggle(150);"
         out = ''.html_safe
         out << link_to_function(show_label, js, :id => "#{html_id}-show", :class => 'icon icon-collapsed collapsible')
-        out << link_to_function(hide_label, js, :id => "#{html_id}-hide", :class => 'icon icon-expended collapsible', :style => 'display:none;')
-        out << content_tag('div', textilizable(text, :object => obj, :headings => false, :inline_attachments => @@inline_attachments), :id => html_id, :class => 'collapsed-text', :style => 'display:none;')
+        out <<
+          link_to_function(
+            hide_label, js,
+            :id => "#{html_id}-hide",
+            :class => 'icon icon-expended collapsible',
+            :style => 'display:none;'
+          )
+        out <<
+          content_tag(
+            'div',
+            textilizable(text, :object => obj, :headings => false,
+                         :inline_attachments => @@inline_attachments),
+            :id => html_id, :class => 'collapsed-text',
+            :style => 'display:none;'
+          )
         out
       end
 
@@ -246,20 +271,30 @@ module Redmine
       macro :thumbnail do |obj, args|
         args, options = extract_macro_options(args, :size, :title)
         filename = args.first
-        raise 'Filename required' unless filename.present?
+        raise t(:error_filename_required) unless filename.present?
+
         size = options[:size]
-        raise 'Invalid size parameter' unless size.nil? || /^\d+$/.match?(size)
+        raise t(:error_invalid_size_parameter) unless size.nil? || /^\d+$/.match?(size)
+
         size = size.to_i
         size = 200 unless size > 0
-        if obj && obj.respond_to?(:attachments) && attachment = Attachment.latest_attach(obj.attachments, filename)
-          title = options[:title] || attachment.title
-          thumbnail_url = url_for(:controller => 'attachments', :action => 'thumbnail', :id => attachment, :size => size, :only_path => @only_path)
-          image_url = url_for(:controller => 'attachments', :action => 'show', :id => attachment, :only_path => @only_path)
 
+        attachments = obj.attachments if obj.respond_to?(:attachments)
+        if (controller_name == 'previews' || action_name == 'preview') && @attachments.present?
+          attachments = (attachments.to_a + @attachments).compact
+        end
+        if attachments.present? && (attachment = Attachment.latest_attach(attachments, filename))
+          title = options[:title] || attachment.title
+          thumbnail_url =
+            url_for(:controller => 'attachments', :action => 'thumbnail',
+                    :id => attachment, :size => size, :only_path => @only_path)
+          image_url =
+            url_for(:controller => 'attachments', :action => 'show',
+                    :id => attachment, :only_path => @only_path)
           img = image_tag(thumbnail_url, :alt => attachment.filename)
           link_to(img, image_url, :class => 'thumbnail', :title => title)
         else
-          raise "Attachment #{filename} not found"
+          raise t(:error_attachment_not_found, :name => filename)
         end
       end
 
@@ -275,7 +310,7 @@ module Redmine
 
         if issue
           # remove invalid options
-          options.delete_if { |k,v| v != 'true' && v != 'false' }
+          options.delete_if {|k, v| v != 'true' && v != 'false'}
 
           # turn string values into boolean
           options.each do |k, v|

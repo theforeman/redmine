@@ -1,8 +1,10 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.4
   TargetRailsVersion: 5.2
+
+  NewCops: enable
 
   Exclude:
     - '**/vendor/**/*'
@@ -26,8 +28,50 @@ require:
 Bundler/OrderedGems:
   Enabled: false
 
+Layout/CaseIndentation:
+  Exclude:
+    - 'config/initializers/10-patches.rb'
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: true
+  Exclude:
+    - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
+
+Layout/EmptyLinesAroundAccessModifier:
+  Enabled: true
+  Exclude:
+    - 'config/initializers/10-patches.rb'
+
 Layout/EmptyLineBetweenDefs:
   AllowAdjacentOneLineDefs: true
+
+Layout/FirstHashElementIndentation:
+  Enabled: true
+  Exclude:
+    - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
+
+Layout/LineLength:
+  Enabled: true
+  IgnoredPatterns: ['\A\s+test \".+\" do\z', '\A\s*\#']
+  Exclude:
+    - 'db/migrate/0*.rb'
+    - 'db/migrate/1*.rb'
+    - 'db/migrate/201*.rb'
+    - 'db/migrate/20200*.rb'
+    - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
+
+Layout/RescueEnsureAlignment:
+  Enabled: true
+  Exclude:
+    - 'db/migrate/085_add_role_tracker_old_status_index_to_workflows.rb'
+
+Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: false
+
+Layout/SpaceBeforeSemicolon:
+  Enabled: true
+  Exclude:
+    - 'config/initializers/10-patches.rb'
 
 Layout/SpaceBeforeBlockBraces:
   # "space" is used more than "no_space".
@@ -35,26 +79,33 @@ Layout/SpaceBeforeBlockBraces:
   #   str = path.to_s.split(%r{[/\\]}).select{|p| !p.blank?}.join("/")
   Enabled: false
 
-# You can see results by "rubocop --only Layout/SpaceInsideBlockBraces"
 Layout/SpaceInsideBlockBraces:
-  EnforcedStyle: no_space
-  SpaceBeforeBlockParameters: false
+  Enabled: false
 
-# You can see results by "rubocop --only Layout/SpaceInsideHashLiteralBraces"
 Layout/SpaceInsideHashLiteralBraces:
-  EnforcedStyle: no_space
+  Enabled: false
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Lint/SuppressedException:
+  AllowComments: true
 
 Layout/TrailingWhitespace:
   AllowInHeredoc: true
-
-Lint/HandleExceptions:
-  AllowComments: true
 
 Metrics:
   Enabled: false
 
 Naming/AccessorMethodName:
   Enabled: false
+
+Naming/VariableNumber:
+  CheckMethodNames: false
+  CheckSymbols: false
 
 Naming/BinaryOperatorParameterName:
   Enabled: false
@@ -70,12 +121,28 @@ Rails/BulkChangeTable:
 Rails/HelperInstanceVariable:
   Enabled: false
 
-# Configuration parameters: AllowedChars.
 Style/AsciiComments:
   Exclude:
     # Copyright credit has non ascii character.
     # We can not change nor remove it.
     - 'app/models/repository/git.rb'
+
+Style/BlockComments:
+  Enabled: true
+  Exclude:
+    - 'lib/diff.rb'
+
+Style/BlockDelimiters:
+  Enabled: true
+  Exclude:
+    - 'db/migrate/007_create_journals.rb'
+    - 'lib/diff.rb'
+
+Style/EmptyElse:
+  EnforcedStyle: empty
+
+Style/FormatString:
+  EnforcedStyle: sprintf
 
 Style/FormatStringToken:
   Enabled: false
@@ -90,14 +157,32 @@ Style/FrozenStringLiteralComment:
     - 'config.ru'
     - 'config/additional_environment.rb'
 
+Style/HashEachMethods:
+  Enabled: true
+
 Style/HashSyntax:
   Enabled: true
   EnforcedStyle: no_mixed_keys
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
 
 Style/IdenticalConditionalBranches:
   Exclude:
     - 'config/initializers/10-patches.rb'
     - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
 
+Style/NegatedIfElseCondition:
+  Enabled: false
+
+Style/RaiseArgs:
+  Enabled: false
+
 Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
   Enabled: false

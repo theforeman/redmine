@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -52,11 +52,11 @@ class ApplicationController < ActionController::Base
       cookies.delete(autologin_cookie_name)
       self.logged_user = nil
       set_localization
-      render_error :status => 422, :message => "Invalid form authenticity token."
+      render_error :status => 422, :message => l(:error_invalid_authenticity_token)
     end
   end
 
-  before_action :session_expiration, :user_setup, :check_if_login_required, :set_localization, :check_password_change
+  before_action :session_expiration, :user_setup, :check_if_login_required, :set_localization, :check_password_change, :check_twofa_activation
   after_action :record_project_usage
 
   rescue_from ::Unauthorized, :with => :deny_access
@@ -89,6 +89,9 @@ class ApplicationController < ActionController::Base
     if user.must_change_password?
       session[:pwd] = '1'
     end
+    if user.must_activate_twofa?
+      session[:must_activate_twofa] = '1'
+    end
   end
 
   def user_setup
@@ -106,7 +109,12 @@ class ApplicationController < ActionController::Base
     unless api_request?
       if session[:user_id]
         # existing session
-        user = (User.active.find(session[:user_id]) rescue nil)
+        user =
+          begin
+            User.active.find(session[:user_id])
+          rescue
+            nil
+          end
       elsif autologin_user = try_to_autologin
         user = autologin_user
       elsif params[:format] == 'atom' && params[:key] && request.get? && accept_rss_auth?
@@ -186,6 +194,7 @@ class ApplicationController < ActionController::Base
   def check_if_login_required
     # no check needed if user is already logged in
     return true if User.current.logged?
+
     require_login if Setting.login_required?
   end
 
@@ -196,6 +205,31 @@ class ApplicationController < ActionController::Base
         redirect_to my_password_path
       else
         session.delete(:pwd)
+      end
+    end
+  end
+
+  def init_twofa_pairing_and_send_code_for(twofa)
+    twofa.init_pairing!
+    if twofa.send_code(controller: 'twofa', action: 'activate')
+      flash[:notice] = l('twofa_code_sent')
+    end
+    redirect_to controller: 'twofa', action: 'activate_confirm', scheme: twofa.scheme_name
+  end
+
+  def check_twofa_activation
+    if session[:must_activate_twofa]
+      if User.current.must_activate_twofa?
+        flash[:warning] = l('twofa_warning_require')
+        if Redmine::Twofa.available_schemes.length == 1
+          twofa_scheme = Redmine::Twofa.for_twofa_scheme(Redmine::Twofa.available_schemes.first)
+          twofa = twofa_scheme.new(User.current)
+          init_twofa_pairing_and_send_code_for(twofa)
+        else
+          redirect_to controller: 'twofa', action: 'select_scheme'
+        end
+      else
+        session.delete(:must_activate_twofa)
       end
     end
   end
@@ -225,25 +259,25 @@ class ApplicationController < ActionController::Base
         url = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id], :project_id => params[:project_id])
       end
       respond_to do |format|
-        format.html {
+        format.html do
           if request.xhr?
             head :unauthorized
           else
             redirect_to signin_path(:back_url => url)
           end
-        }
-        format.any(:atom, :pdf, :csv) {
+        end
+        format.any(:atom, :pdf, :csv) do
           redirect_to signin_path(:back_url => url)
-        }
-        format.api  {
+        end
+        format.api do
           if Setting.rest_api_enabled? && accept_api_auth?
             head(:unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"')
           else
             head(:forbidden)
           end
-        }
-        format.js   { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
-        format.any  { head :unauthorized }
+        end
+        format.js   {head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"'}
+        format.any  {head :unauthorized}
       end
       return false
     end
@@ -252,6 +286,7 @@ class ApplicationController < ActionController::Base
 
   def require_admin
     return unless require_login
+
     if !User.current.admin?
       render_403
       return false
@@ -342,6 +377,7 @@ class ApplicationController < ActionController::Base
     # if the issue actually exists but requires authentication
     @issue = Issue.find(params[:id])
     raise Unauthorized unless @issue.visible?
+
     @project = @issue.project
   rescue ActiveRecord::RecordNotFound
     render_404
@@ -352,10 +388,13 @@ class ApplicationController < ActionController::Base
   def find_issues
     @issues = Issue.
       where(:id => (params[:id] || params[:ids])).
-      preload(:project, :status, :tracker, :priority, :author, :assigned_to, :relations_to, {:custom_values => :custom_field}).
+      preload(:project, :status, :tracker, :priority,
+              :author, :assigned_to, :relations_to,
+              {:custom_values => :custom_field}).
       to_a
     raise ActiveRecord::RecordNotFound if @issues.empty?
     raise Unauthorized unless @issues.all?(&:visible?)
+
     @projects = @issues.collect(&:project).compact.uniq
     @project = @projects.first if @projects.size == 1
   rescue ActiveRecord::RecordNotFound
@@ -365,7 +404,7 @@ class ApplicationController < ActionController::Base
   def find_attachments
     if (attachments = params[:attachments]).present?
       att = attachments.values.collect do |attachment|
-        Attachment.find_by_token( attachment[:token] ) if attachment[:token].present?
+        Attachment.find_by_token(attachment[:token]) if attachment[:token].present?
       end
       att.compact!
     end
@@ -373,10 +412,10 @@ class ApplicationController < ActionController::Base
   end
 
   def parse_params_for_bulk_update(params)
-    attributes = (params || {}).reject {|k,v| v.blank?}
+    attributes = (params || {}).reject {|k, v| v.blank?}
     attributes.keys.each {|k| attributes[k] = '' if attributes[k] == 'none'}
     if custom = attributes[:custom_field_values]
-      custom.reject! {|k,v| v.blank?}
+      custom.reject! {|k, v| v.blank?}
       custom.keys.each do |k|
         if custom[k].is_a?(Array)
           custom[k] << '' if custom[k].delete('__none__')
@@ -456,6 +495,7 @@ class ApplicationController < ActionController::Base
       if uri.send(component).present? && uri.send(component) != request.send(component)
         return false
       end
+
       uri.send(:"#{component}=", nil)
     end
     # Always ignore basic user:password in the URL
@@ -522,10 +562,10 @@ class ApplicationController < ActionController::Base
     @status = arg[:status] || 500
 
     respond_to do |format|
-      format.html {
+      format.html do
         render :template => 'common/error', :layout => use_layout, :status => @status
-      }
-      format.any { head @status }
+      end
+      format.any {head @status}
     end
   end
 
@@ -540,6 +580,7 @@ class ApplicationController < ActionController::Base
   # but have no HTML representation for non admin users
   def require_admin_or_api_request
     return true if api_request?
+
     if User.current.admin?
       true
     elsif User.current.logged?
@@ -558,7 +599,7 @@ class ApplicationController < ActionController::Base
 
   def render_feed(items, options={})
     @items = (items || []).to_a
-    @items.sort! {|x,y| y.event_datetime <=> x.event_datetime }
+    @items.sort! {|x, y| y.event_datetime <=> x.event_datetime}
     @items = @items.slice(0, Setting.feeds_limit.to_i)
     @title = options[:title] || Setting.app_title
     render :template => "common/feed", :formats => [:atom], :layout => false,
@@ -634,13 +675,13 @@ class ApplicationController < ActionController::Base
     tmp = []
     if value
       parts = value.split(/,\s*/)
-      parts.each {|part|
+      parts.each do |part|
         if m = %r{^([^\s,]+?)(?:;\s*q=(\d+(?:\.\d+)?))?$}.match(part)
           val = m[1]
           q = (m[2] or 1).to_f
           tmp.push([val, q])
         end
-      }
+      end
       tmp = tmp.sort_by{|val, q| -q}
       tmp.collect!{|val, q| val}
     end
@@ -651,7 +692,7 @@ class ApplicationController < ActionController::Base
 
   # Returns a string that can be used as filename value in Content-Disposition header
   def filename_for_content_disposition(name)
-    %r{(MSIE|Trident|Edge)}.match?(request.env['HTTP_USER_AGENT']) ? ERB::Util.url_encode(name) : name
+    %r{(MSIE|Trident|Edge)}.match?(request.env['HTTP_USER_AGENT'].to_s) ? ERB::Util.url_encode(name) : name
   end
 
   def api_request?
@@ -681,7 +722,7 @@ class ApplicationController < ActionController::Base
   def query_statement_invalid(exception)
     logger.error "Query::StatementInvalid: #{exception.message}" if logger
     session.delete(:issue_query)
-    render_error "An error occurred while executing the query and has been logged. Please report this error to your Redmine administrator."
+    render_error l(:error_query_statement_invalid)
   end
 
   # Renders a 204 response for successful updates or deletions via the API

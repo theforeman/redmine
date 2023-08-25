@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,6 +27,12 @@ module Redmine
       diff = diff.split("\n") if diff.is_a?(String)
       @diff_type = options[:type] || 'inline'
       @diff_style = options[:style]
+      # remove git footer
+      if diff.length > 1 &&
+           diff[-2] =~ /^--/ &&
+           diff[-1] =~ /^[0-9]/
+        diff.pop(2)
+      end
       lines = 0
       @truncated = false
       diff_table = DiffTable.new(diff_type, diff_style)

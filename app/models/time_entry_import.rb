@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class TimeEntryImport < Import
+  AUTO_MAPPABLE_FIELDS = {
+    'activity' => 'field_activity',
+    'user' => 'field_user',
+    'issue_id' => 'field_issue',
+    'spent_on' => 'field_spent_on',
+    'hours' => 'field_hours',
+    'comments' => 'field_comments'
+  }
+
   def self.menu_item
     :time_entries
   end
@@ -47,7 +56,7 @@ class TimeEntryImport < Import
     users = []
     if project
       users = project.members.active.preload(:user)
-      users = users.map(&:user).select{ |u| u.allowed_to?(:log_time, project) }
+      users = users.map(&:user).select{|u| u.allowed_to?(:log_time, project)}
     end
     users << User.current if User.current.logged? && !users.include?(User.current)
     users
@@ -66,7 +75,7 @@ class TimeEntryImport < Import
   end
 
   def user_value
-    if mapping['user_id'].to_s =~ /\Avalue:(\d+)\z/
+    if mapping['user'].to_s =~ /\Avalue:(\d+)\z/
       $1.to_i
     end
   end
@@ -88,7 +97,7 @@ class TimeEntryImport < Import
     if user.allowed_to?(:log_time_for_other_users, project)
       if user_value
         user_id = user_value
-      elsif user_name = row_value(row, 'user_id')
+      elsif user_name = row_value(row, 'user')
         user_id = Principal.detect_by_keyword(allowed_target_users, user_name).try(:id)
       end
     else

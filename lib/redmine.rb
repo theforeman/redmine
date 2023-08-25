@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -68,6 +68,7 @@ require 'redmine/hook'
 require 'redmine/hook/listener'
 require 'redmine/hook/view_listener'
 require 'redmine/plugin'
+require 'redmine/twofa'
 
 Redmine::Scm::Base.add "Subversion"
 Redmine::Scm::Base.add "Mercurial"
@@ -83,6 +84,7 @@ Redmine::AccessControl.map do |map|
   map.permission :add_project, {:projects => [:new, :create]}, :require => :loggedin
   map.permission :edit_project, {:projects => [:settings, :edit, :update]}, :require => :member
   map.permission :close_project, {:projects => [:close, :reopen]}, :require => :member, :read => true
+  map.permission :delete_project, {:projects => :destroy}, :require => :member, :read => true
   map.permission :select_project_modules, {:projects => :modules}, :require => :member
   map.permission :view_members, {:members => [:index, :show]}, :public => true, :read => true
   map.permission :manage_members, {:projects => :settings, :members => [:index, :show, :new, :create, :edit, :update, :destroy, :autocomplete]}, :require => :member
@@ -128,9 +130,15 @@ Redmine::AccessControl.map do |map|
   map.project_module :time_tracking do |map|
     map.permission :view_time_entries, {:timelog => [:index, :report, :show]}, :read => true
     map.permission :log_time, {:timelog => [:new, :create]}, :require => :loggedin
-    map.permission :edit_time_entries, {:timelog => [:edit, :update, :destroy, :bulk_edit, :bulk_update]}, :require => :member
-    map.permission :edit_own_time_entries, {:timelog => [:edit, :update, :destroy,:bulk_edit, :bulk_update]}, :require => :loggedin
-    map.permission :manage_project_activities, {:projects => :settings, :project_enumerations => [:update, :destroy]}, :require => :member
+    map.permission :edit_time_entries,
+                   {:timelog => [:edit, :update, :destroy, :bulk_edit, :bulk_update]},
+                   :require => :member
+    map.permission :edit_own_time_entries,
+                   {:timelog => [:edit, :update, :destroy, :bulk_edit, :bulk_update]},
+                   :require => :loggedin
+    map.permission :manage_project_activities,
+                   {:projects => :settings, :project_enumerations => [:update, :destroy]},
+                   :require => :member
     map.permission :log_time_for_other_users, :require => :member
     map.permission :import_time_entries, {}
   end
@@ -154,7 +162,7 @@ Redmine::AccessControl.map do |map|
   end
 
   map.project_module :wiki do |map|
-    map.permission :view_wiki_pages, {:wiki => [:index, :show, :special, :date_index]}, :read => true
+    map.permission :view_wiki_pages, {:wiki => [:index, :show, :special, :date_index], :auto_complete => [:wiki_pages]}, :read => true
     map.permission :view_wiki_edits, {:wiki => [:history, :diff, :annotate]}, :read => true
     map.permission :export_wiki_pages, {:wiki => [:export]}, :read => true
     map.permission :edit_wiki_pages, :wiki => [:new, :edit, :update, :preview, :add_attachment], :attachments => :upload
@@ -170,7 +178,7 @@ Redmine::AccessControl.map do |map|
     map.permission :browse_repository, {:repositories => [:show, :browse, :entry, :raw, :annotate, :changes, :diff, :stats, :graph]}, :read => true
     map.permission :commit_access, {}
     map.permission :manage_related_issues, {:repositories => [:add_related_issue, :remove_related_issue]}
-    map.permission :manage_repository, {:projects => :settings, :repositories => [:new, :create, :edit, :update, :committers, :destroy]}, :require => :member
+    map.permission :manage_repository, {:projects => :settings, :repositories => [:new, :create, :edit, :update, :committers, :destroy, :fetch_changesets]}, :require => :member
   end
 
   map.project_module :boards do |map|
@@ -180,6 +188,9 @@ Redmine::AccessControl.map do |map|
     map.permission :edit_own_messages, {:messages => :edit, :attachments => :upload}, :require => :loggedin
     map.permission :delete_messages, {:messages => :destroy}, :require => :member
     map.permission :delete_own_messages, {:messages => :destroy}, :require => :loggedin
+    map.permission :view_message_watchers, {}, :read => true
+    map.permission :add_message_watchers, {:watchers => [:new, :create, :autocomplete_for_user]}
+    map.permission :delete_message_watchers, {:watchers => :destroy}
     map.permission :manage_boards, {:projects => :settings, :boards => [:new, :create, :edit, :update, :destroy]}, :require => :member
   end
 
@@ -194,134 +205,213 @@ end
 
 Redmine::MenuManager.map :top_menu do |menu|
   menu.push :home, :home_path
-  menu.push :my_page, { :controller => 'my', :action => 'page' }, :if => Proc.new { User.current.logged? }
-  menu.push :projects, { :controller => 'projects', :action => 'index' }, :caption => :label_project_plural
-  menu.push :administration, { :controller => 'admin', :action => 'index' }, :if => Proc.new { User.current.admin? }, :last => true
+  menu.push :my_page, {:controller => 'my', :action => 'page'},
+            :if => Proc.new {User.current.logged?}
+  menu.push :projects, {:controller => 'projects', :action => 'index'},
+            :caption => :label_project_plural
+  menu.push :administration, {:controller => 'admin', :action => 'index'},
+            :if => Proc.new {User.current.admin?}, :last => true
   menu.push :help, Redmine::Info.help_url, :last => true
 end
 
 Redmine::MenuManager.map :account_menu do |menu|
-  menu.push :login, :signin_path, :if => Proc.new { !User.current.logged? }
-  menu.push :register, :register_path, :if => Proc.new { !User.current.logged? && Setting.self_registration? }
-  menu.push :my_account, { :controller => 'my', :action => 'account' }, :if => Proc.new { User.current.logged? }
-  menu.push :logout, :signout_path, :html => {:method => 'post'}, :if => Proc.new { User.current.logged? }
+  menu.push :login, :signin_path, :if => Proc.new {!User.current.logged?}
+  menu.push :register, :register_path,
+            :if => Proc.new {!User.current.logged? && Setting.self_registration?}
+  menu.push :my_account, {:controller => 'my', :action => 'account'},
+            :if => Proc.new {User.current.logged?}
+  menu.push :logout, :signout_path, :html => {:method => 'post'},
+            :if => Proc.new {User.current.logged?}
 end
 
 Redmine::MenuManager.map :application_menu do |menu|
   menu.push :projects, {:controller => 'projects', :action => 'index'},
             :permission => nil,
             :caption => :label_project_plural
-  menu.push :activity, {:controller => 'activities', :action => 'index'}
-  menu.push :issues,   {:controller => 'issues', :action => 'index'},
-            :if => Proc.new {
-                     User.current.allowed_to?(:view_issues, nil, :global => true) &&
-                       EnabledModule.exists?(:project => Project.visible, :name => :issue_tracking)
-                   },
-            :caption => :label_issue_plural
-  menu.push :time_entries, {:controller => 'timelog', :action => 'index'},
-            :if => Proc.new {
-                     User.current.allowed_to?(:view_time_entries, nil, :global => true) &&
-                       EnabledModule.exists?(:project => Project.visible, :name => :time_tracking)
-                   },
-            :caption => :label_spent_time
-  menu.push :gantt, { :controller => 'gantts', :action => 'show' },
-            :caption => :label_gantt,
-            :if => Proc.new {
-                     User.current.allowed_to?(:view_gantt, nil, :global => true) &&
-                       EnabledModule.exists?(:project => Project.visible, :name => :gantt)
-                   }
-  menu.push :calendar, { :controller => 'calendars', :action => 'show' },
-            :caption => :label_calendar,
-            :if => Proc.new {
-                     User.current.allowed_to?(:view_calendar, nil, :global => true) &&
-                       EnabledModule.exists?(:project => Project.visible, :name => :calendar)
-                   }
-  menu.push :news, {:controller => 'news', :action => 'index'},
-            :if => Proc.new {
-                     User.current.allowed_to?(:view_news, nil, :global => true) &&
-                       EnabledModule.exists?(:project => Project.visible, :name => :news)
-                   },
-            :caption => :label_news_plural
+  menu.push :activity, {:controller => 'activities', :action => 'index', :id => nil}
+  menu.push(
+    :issues,
+    {:controller => 'issues', :action => 'index'},
+    :if =>
+       Proc.new do
+         User.current.allowed_to?(:view_issues, nil, :global => true) &&
+           EnabledModule.exists?(:project => Project.visible, :name => :issue_tracking)
+       end,
+    :caption => :label_issue_plural
+  )
+  menu.push(
+    :time_entries,
+    {:controller => 'timelog', :action => 'index'},
+    :if =>
+      Proc.new do
+        User.current.allowed_to?(:view_time_entries, nil, :global => true) &&
+          EnabledModule.exists?(:project => Project.visible, :name => :time_tracking)
+      end,
+      :caption => :label_spent_time
+  )
+  menu.push(
+    :gantt,
+    {:controller => 'gantts', :action => 'show'},
+    :caption => :label_gantt,
+    :if =>
+       Proc.new do
+         User.current.allowed_to?(:view_gantt, nil, :global => true) &&
+           EnabledModule.exists?(:project => Project.visible, :name => :gantt)
+       end
+  )
+  menu.push(
+    :calendar,
+    {:controller => 'calendars', :action => 'show'},
+    :caption => :label_calendar,
+    :if =>
+      Proc.new do
+        User.current.allowed_to?(:view_calendar, nil, :global => true) &&
+          EnabledModule.exists?(:project => Project.visible, :name => :calendar)
+      end
+  )
+  menu.push(
+    :news,
+    {:controller => 'news', :action => 'index'},
+    :if =>
+      Proc.new do
+        User.current.allowed_to?(:view_news, nil, :global => true) &&
+          EnabledModule.exists?(:project => Project.visible, :name => :news)
+      end,
+    :caption => :label_news_plural
+  )
 end
 
 Redmine::MenuManager.map :admin_menu do |menu|
-  menu.push :projects, {:controller => 'admin', :action => 'projects'}, :caption => :label_project_plural,
+  menu.push :projects, {:controller => 'admin', :action => 'projects'},
+            :caption => :label_project_plural,
             :html => {:class => 'icon icon-projects'}
   menu.push :users, {:controller => 'users'}, :caption => :label_user_plural,
             :html => {:class => 'icon icon-user'}
   menu.push :groups, {:controller => 'groups'}, :caption => :label_group_plural,
             :html => {:class => 'icon icon-group'}
-  menu.push :roles, {:controller => 'roles'}, :caption => :label_role_and_permissions,
+  menu.push :roles, {:controller => 'roles'},
+            :caption => :label_role_and_permissions,
             :html => {:class => 'icon icon-roles'}
-  menu.push :trackers, {:controller => 'trackers'}, :caption => :label_tracker_plural,
+  menu.push :trackers, {:controller => 'trackers'},
+            :caption => :label_tracker_plural,
             :html => {:class => 'icon icon-issue'}
-  menu.push :issue_statuses, {:controller => 'issue_statuses'}, :caption => :label_issue_status_plural,
+  menu.push :issue_statuses, {:controller => 'issue_statuses'},
+            :caption => :label_issue_status_plural,
             :html => {:class => 'icon icon-issue-edit'}
-  menu.push :workflows, {:controller => 'workflows', :action => 'edit'}, :caption => :label_workflow,
+  menu.push :workflows, {:controller => 'workflows', :action => 'edit'},
+            :caption => :label_workflow,
             :html => {:class => 'icon icon-workflows'}
-  menu.push :custom_fields, {:controller => 'custom_fields'},  :caption => :label_custom_field_plural,
+  menu.push :custom_fields, {:controller => 'custom_fields'},
+            :caption => :label_custom_field_plural,
             :html => {:class => 'icon icon-custom-fields'}
   menu.push :enumerations, {:controller => 'enumerations'},
             :html => {:class => 'icon icon-list'}
   menu.push :settings, {:controller => 'settings'},
             :html => {:class => 'icon icon-settings'}
-  menu.push :ldap_authentication, {:controller => 'auth_sources', :action => 'index'},
+  menu.push :ldap_authentication,
+            {:controller => 'auth_sources', :action => 'index'},
             :html => {:class => 'icon icon-server-authentication'}
-  menu.push :plugins, {:controller => 'admin', :action => 'plugins'}, :last => true,
+  menu.push :plugins, {:controller => 'admin', :action => 'plugins'},
+            :last => true,
             :html => {:class => 'icon icon-plugins'}
-  menu.push :info, {:controller => 'admin', :action => 'info'}, :caption => :label_information_plural, :last => true,
+  menu.push :info, {:controller => 'admin', :action => 'info'},
+            :caption => :label_information_plural,
+            :last => true,
             :html => {:class => 'icon icon-help'}
 end
 
 Redmine::MenuManager.map :project_menu do |menu|
-  menu.push :new_object, nil, :caption => ' + ',
-            :if => Proc.new { |p| Setting.new_item_menu_tab == '2' },
-            :html => { :id => 'new-object', :onclick => 'toggleNewObjectDropdown(); return false;' }
-  menu.push :new_issue_sub,
-            { :controller => 'issues', :action => 'new', :copy_from => nil },
-            :param => :project_id, :caption => :label_issue_new,
-            :html => { :accesskey => Redmine::AccessKeys.key_for(:new_issue) },
-            :if => Proc.new { |p| Issue.allowed_target_trackers(p).any? },
-            :permission => :add_issues,
-            :parent => :new_object
-  menu.push :new_issue_category, {:controller => 'issue_categories', :action => 'new'},
+  menu.push(
+    :new_object, nil, :caption => ' + ',
+    :if => Proc.new {|p| Setting.new_item_menu_tab == '2'},
+    :html => {:id => 'new-object',
+              :onclick => 'toggleNewObjectDropdown(); return false;'}
+  )
+  menu.push(
+    :new_issue_sub,
+    {:controller => 'issues', :action => 'new', :copy_from => nil},
+    :param => :project_id, :caption => :label_issue_new,
+    :html => {:accesskey => Redmine::AccessKeys.key_for(:new_issue)},
+    :if => Proc.new {|p| Issue.allowed_target_trackers(p).any?},
+    :permission => :add_issues,
+    :parent => :new_object
+  )
+  menu.push :new_issue_category,
+            {:controller => 'issue_categories', :action => 'new'},
             :param => :project_id, :caption => :label_issue_category_new,
             :parent => :new_object
-  menu.push :new_version, {:controller => 'versions', :action => 'new'}, :param => :project_id, :caption => :label_version_new,
+  menu.push :new_version, {:controller => 'versions', :action => 'new'},
+            :param => :project_id, :caption => :label_version_new,
             :parent => :new_object
-  menu.push :new_timelog, {:controller => 'timelog', :action => 'new'}, :param => :project_id, :caption => :button_log_time,
+  menu.push :new_timelog, {:controller => 'timelog', :action => 'new'},
+            :param => :project_id, :caption => :button_log_time,
             :parent => :new_object
-  menu.push :new_news, {:controller => 'news', :action => 'new'}, :param => :project_id, :caption => :label_news_new,
+  menu.push :new_news, {:controller => 'news', :action => 'new'},
+            :param => :project_id, :caption => :label_news_new,
             :parent => :new_object
-  menu.push :new_document, {:controller => 'documents', :action => 'new'}, :param => :project_id, :caption => :label_document_new,
+  menu.push :new_document, {:controller => 'documents', :action => 'new'},
+            :param => :project_id, :caption => :label_document_new,
             :parent => :new_object
-  menu.push :new_wiki_page, {:controller => 'wiki', :action => 'new'}, :param => :project_id, :caption => :label_wiki_page_new,
+  menu.push :new_wiki_page, {:controller => 'wiki', :action => 'new'},
+            :param => :project_id, :caption => :label_wiki_page_new,
             :parent => :new_object
-  menu.push :new_file, {:controller => 'files', :action => 'new'}, :param => :project_id, :caption => :label_attachment_new,
+  menu.push :new_file, {:controller => 'files', :action => 'new'},
+            :param => :project_id, :caption => :label_attachment_new,
             :parent => :new_object
 
-  menu.push :overview, { :controller => 'projects', :action => 'show' }
-  menu.push :activity, { :controller => 'activities', :action => 'index' }
-  menu.push :roadmap, { :controller => 'versions', :action => 'index' }, :param => :project_id,
-            :if => Proc.new { |p| p.shared_versions.any? }
-  menu.push :issues, { :controller => 'issues', :action => 'index' }, :param => :project_id, :caption => :label_issue_plural
-  menu.push :new_issue, { :controller => 'issues', :action => 'new', :copy_from => nil }, :param => :project_id, :caption => :label_issue_new,
-            :html => { :accesskey => Redmine::AccessKeys.key_for(:new_issue) },
-            :if => Proc.new { |p| Setting.new_item_menu_tab == '1' && Issue.allowed_target_trackers(p).any? },
-            :permission => :add_issues
-  menu.push :time_entries, { :controller => 'timelog', :action => 'index' }, :param => :project_id, :caption => :label_spent_time
-  menu.push :gantt, { :controller => 'gantts', :action => 'show' }, :param => :project_id, :caption => :label_gantt
-  menu.push :calendar, { :controller => 'calendars', :action => 'show' }, :param => :project_id, :caption => :label_calendar
-  menu.push :news, { :controller => 'news', :action => 'index' }, :param => :project_id, :caption => :label_news_plural
-  menu.push :documents, { :controller => 'documents', :action => 'index' }, :param => :project_id, :caption => :label_document_plural
-  menu.push :wiki, { :controller => 'wiki', :action => 'show', :id => nil }, :param => :project_id,
-            :if => Proc.new { |p| p.wiki && !p.wiki.new_record? }
-  menu.push :boards, { :controller => 'boards', :action => 'index', :id => nil }, :param => :project_id,
-            :if => Proc.new { |p| p.boards.any? }, :caption => :label_board_plural
-  menu.push :files, { :controller => 'files', :action => 'index' }, :caption => :label_file_plural, :param => :project_id
-  menu.push :repository, { :controller => 'repositories', :action => 'show', :repository_id => nil, :path => nil, :rev => nil },
-            :if => Proc.new { |p| p.repository && !p.repository.new_record? }
-  menu.push :settings, { :controller => 'projects', :action => 'settings' }, :last => true
+  menu.push :overview, {:controller => 'projects', :action => 'show'}
+  menu.push :activity, {:controller => 'activities', :action => 'index'}
+  menu.push(
+    :roadmap,
+    {:controller => 'versions', :action => 'index'},
+    :param => :project_id,
+    :if =>
+      Proc.new do |p|
+        if p.shared_versions.any?
+          true
+        else
+          Setting.display_subprojects_issues? && p.rolled_up_versions.any?
+        end
+      end
+  )
+  menu.push :issues, {:controller => 'issues', :action => 'index'},
+            :param => :project_id, :caption => :label_issue_plural
+  menu.push(
+    :new_issue,
+    {:controller => 'issues', :action => 'new', :copy_from => nil},
+    :param => :project_id, :caption => :label_issue_new,
+    :html => {:accesskey => Redmine::AccessKeys.key_for(:new_issue)},
+    :if =>
+      Proc.new do |p|
+        Setting.new_item_menu_tab == '1' &&
+          Issue.allowed_target_trackers(p).any?
+      end,
+    :permission => :add_issues
+  )
+  menu.push :time_entries, {:controller => 'timelog', :action => 'index'},
+            :param => :project_id, :caption => :label_spent_time
+  menu.push :gantt, {:controller => 'gantts', :action => 'show'},
+            :param => :project_id, :caption => :label_gantt
+  menu.push :calendar, {:controller => 'calendars', :action => 'show'},
+            :param => :project_id, :caption => :label_calendar
+  menu.push :news, {:controller => 'news', :action => 'index'},
+            :param => :project_id, :caption => :label_news_plural
+  menu.push :documents, {:controller => 'documents', :action => 'index'},
+            :param => :project_id, :caption => :label_document_plural
+  menu.push :wiki, {:controller => 'wiki', :action => 'show', :id => nil},
+            :param => :project_id,
+            :if => Proc.new {|p| p.wiki && !p.wiki.new_record?}
+  menu.push :boards, {:controller => 'boards', :action => 'index', :id => nil},
+            :param => :project_id,
+            :if => Proc.new {|p| p.boards.any?}, :caption => :label_board_plural
+  menu.push :files, {:controller => 'files', :action => 'index'},
+            :caption => :label_file_plural, :param => :project_id
+  menu.push :repository,
+            {:controller => 'repositories', :action => 'show',
+             :repository_id => nil, :path => nil, :rev => nil},
+            :if => Proc.new {|p| p.repository && !p.repository.new_record?}
+  menu.push :settings, {:controller => 'projects', :action => 'settings'},
+            :last => true
 end
 
 Redmine::Activity.map do |activity|

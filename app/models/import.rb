@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,6 +37,7 @@ class Import < ActiveRecord::Base
     '%d.%m.%Y',
     '%d-%m-%Y'
   ]
+  AUTO_MAPPABLE_FIELDS = {}
 
   def self.menu_item
     nil
@@ -67,7 +68,7 @@ class Import < ActiveRecord::Base
     if file_exists?
       begin
         content = File.read(filepath, 256)
-        separator = [',', ';'].sort_by {|sep| content.count(sep) }.last
+        separator = [',', ';'].sort_by {|sep| content.count(sep)}.last
       rescue => e
       end
     end
@@ -211,6 +212,7 @@ class Import < ActiveRecord::Base
         item.save!
         imported += 1
 
+        extend_object(row, item, object) if object.persisted?
         do_callbacks(use_unique_id? ? item.unique_id : item.position, object)
       end
       current = position
@@ -248,7 +250,7 @@ class Import < ActiveRecord::Base
     wrapper = settings['wrapper'].to_s
     csv_options[:quote_char] = wrapper if wrapper.size == 1
 
-    CSV.foreach(filepath, csv_options) do |row|
+    CSV.foreach(filepath, **csv_options) do |row|
       yield row if block_given?
     end
   end
@@ -269,7 +271,12 @@ class Import < ActiveRecord::Base
 
   # Builds a record for the given row and returns it
   # To be implemented by subclasses
-  def build_object(row)
+  def build_object(row, item)
+  end
+
+  # Extends object with properties, that may only be handled after it's been
+  # persisted.
+  def extend_object(row, item, object)
   end
 
   # Generates a filename used to store the import file

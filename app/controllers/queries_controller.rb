@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -146,6 +146,12 @@ class QueriesController < ApplicationController
         redirect_to project_gantt_path(@project, options)
       else
         redirect_to issues_gantt_path(options)
+      end
+    elsif params[:calendar]
+      if @project
+        redirect_to project_calendar_path(@project, options)
+      else
+        redirect_to issues_calendar_path(options)
       end
     else
       redirect_to _project_issues_path(@project, options)

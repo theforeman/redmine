@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,55 +20,56 @@
 require "digest/sha1"
 
 class User < Principal
+  include Redmine::Ciphering
   include Redmine::SafeAttributes
 
   # Different ways of displaying/sorting users
   USER_FORMATS = {
     :firstname_lastname => {
-        :string => '#{firstname} #{lastname}',
-        :order => %w(firstname lastname id),
-        :setting_order => 1
-      },
+      :string => '#{firstname} #{lastname}',
+      :order => %w(firstname lastname id),
+      :setting_order => 1
+    },
     :firstname_lastinitial => {
-        :string => '#{firstname} #{lastname.to_s.chars.first}.',
-        :order => %w(firstname lastname id),
-        :setting_order => 2
-      },
+      :string => '#{firstname} #{lastname.to_s.chars.first}.',
+      :order => %w(firstname lastname id),
+      :setting_order => 2
+    },
     :firstinitial_lastname => {
-        :string => '#{firstname.to_s.gsub(/(([[:alpha:]])[[:alpha:]]*\.?)/, \'\2.\')} #{lastname}',
-        :order => %w(firstname lastname id),
-        :setting_order => 2
-      },
+      :string => '#{firstname.to_s.gsub(/(([[:alpha:]])[[:alpha:]]*\.?)/, \'\2.\')} #{lastname}',
+      :order => %w(firstname lastname id),
+      :setting_order => 2
+    },
     :firstname => {
-        :string => '#{firstname}',
-        :order => %w(firstname id),
-        :setting_order => 3
-      },
+      :string => '#{firstname}',
+      :order => %w(firstname id),
+      :setting_order => 3
+    },
     :lastname_firstname => {
-        :string => '#{lastname} #{firstname}',
-        :order => %w(lastname firstname id),
-        :setting_order => 4
-      },
+      :string => '#{lastname} #{firstname}',
+      :order => %w(lastname firstname id),
+      :setting_order => 4
+    },
     :lastnamefirstname => {
-        :string => '#{lastname}#{firstname}',
-        :order => %w(lastname firstname id),
-        :setting_order => 5
-      },
+      :string => '#{lastname}#{firstname}',
+      :order => %w(lastname firstname id),
+      :setting_order => 5
+    },
     :lastname_comma_firstname => {
-        :string => '#{lastname}, #{firstname}',
-        :order => %w(lastname firstname id),
-        :setting_order => 6
-      },
+      :string => '#{lastname}, #{firstname}',
+      :order => %w(lastname firstname id),
+      :setting_order => 6
+    },
     :lastname => {
-        :string => '#{lastname}',
-        :order => %w(lastname id),
-        :setting_order => 7
-      },
+      :string => '#{lastname}',
+      :order => %w(lastname id),
+      :setting_order => 7
+    },
     :username => {
-        :string => '#{login}',
-        :order => %w(login id),
-        :setting_order => 8
-      },
+      :string => '#{login}',
+      :order => %w(login id),
+      :setting_order => 8
+    },
   }
 
   MAIL_NOTIFICATION_OPTIONS = [
@@ -92,8 +93,8 @@ class User < Principal
   has_many :email_addresses, :dependent => :delete_all
   belongs_to :auth_source
 
-  scope :logged, lambda { where("#{User.table_name}.status <> #{STATUS_ANONYMOUS}") }
-  scope :status, lambda {|arg| where(arg.blank? ? nil : {:status => arg.to_i}) }
+  scope :logged, lambda {where("#{User.table_name}.status <> #{STATUS_ANONYMOUS}")}
+  scope :status, lambda {|arg| where(arg.blank? ? nil : {:status => arg.to_i})}
 
   acts_as_customizable
 
@@ -104,8 +105,8 @@ class User < Principal
   LOGIN_LENGTH_LIMIT = 60
   MAIL_LENGTH_LIMIT = 60
 
-  validates_presence_of :login, :firstname, :lastname, :if => Proc.new { |user| !user.is_a?(AnonymousUser) }
-  validates_uniqueness_of :login, :if => Proc.new { |user| user.login_changed? && user.login.present? }, :case_sensitive => false
+  validates_presence_of :login, :firstname, :lastname, :if => Proc.new {|user| !user.is_a?(AnonymousUser)}
+  validates_uniqueness_of :login, :if => Proc.new {|user| user.login_changed? && user.login.present?}, :case_sensitive => false
   # Login must contain letters, numbers, underscores only
   validates_format_of :login, :with => /\A[a-z0-9_\-@\.]*\z/i
   validates_length_of :login, :maximum => LOGIN_LENGTH_LIMIT
@@ -131,27 +132,27 @@ class User < Principal
   after_save :update_notified_project_ids, :destroy_tokens, :deliver_security_notification
   after_destroy :deliver_security_notification
 
-  scope :admin, lambda {|*args|
+  scope :admin, (lambda do |*args|
     admin = args.size > 0 ? !!args.first : true
     where(:admin => admin)
-  }
-  scope :in_group, lambda {|group|
+  end)
+  scope :in_group, (lambda do |group|
     group_id = group.is_a?(Group) ? group.id : group.to_i
     where("#{User.table_name}.id IN (SELECT gu.user_id FROM #{table_name_prefix}groups_users#{table_name_suffix} gu WHERE gu.group_id = ?)", group_id)
-  }
-  scope :not_in_group, lambda {|group|
+  end)
+  scope :not_in_group, (lambda do |group|
     group_id = group.is_a?(Group) ? group.id : group.to_i
     where("#{User.table_name}.id NOT IN (SELECT gu.user_id FROM #{table_name_prefix}groups_users#{table_name_suffix} gu WHERE gu.group_id = ?)", group_id)
-  }
-  scope :sorted, lambda { order(*User.fields_for_order_statement)}
-  scope :having_mail, lambda {|arg|
+  end)
+  scope :sorted, lambda {order(*User.fields_for_order_statement)}
+  scope :having_mail, (lambda do |arg|
     addresses = Array.wrap(arg).map {|a| a.to_s.downcase}
     if addresses.any?
       joins(:email_addresses).where("LOWER(#{EmailAddress.table_name}.address) IN (?)", addresses).distinct
     else
       none
     end
-  }
+  end)
 
   def set_mail_notification
     self.mail_notification = Setting.default_notification_option if self.mail_notification.blank?
@@ -220,12 +221,23 @@ class User < Principal
   end
 
   # Returns the user that matches provided login and password, or nil
+  # AuthSource errors are caught, logged and nil is returned.
   def self.try_to_login(login, password, active_only=true)
+    try_to_login!(login, password, active_only)
+  rescue AuthSourceException => e
+    logger.error "An error occured when authenticating #{login}: #{e.message}"
+    nil
+  end
+
+  # Returns the user that matches provided login and password, or nil
+  # AuthSource errors are passed through.
+  def self.try_to_login!(login, password, active_only=true)
     login = login.to_s.strip
     password = password.to_s
 
     # Make sure no one can sign in with an empty login or password
     return nil if login.empty? || password.empty?
+
     user = find_by_login(login)
     if user
       # user is already in local database
@@ -383,11 +395,19 @@ class User < Principal
       length -= 1
     end
     chars = chars_list.flatten
-    length.times { password << chars[SecureRandom.random_number(chars.size)] }
+    length.times {password << chars[SecureRandom.random_number(chars.size)]}
     password = password.split('').shuffle(random: SecureRandom).join
     self.password = password
     self.password_confirmation = password
     self
+  end
+
+  def twofa_active?
+    twofa_scheme.present?
+  end
+
+  def must_activate_twofa?
+    Setting.twofa == '2' && !twofa_active?
   end
 
   def pref
@@ -448,6 +468,14 @@ class User < Principal
 
   def delete_autologin_token(value)
     Token.where(:user_id => id, :action => 'autologin', :value => value).delete_all
+  end
+
+  def twofa_totp_key
+    read_ciphered_attribute(:twofa_totp_key)
+  end
+
+  def twofa_totp_key=(key)
+    write_ciphered_attribute(:twofa_totp_key, key)
   end
 
   # Returns true if token is a valid session token for the user whose id is user_id
@@ -582,14 +610,18 @@ class User < Principal
   def membership(project)
     project_id = project.is_a?(Project) ? project.id : project
 
-    @membership_by_project_id ||= Hash.new {|h, project_id|
-      h[project_id] = memberships.where(:project_id => project_id).first
-    }
+    @membership_by_project_id ||=
+      Hash.new do |h, project_id|
+        h[project_id] = memberships.where(:project_id => project_id).first
+      end
     @membership_by_project_id[project_id]
   end
 
   def roles
-    @roles ||= Role.joins(members: :project).where(["#{Project.table_name}.status <> ?", Project::STATUS_ARCHIVED]).where(Member.arel_table[:user_id].eq(id)).distinct
+    @roles ||=
+      Role.joins(members: :project).
+        where(["#{Project.table_name}.status <> ?", Project::STATUS_ARCHIVED]).
+          where(Member.arel_table[:user_id].eq(id)).distinct
   end
 
   # Returns the user's bult-in role
@@ -601,6 +633,7 @@ class User < Principal
   def roles_for_project(project)
     # No role on archived projects
     return [] if project.nil? || project.archived?
+
     if membership = membership(project)
       membership.roles.to_a
     elsif project.is_public?
@@ -631,7 +664,7 @@ class User < Principal
     Project.unscoped do
       return @project_ids_by_role if @project_ids_by_role
 
-      group_class = anonymous? ? GroupAnonymous : GroupNonMember
+      group_class = anonymous? ? GroupAnonymous.unscoped : GroupNonMember.unscoped
       group_id = group_class.pluck(:id).first
 
       members = Member.joins(:project, :member_roles).
@@ -704,11 +737,12 @@ class User < Principal
 
       roles = roles_for_project(context)
       return false unless roles
-      roles.any? {|role|
+
+      roles.any? do |role|
         (context.is_public? || role.member?) &&
         role.allowed_to?(action) &&
         (block_given? ? yield(role, self) : true)
-      }
+      end
     elsif context && context.is_a?(Array)
       if context.empty?
         false
@@ -724,10 +758,10 @@ class User < Principal
 
       # authorize if user has at least one role that has this permission
       roles = self.roles.to_a | [builtin_role]
-      roles.any? {|role|
+      roles.any? do |role|
         role.allowed_to?(action) &&
         (block_given? ? yield(role, self) : true)
-      }
+      end
     else
       false
     end
@@ -808,6 +842,10 @@ class User < Principal
     end
   end
 
+  def notify_about_high_priority_issues?
+    self.pref.notify_about_high_priority_issues
+  end
+
   def self.current=(user)
     RequestStore.store[:current_user] = user
   end
@@ -834,6 +872,7 @@ class User < Principal
     transaction do
       User.where("salt IS NULL OR salt = ''").find_each do |user|
         next if user.hashed_password.blank?
+
         salt = User.generate_salt
         hashed_password = User.hash_password("#{salt}#{user.hashed_password}")
         User.where(:id => user.id).update_all(:salt => salt, :hashed_password => hashed_password)
@@ -852,6 +891,7 @@ class User < Principal
 
   def validate_password_length
     return if password.blank? && generate_password?
+
     # Password length validation based on setting
     if !password.nil? && password.size < Setting.password_min_length.to_i
       errors.add(:password, :too_short, :count => Setting.password_min_length.to_i)
@@ -876,7 +916,7 @@ class User < Principal
   # This helps to keep the account secure in case the associated email account
   # was compromised.
   def destroy_tokens
-    if saved_change_to_hashed_password? || (saved_change_to_status? && !active?)
+    if saved_change_to_hashed_password? || (saved_change_to_status? && !active?) || (saved_change_to_twofa_scheme? && twofa_scheme.present?)
       tokens = ['recovery', 'autologin', 'session']
       Token.where(:user_id => id, :action => tokens).delete_all
     end
@@ -937,16 +977,13 @@ class User < Principal
     if (admin? && saved_change_to_id? && active?) ||    # newly created admin
        (admin? && saved_change_to_admin? && active?) || # regular user became admin
        (admin? && saved_change_to_status? && active?)   # locked admin became active again
-
-       deliver = true
-       options[:message] = :mail_body_security_notification_add
-
+      deliver = true
+      options[:message] = :mail_body_security_notification_add
     elsif (admin? && destroyed? && active?) ||      # active admin user was deleted
           (!admin? && saved_change_to_admin? && active?) || # admin is no longer admin
           (admin? && saved_change_to_status? && !active?)   # admin was locked
-
-          deliver = true
-          options[:message] = :mail_body_security_notification_remove
+      deliver = true
+      options[:message] = :mail_body_security_notification_remove
     end
 
     if deliver
@@ -963,7 +1000,7 @@ class AnonymousUser < User
 
   def validate_anonymous_uniqueness
     # There should be only one AnonymousUser in the database
-    errors.add :base, 'An anonymous user already exists.' if AnonymousUser.exists?
+    errors.add :base, 'An anonymous user already exists.' if AnonymousUser.unscoped.exists?
   end
 
   def available_custom_fields

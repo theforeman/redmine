@@ -354,22 +354,22 @@ class RedCloth3 < String
 
     # Text markup tags, don't conflict with block tags
     SIMPLE_HTML_TAGS = [
-        'tt', 'b', 'i', 'big', 'small', 'em', 'strong', 'dfn', 'code',
-        'samp', 'kbd', 'var', 'cite', 'abbr', 'acronym', 'a', 'img', 'br',
-        'br', 'map', 'q', 'sub', 'sup', 'span', 'bdo'
+      'tt', 'b', 'i', 'big', 'small', 'em', 'strong', 'dfn', 'code',
+      'samp', 'kbd', 'var', 'cite', 'abbr', 'acronym', 'a', 'img', 'br',
+      'br', 'map', 'q', 'sub', 'sup', 'span', 'bdo'
     ]
 
     QTAGS = [
-        ['**', 'b', :limit],
-        ['*', 'strong', :limit],
-        ['??', 'cite', :limit],
-        ['-', 'del', :limit],
-        ['__', 'i', :limit],
-        ['_', 'em', :limit],
-        ['%', 'span', :limit],
-        ['+', 'ins', :limit],
-        ['^', 'sup', :limit],
-        ['~', 'sub', :limit]
+      ['**', 'b', :limit],
+      ['*', 'strong', :limit],
+      ['??', 'cite', :limit],
+      ['-', 'del', :limit],
+      ['__', 'i', :limit],
+      ['_', 'em', :limit],
+      ['%', 'span', :limit],
+      ['+', 'ins', :limit],
+      ['^', 'sup', :limit],
+      ['~', 'sub', :limit]
     ]
     QTAGS_JOIN = QTAGS.map {|rc, ht, rtype| Regexp::quote rc}.join('|')
 
@@ -636,7 +636,7 @@ class RedCloth3 < String
     end
 
     def lT( text )
-        text =~ /\#$/ ? 'o' : 'u'
+        /\#$/.match?(text) ? 'o' : 'u'
     end
 
     def hard_break( text )
@@ -690,7 +690,7 @@ class RedCloth3 < String
 
     def textile_bq( tag, atts, cite, content )
         cite, cite_title = check_refs( cite )
-        cite = " cite=\"#{cite}\"" if cite
+        cite = " cite=\"#{htmlesc cite.dup}\"" if cite
         atts = shelve( atts ) if atts
         "\t<blockquote#{cite}>\n\t\t<p#{atts}>#{content}</p>\n\t</blockquote>"
     end
@@ -908,7 +908,7 @@ class RedCloth3 < String
 
     def refs( text )
         @rules.each do |rule_name|
-            method( rule_name ).call( text ) if rule_name.to_s.match /^refs_/
+            method( rule_name ).call( text ) if rule_name.to_s.match? /^refs_/
         end
     end
 
@@ -961,7 +961,7 @@ class RedCloth3 < String
             href, alt_title = check_refs( href ) if href
             url, url_title = check_refs( url )
 
-            next m unless uri_with_safe_scheme?(url)
+            next m unless uri_with_safe_scheme?(url.partition('?').first)
             if href
               href = htmlesc(href.dup)
               next m if href.downcase.start_with?('javascript:')
@@ -1016,7 +1016,7 @@ class RedCloth3 < String
     def clean_white_space( text )
         # normalize line breaks
         text.gsub!( /\r\n/, "\n" )
-        text.gsub!( /\r/, "\n" )
+        text.tr!( "\r", "\n" )
         text.gsub!( /\t/, '    ' )
         text.gsub!( /^ +$/, '' )
         text.gsub!( /\n{3,}/, "\n\n" )
@@ -1061,9 +1061,9 @@ class RedCloth3 < String
             text.gsub!( ALLTAG_MATCH ) do |line|
                 ## matches are off if we're between <code>, <pre> etc.
                 if $1
-                    if line =~ OFFTAG_OPEN
+                    if OFFTAG_OPEN.match?(line)
                         codepre += 1
-                    elsif line =~ OFFTAG_CLOSE
+                    elsif OFFTAG_CLOSE.match?(line)
                         codepre -= 1
                         codepre = 0 if codepre < 0
                     end
@@ -1207,13 +1207,15 @@ class RedCloth3 < String
         end
     end
 
-    ALLOWED_TAGS = %w(redpre pre code kbd notextile)
+    ALLOWED_TAGS = %w(pre code kbd notextile)
     def escape_html_tags(text)
-        text.gsub!(%r{<(\/?([!\w]+)[^<>\n]*)(>?)}) do |m|
-            if ALLOWED_TAGS.include?($2) && $3.present?
-                "<#{$1}#{$3}"
+        text.gsub!(%r{<(\/?([!\w][^ >\t\f\r\n]*)[^<>\n]*)(>?)}) do |m|
+            all, tag, close = $1, $2, $3
+
+            if close.present? && (ALLOWED_TAGS.include?(tag) || (tag =~ /\Aredpre#\d+\z/))
+                "<#{all}#{close}"
             else
-                "&lt;#{$1}#{'&gt;' unless $3.blank?}"
+                "&lt;#{all}#{'&gt;' unless close.blank?}"
             end
         end
     end

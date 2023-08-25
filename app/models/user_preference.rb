@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,11 +33,14 @@ class UserPreference < ActiveRecord::Base
     'comments_sorting',
     'warn_on_leaving_unsaved',
     'no_self_notified',
+    'notify_about_high_priority_issues',
     'textarea_font',
     'recently_used_projects',
-    'history_default_tab')
+    'history_default_tab',
+    'toolbar_language_options')
 
   TEXTAREA_FONT_OPTIONS = ['monospace', 'proportional']
+  DEFAULT_TOOLBAR_LANGUAGE_OPTIONS = %w[c cpp csharp css diff go groovy html java javascript objc perl php python r ruby sass scala shell sql swift xml yaml]
 
   def initialize(attributes=nil, *args)
     super
@@ -49,7 +52,7 @@ class UserPreference < ActiveRecord::Base
         self.time_zone = Setting.default_users_time_zone
       end
       unless attributes && attributes.key?(:no_self_notified)
-        self.no_self_notified = true
+        self.no_self_notified = Setting.default_users_no_self_notified
       end
     end
     self.others ||= {}
@@ -78,8 +81,8 @@ class UserPreference < ActiveRecord::Base
     end
   end
 
-  def comments_sorting; self[:comments_sorting] end
-  def comments_sorting=(order); self[:comments_sorting]=order end
+  def comments_sorting; self[:comments_sorting]; end
+  def comments_sorting=(order); self[:comments_sorting]=order; end
 
   def warn_on_leaving_unsaved; self[:warn_on_leaving_unsaved] || '1'; end
   def warn_on_leaving_unsaved=(value); self[:warn_on_leaving_unsaved]=value; end
@@ -87,16 +90,31 @@ class UserPreference < ActiveRecord::Base
   def no_self_notified; (self[:no_self_notified] == true || self[:no_self_notified] == '1'); end
   def no_self_notified=(value); self[:no_self_notified]=value; end
 
-  def activity_scope; Array(self[:activity_scope]) ; end
-  def activity_scope=(value); self[:activity_scope]=value ; end
+  def notify_about_high_priority_issues; (self[:notify_about_high_priority_issues] == true || self[:notify_about_high_priority_issues] == '1'); end
+  def notify_about_high_priority_issues=(value); self[:notify_about_high_priority_issues]=value; end
 
-  def textarea_font; self[:textarea_font] end
+  def activity_scope; Array(self[:activity_scope]); end
+  def activity_scope=(value); self[:activity_scope]=value; end
+
+  def textarea_font; self[:textarea_font]; end
   def textarea_font=(value); self[:textarea_font]=value; end
 
   def recently_used_projects; (self[:recently_used_projects] || 3).to_i; end
   def recently_used_projects=(value); self[:recently_used_projects] = value.to_i; end
   def history_default_tab; self[:history_default_tab]; end
   def history_default_tab=(value); self[:history_default_tab]=value; end
+
+  def toolbar_language_options
+    self[:toolbar_language_options].presence || DEFAULT_TOOLBAR_LANGUAGE_OPTIONS.join(',')
+  end
+
+  def toolbar_language_options=(value)
+    languages =
+      value.to_s.delete(' ').split(',').select do |lang|
+        Redmine::SyntaxHighlighting.language_supported?(lang)
+      end.compact
+    self[:toolbar_language_options] = languages.join(',')
+  end
 
   # Returns the names of groups that are displayed on user's page
   # Example:

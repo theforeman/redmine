@@ -261,7 +261,7 @@
 
   /* search magnifier icon */
   .search-magnifier {
-    font-family: Verdana;
+    font-family: Verdana, sans-serif;
     color: #bbb;
 
     cursor: pointer;
@@ -656,19 +656,6 @@
     F) PAGE SPECIFIC STYLES
   \*----------------------------------------*/
 
-  /* page /login */
-
-  #login-form table {
-    width: 100%;
-  }
-
-  #login-form input#username,
-  #login-form input#password,
-  #login-form input#openid_url {
-    width: 100%;
-    height: auto;
-  }
-
   /* some themes add a margin to login page, remove it on mobile */
   .action-login #main {
     margin: 0;
@@ -791,14 +778,8 @@
     padding-right: 5px;
   }
 
-  #issue_tree .issue > td, #relations .issue > td, #issue_tree .issue .user {
-    text-overflow: ellipsis; /* if text exceeds its space, add ... */
-    overflow: hidden;
-  }
-
   #issue_tree .issue > td.subject, #relations .issue > td.subject {
     width: 100%; /* let subject have one full width column */
-    word-break: break-word; /* break word if subject is too long */
   }
 
   #issue_tree .issue > td:not(.subject), #relations .issue > td:not(.subject) {
@@ -823,11 +804,6 @@
   #issue_tree .issue .buttons a,
   #relations .issue .buttons a {
     vertical-align: middle;
-  }
-
-  #issue_tree .issue > td.subject,
-  #relations .issue > td.subject {
-    padding-right: 25px; /* this is the spaces that .buttons uses next to subject */
   }
 
   /* attachment upload form */

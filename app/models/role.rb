@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,12 +53,12 @@ class Role < ActiveRecord::Base
     ['members_of_visible_projects', :label_users_visibility_members_of_visible_projects]
   ]
 
-  scope :sorted, lambda { order(:builtin, :position) }
-  scope :givable, lambda { order(:position).where(:builtin => 0) }
-  scope :builtin, lambda { |*args|
+  scope :sorted, lambda {order(:builtin, :position)}
+  scope :givable, lambda {order(:position).where(:builtin => 0)}
+  scope :builtin, (lambda do |*args|
     compare = (args.first == true ? 'not' : '')
     where("#{compare} builtin = 0")
-  }
+  end)
 
   before_destroy :check_deletable
   has_many :workflow_rules, :dependent => :delete_all
@@ -92,21 +92,23 @@ class Role < ActiveRecord::Base
     :if => lambda {|role| role.respond_to?(:time_entries_visibility) && role.time_entries_visibility_changed?})
 
   safe_attributes(
-      'name',
-      'assignable',
-      'position',
-      'issues_visibility',
-      'users_visibility',
-      'time_entries_visibility',
-      'all_roles_managed',
-      'managed_role_ids',
-      'permissions',
-      'permissions_all_trackers',
-      'permissions_tracker_ids')
+    'name',
+    'assignable',
+    'position',
+    'issues_visibility',
+    'users_visibility',
+    'time_entries_visibility',
+    'all_roles_managed',
+    'managed_role_ids',
+    'permissions',
+    'permissions_all_trackers',
+    'permissions_tracker_ids'
+  )
 
   # Copies attributes from another role, arg can be an id or a Role
   def copy_from(arg, options={})
     return unless arg.present?
+
     role = arg.is_a?(Role) ? arg : Role.find_by_id(arg.to_s)
     self.attributes = role.attributes.dup.except("id", "name", "position", "builtin", "permissions")
     self.permissions = role.permissions.dup
@@ -115,7 +117,7 @@ class Role < ActiveRecord::Base
   end
 
   def permissions=(perms)
-    perms = perms.collect {|p| p.to_sym unless p.blank? }.compact.uniq if perms
+    perms = perms.collect {|p| p.to_sym unless p.blank?}.compact.uniq if perms
     write_attribute(:permissions, perms)
   end
 
@@ -132,8 +134,9 @@ class Role < ActiveRecord::Base
 
   def remove_permission!(*perms)
     return unless permissions.is_a?(Array)
+
     permissions_will_change!
-    perms.each { |p| permissions.delete(p.to_sym) }
+    perms.each {|p| permissions.delete(p.to_sym)}
     save!
   end
 
@@ -292,9 +295,9 @@ class Role < ActiveRecord::Base
 
   def allowed_actions
     @actions_allowed ||=
-      allowed_permissions.inject([]) {|actions, permission|
+      allowed_permissions.inject([]) do |actions, permission|
         actions += Redmine::AccessControl.allowed_actions(permission)
-      }.flatten
+      end.flatten
   end
 
   def check_deletable

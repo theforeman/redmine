@@ -2,7 +2,7 @@
 
 #
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,8 +28,6 @@ module Redmine
         attr_accessor :footer_date
 
         def initialize(lang, orientation='P')
-          @@k_path_cache = Rails.root.join('tmp', 'pdf')
-          FileUtils.mkdir_p @@k_path_cache unless File::exist?(@@k_path_cache)
           set_language_if_valid lang
           super(orientation, 'mm', 'A4')
           set_print_header(false)
@@ -128,7 +126,7 @@ module Redmine
             RDMCell(0, 5, @footer_date, 0, 0, 'L')
           end
           set_x(-30)
-          RDMCell(0, 5, get_alias_num_page() + '/' + get_alias_nb_pages(), 0, 0, 'C')
+          RDMCell(0, 5, get_alias_num_page + '/' + get_alias_nb_pages, 0, 0, 'C')
         end
       end
 

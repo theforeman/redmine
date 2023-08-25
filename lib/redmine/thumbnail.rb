@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,6 +31,7 @@ module Redmine
     def self.generate(source, target, size, is_pdf = false)
       return nil unless convert_available?
       return nil if is_pdf && !gs_available?
+
       unless File.exists?(target)
         # Make sure we only invoke Imagemagick if the file type is allowed
         mime_type = File.open(source) {|f| Marcel::MimeType.for(f)}
@@ -58,6 +59,7 @@ module Redmine
 
     def self.convert_available?
       return @convert_available if defined?(@convert_available)
+
       begin
         `#{shell_quote CONVERT_BIN} -version`
         @convert_available = $?.success?

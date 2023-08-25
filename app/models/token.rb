@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,11 +37,12 @@ class Token < ActiveRecord::Base
   end
 
   add_action :api,       max_instances: 1,  validity_time: nil
-  add_action :autologin, max_instances: 10, validity_time: Proc.new { Setting.autologin.to_i.days }
+  add_action :autologin, max_instances: 10, validity_time: Proc.new {Setting.autologin.to_i.days}
   add_action :feeds,     max_instances: 1,  validity_time: nil
-  add_action :recovery,  max_instances: 1,  validity_time: Proc.new { Token.validity_time }
-  add_action :register,  max_instances: 1,  validity_time: Proc.new { Token.validity_time }
+  add_action :recovery,  max_instances: 1,  validity_time: Proc.new {Token.validity_time}
+  add_action :register,  max_instances: 1,  validity_time: Proc.new {Token.validity_time}
   add_action :session,   max_instances: 10, validity_time: nil
+  add_action :twofa_backup_code, max_instances: 10, validity_time: nil
 
   def generate_new_token
     self.value = Token.generate_token_value

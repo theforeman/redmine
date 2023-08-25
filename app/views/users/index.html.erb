@@ -1,5 +1,10 @@
 <div class="contextual">
 <%= link_to l(:label_user_new), new_user_path, :class => 'icon icon-add' %>
+  <%= actions_dropdown do %>
+    <% if User.current.allowed_to?(:import_users, nil, :global => true) %>
+      <%= link_to l(:button_import), new_users_import_path, :class => 'icon icon-import' %>
+    <% end %>
+  <% end %>
 </div>
 
 <h2><%=l(:label_user_plural)%></h2>
@@ -48,7 +53,7 @@
   <td class="last_login_on"><%= format_time(user.last_login_on) unless user.last_login_on.nil? %></td>
     <td class="buttons">
       <%= change_status_link(user) %>
-      <%= delete_link user_path(user, :back_url => request.original_fullpath) unless User.current == user %>
+      <%= delete_link user_path(user, :back_url => request.original_fullpath), :data => {} unless User.current == user %>
     </td>
   </tr>
 <% end -%>

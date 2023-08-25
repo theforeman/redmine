@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,10 @@ module AttachmentsHelper
 
   def container_attachments_path(container)
     object_attachments_path container.class.name.underscore.pluralize, container.id
+  end
+
+  def container_attachments_download_path(container)
+    object_attachments_download_path container.class.name.underscore.pluralize, container.id
   end
 
   # Displays view/delete links to the attachments of the given object
@@ -66,7 +70,7 @@ module AttachmentsHelper
   def render_api_attachment(attachment, api, options={})
     api.attachment do
       render_api_attachment_attributes(attachment, api)
-      options.each { |key, value| eval("api.#{key} value") }
+      options.each {|key, value| eval("api.#{key} value")}
     end
   end
 

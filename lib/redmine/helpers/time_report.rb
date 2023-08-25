@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -104,31 +104,32 @@ module Redmine
       end
 
       def load_available_criteria
-        @available_criteria = { 'project' => {:sql => "#{TimeEntry.table_name}.project_id",
-                                              :klass => Project,
-                                              :label => :label_project},
-                                 'status' => {:sql => "#{Issue.table_name}.status_id",
-                                              :klass => IssueStatus,
-                                              :label => :field_status},
-                                 'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
-                                              :klass => ::Version,
-                                              :label => :label_version},
-                                 'category' => {:sql => "#{Issue.table_name}.category_id",
-                                                :klass => IssueCategory,
-                                                :label => :field_category},
-                                 'user' => {:sql => "#{TimeEntry.table_name}.user_id",
-                                             :klass => User,
-                                             :label => :label_user},
-                                 'tracker' => {:sql => "#{Issue.table_name}.tracker_id",
-                                              :klass => Tracker,
-                                              :label => :label_tracker},
-                                 'activity' => {:sql => "#{TimeEntry.table_name}.activity_id",
-                                               :klass => TimeEntryActivity,
-                                               :label => :label_activity},
-                                 'issue' => {:sql => "#{TimeEntry.table_name}.issue_id",
-                                             :klass => Issue,
-                                             :label => :label_issue}
-                               }
+        @available_criteria = {
+          'project' => {:sql => "#{TimeEntry.table_name}.project_id",
+                        :klass => Project,
+                        :label => :label_project},
+          'status' => {:sql => "#{Issue.table_name}.status_id",
+                       :klass => IssueStatus,
+                       :label => :field_status},
+          'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
+                        :klass => ::Version,
+                        :label => :label_version},
+          'category' => {:sql => "#{Issue.table_name}.category_id",
+                         :klass => IssueCategory,
+                         :label => :field_category},
+          'user' => {:sql => "#{TimeEntry.table_name}.user_id",
+                     :klass => User,
+                     :label => :label_user},
+          'tracker' => {:sql => "#{Issue.table_name}.tracker_id",
+                        :klass => Tracker,
+                        :label => :label_tracker},
+          'activity' => {:sql => "COALESCE(#{TimeEntryActivity.table_name}.parent_id, #{TimeEntryActivity.table_name}.id)",
+                         :klass => TimeEntryActivity,
+                         :label => :field_activity},
+          'issue' => {:sql => "#{TimeEntry.table_name}.issue_id",
+                      :klass => Issue,
+                      :label => :label_issue}
+        }
 
         # Add time entry custom fields
         custom_fields = TimeEntryCustomField.visible

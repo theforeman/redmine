@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -84,8 +84,11 @@ class SearchController < ApplicationController
       @question = ""
     end
     respond_to do |format|
-      format.html { render :layout => false if request.xhr? }
-      format.api  { @results ||= []; render :layout => false }
+      format.html {render :layout => false if request.xhr?}
+      format.api do
+        @results ||= []
+        render :layout => false
+      end
     end
   end
 end

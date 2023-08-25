@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@ class Group < Principal
 
   before_destroy :remove_references_before_destroy
 
-  scope :sorted, lambda { order(:type => :asc, :lastname => :asc) }
+  scope :sorted, lambda {order(:type => :asc, :lastname => :asc)}
   scope :named, lambda {|arg| where("LOWER(#{table_name}.lastname) = LOWER(?)", arg.to_s.strip)}
   scope :givable, lambda {where(:type => 'Group')}
 
@@ -75,9 +75,13 @@ class Group < Principal
   def user_added(user)
     members.each do |member|
       next if member.project.nil?
-      user_member = Member.find_by_project_id_and_user_id(member.project_id, user.id) || Member.new(:project_id => member.project_id, :user_id => user.id)
+
+      user_member =
+        Member.find_by_project_id_and_user_id(member.project_id, user.id) ||
+          Member.new(:project_id => member.project_id, :user_id => user.id)
       member.member_roles.each do |member_role|
-        user_member.member_roles << MemberRole.new(:role => member_role.role, :inherited_from => member_role.id)
+        user_member.member_roles << MemberRole.new(:role => member_role.role,
+                                                   :inherited_from => member_role.id)
       end
       user_member.save!
     end
@@ -115,6 +119,7 @@ class Group < Principal
     return if self.id.nil?
 
     Issue.where(['assigned_to_id = ?', id]).update_all('assigned_to_id = NULL')
+    Watcher.where('user_id = ?', id).delete_all
   end
 end
 

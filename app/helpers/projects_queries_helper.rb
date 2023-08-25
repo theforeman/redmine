@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,7 +23,9 @@ module ProjectsQueriesHelper
     if item.is_a?(Project)
       case column.name
       when :name
-        link_to_project(item) + (content_tag('span', '', :class => 'icon icon-user my-project', :title => l(:label_my_projects)) if User.current.member_of?(item))
+        link_to_project(item) +
+          (tag.span(class: 'icon icon-user my-project', title: l(:label_my_projects)) if User.current.member_of?(item)) +
+          (tag.span(class: 'icon icon-bookmarked-project', title: l(:label_my_bookmarks)) if User.current.bookmarked_project_ids.include?(item.id))
       when :short_description
         item.description? ? content_tag('div', textilizable(item, :short_description), :class => "wiki") : ''
       when :homepage

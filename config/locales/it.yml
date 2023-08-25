@@ -368,11 +368,11 @@ it:
   label_attachment_plural: File
   label_report: Report
   label_report_plural: Report
-  label_news: Notizia
-  label_news_new: Aggiungi notizia
-  label_news_plural: Notizie
-  label_news_latest: Utime notizie
-  label_news_view_all: Tutte le notizie
+  label_news: News
+  label_news_new: Aggiungi news
+  label_news_plural: News
+  label_news_latest: Utime news
+  label_news_view_all: Tutte le news
   label_settings: Impostazioni
   label_overview: Panoramica
   label_version: Versione
@@ -564,7 +564,6 @@ it:
 
   text_select_mail_notifications: Seleziona le azioni per cui deve essere inviata una notifica.
   text_regexp_info: es. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 significa nessuna restrizione
   text_project_destroy_confirmation: Sei sicuro di voler eliminare il progetto e tutti i dati ad esso collegati?
   text_workflow_edit: Seleziona un ruolo ed un tracker per modificare il workflow
   text_are_you_sure: Sei sicuro ?
@@ -614,7 +613,6 @@ it:
   field_column_names: Colonne
   label_default_columns: Colonne predefinite
   setting_issue_list_default_columns: Colonne predefinite mostrate nell'elenco segnalazioni
-  notice_no_issue_selected: "Nessuna segnalazione selezionata! Seleziona le segnalazioni che intendi modificare."
   label_bulk_edit_selected_issues: Modifica massiva delle segnalazioni selezionate
   label_no_change_option: (Nessuna modifica)
   notice_failed_to_save_issues: "Impossibile salvare %{count} segnalazioni su %{total} selezionate: %{ids}."
@@ -668,14 +666,14 @@ it:
   label_document_added: Documenti aggiunti
   label_message_posted: Messaggi aggiunti
   label_file_added: File aggiunti
-  label_news_added: Notizie aggiunte
+  label_news_added: News aggiunte
   project_module_boards: Forum
   project_module_issue_tracking: Tracking delle segnalazioni
   project_module_wiki: Wiki
   project_module_files: File
   project_module_documents: Documenti
   project_module_repository: Repository
-  project_module_news: Notizie
+  project_module_news: News
   project_module_time_tracking: Time tracking
   text_file_repository_writable: Repository dei file scrivibile
   text_default_administrator_account_changed: L'account amministrativo predefinito è stato modificato
@@ -704,7 +702,6 @@ it:
   label_reverse_chronological_order: In ordine cronologico inverso
   label_preferences: Preferenze
   setting_display_subprojects_issues: Mostra le segnalazioni dei sottoprogetti nel progetto principale in modo predefinito
-  label_overall_activity: Attività generale
   setting_default_projects_public: I nuovi progetti sono pubblici in modo predefinito
   error_scm_annotate: "L'oggetto non esiste o non può essere annotato."
   text_subprojects_destroy_warning: "Anche i suoi sottoprogetti: %{value} verranno eliminati."
@@ -742,7 +739,7 @@ it:
   permission_manage_wiki: Gestisci wiki
   permission_manage_categories: Gestisci categorie segnalazioni
   permission_protect_wiki_pages: Proteggi pagine wiki
-  permission_comment_news: Commenta notizie
+  permission_comment_news: Commenta news
   permission_delete_messages: Elimina messaggi
   permission_select_project_modules: Seleziona moduli progetto
   permission_edit_wiki_pages: Modifica pagine wiki
@@ -757,7 +754,7 @@ it:
   permission_view_messages: Vedi messaggi
   permission_manage_files: Gestisci files
   permission_edit_issue_notes: Modifica note
-  permission_manage_news: Gestisci notizie
+  permission_manage_news: Gestisci news
   permission_view_calendar: Vedi calendario
   permission_manage_members: Gestisci membri
   permission_edit_messages: Modifica messaggi
@@ -813,7 +810,7 @@ it:
   mail_subject_wiki_content_added: "La pagina '%{id}' è stata aggiunta al wiki"
   mail_body_wiki_content_added: La pagina '%{id}' è stata aggiunta al wiki da %{author}.
   label_wiki_content_updated: Aggiornata pagina wiki
-  mail_body_wiki_content_updated: La pagina '%{id}' wiki è stata aggiornata da%{author}.
+  mail_body_wiki_content_updated: La pagina '%{id}' wiki è stata aggiornata da %{author}.
   permission_add_project: Crea progetto
   setting_new_project_user_role_id: Ruolo assegnato agli utenti non amministratori che creano un progetto
   label_view_all_revisions: Mostra tutte le revisioni
@@ -899,7 +896,6 @@ it:
   text_zoom_out: Riduci ingrandimento
   text_zoom_in: Aumenta ingrandimento
   notice_unable_delete_time_entry: Impossibile eliminare il valore time log.
-  label_overall_spent_time: Totale tempo impiegato
   field_time_entries: Tempo di collegamento
   project_module_gantt: Gantt
   project_module_calendar: Calendario
@@ -924,7 +920,7 @@ it:
   text_warn_on_leaving_unsaved: La pagina corrente contiene del testo non salvato che verrà perso se lasci questa pagina.
   label_my_queries: Le mie queries personalizzate
   text_journal_changed_no_detail: "%{label} aggiornato"
-  label_news_comment_added: Commento aggiunto a una notizia
+  label_news_comment_added: Commento aggiunto a una news
   button_expand_all: Espandi tutto
   button_collapse_all: Comprimi tutto
   label_additional_workflow_transitions_for_assignee: Transizioni supplementari consentite quando l'utente è l'assegnatario
@@ -1138,7 +1134,7 @@ it:
   notice_import_finished_with_errors: "%{count} out of %{total} items could not be imported"
   error_invalid_file_encoding: The file is not a valid %{encoding} encoded file
   error_invalid_csv_file_or_settings: The file is not a CSV file or does not match the
-    settings below
+    settings below (%{value})
   error_can_not_read_import_file: An error occurred while reading the file to import
   permission_import_issues: Import issues
   label_import_issues: Importa segnalazioni
@@ -1306,3 +1302,106 @@ it:
   label_display_type_board: Board
   label_my_bookmarks: I miei segnalibri
   label_import_time_entries: Importa tempo impiegato
+  field_toolbar_language_options: Code highlighting toolbar languages
+  label_user_mail_notify_about_high_priority_issues_html: Also notify me about issues
+    with a priority of <em>%{prio}</em> or higher
+  label_assign_to_me: Assign to me
+  notice_issue_not_closable_by_open_tasks: This issue cannot be closed because it has
+    at least one open subtask.
+  notice_issue_not_closable_by_blocking_issue: This issue cannot be closed because it
+    is blocked by at least one open issue.
+  notice_issue_not_reopenable_by_closed_parent_issue: This issue cannot be reopened
+    because its parent issue is closed.
+  error_bulk_download_size_too_big: These attachments cannot be bulk downloaded because
+    the total file size exceeds the maximum allowed size (%{max_size})
+  setting_bulk_download_max_size: Maximum total size for bulk download
+  label_download_all_attachments: Download all files
+  error_attachments_too_many: This file cannot be uploaded because it exceeds the maximum
+    number of files that can be attached simultaneously (%{max_number_of_files})
+  setting_email_domains_allowed: Allowed email domains
+  setting_email_domains_denied: Disallowed email domains
+  field_passwd_changed_on: Password last changed
+  label_relations_mapping: Relations mapping
+  label_import_users: Import users
+  label_days_to_html: "%{days} days up to %{date}"
+  setting_twofa: Two-factor authentication
+  label_optional: optional
+  label_required_lower: required
+  button_disable: Disable
+  twofa__totp__name: Authenticator app
+  twofa__totp__text_pairing_info_html: Scan this QR code or enter the plain text key
+    into a TOTP app (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) and enter the code in the field below to activate two-factor authentication.
+  twofa__totp__label_plain_text_key: Plain text key
+  twofa__totp__label_activate: Enable authenticator app
+  twofa_currently_active: 'Currently active: %{twofa_scheme_name}'
+  twofa_not_active: Not activated
+  twofa_label_code: Code
+  twofa_hint_disabled_html: Setting <strong>%{label}</strong> will deactivate and unpair
+    two-factor authentication devices for all users.
+  twofa_hint_required_html: Setting <strong>%{label}</strong> will require all users
+    to set up two-factor authentication at their next login.
+  twofa_label_setup: Enable two-factor authentication
+  twofa_label_deactivation_confirmation: Disable two-factor authentication
+  twofa_notice_select: 'Please select the two-factor scheme you would like to use:'
+  twofa_warning_require: The administrator requires you to enable two-factor authentication.
+  twofa_activated: Two-factor authentication successfully enabled. It is recommended
+    to <a data-method="post" href="%{bc_path}">generate backup codes</a> for your account.
+  twofa_deactivated: Two-factor authentication disabled.
+  twofa_mail_body_security_notification_paired: Two-factor authentication successfully
+    enabled using %{field}.
+  twofa_mail_body_security_notification_unpaired: Two-factor authentication disabled
+    for your account.
+  twofa_mail_body_backup_codes_generated: New two-factor authentication backup codes
+    generated.
+  twofa_mail_body_backup_code_used: A two-factor authentication backup code has been
+    used.
+  twofa_invalid_code: Code is invalid or outdated.
+  twofa_label_enter_otp: Please enter your two-factor authentication code.
+  twofa_too_many_tries: Too many tries.
+  twofa_resend_code: Resend code
+  twofa_code_sent: An authentication code has been sent to you.
+  twofa_generate_backup_codes: Generate backup codes
+  twofa_text_generate_backup_codes_confirmation: This will invalidate all existing backup
+    codes and generate new ones. Would you like to continue?
+  twofa_notice_backup_codes_generated: Your backup codes have been generated.
+  twofa_warning_backup_codes_generated_invalidated: New backup codes have been generated.
+    Your existing codes from %{time} are now invalid.
+  twofa_label_backup_codes: Two-factor authentication backup codes
+  twofa_text_backup_codes_hint: Use these codes instead of a one-time password should
+    you not have access to your second factor. Each code can only be used once. It is
+    recommended to print and store them in a safe place.
+  twofa_text_backup_codes_created_at: Backup codes generated %{datetime}.
+  twofa_backup_codes_already_shown: Backup codes cannot be shown again, please <a data-method="post"
+    href="%{bc_path}">generate new backup codes</a> if required.
+  error_can_not_execute_macro_html: Error executing the <strong>%{name}</strong> macro
+    (%{error})
+  error_macro_does_not_accept_block: This macro does not accept a block of text
+  error_childpages_macro_no_argument: With no argument, this macro can be called from
+    wiki pages only
+  error_circular_inclusion: Circular inclusion detected
+  error_page_not_found: Page not found
+  error_filename_required: Filename required
+  error_invalid_size_parameter: Invalid size parameter
+  error_attachment_not_found: Attachment %{name} not found
+  permission_delete_project: Delete the project
+  field_twofa_scheme: Two-factor authentication scheme
+  text_user_destroy_confirmation: Are you sure you want to delete this user and remove
+    all references to them? This cannot be undone. Often, locking a user instead of
+    deleting them is the better solution. To confirm, please enter their login (%{login})
+    below.
+  text_project_destroy_enter_identifier: To confirm, please enter the project's identifier
+    (%{identifier}) below.
+  button_add_subtask: Add subtask
+  notice_invalid_watcher: 'Invalid watcher: User will not receive any notifications
+    because it does not have access to view this object.'
+  button_fetch_changesets: Fetch commits
+  permission_view_message_watchers: View message watchers list
+  permission_add_message_watchers: Add message watchers
+  permission_delete_message_watchers: Delete message watchers
+  label_message_watchers: Watchers
+  button_copy_link: Copy link
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2019  Jean-Philippe Lang
+# Copyright (C) 2006-2021  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@ class DocumentsController < ApplicationController
     documents = @project.documents.includes(:attachments, :category).to_a
     case @sort_by
     when 'date'
-      documents.sort!{|a,b| b.updated_on <=> a.updated_on}
+      documents.sort!{|a, b| b.updated_on <=> a.updated_on}
       @grouped = documents.group_by {|d| d.updated_on.to_date}
     when 'title'
       @grouped = documents.group_by {|d| d.title.first.upcase}
@@ -83,6 +83,7 @@ class DocumentsController < ApplicationController
 
   def destroy
     @document.destroy if request.delete?
+    flash[:notice] = l(:notice_successful_delete)
     redirect_to project_documents_path(@project)
   end
 
