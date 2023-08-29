@@ -96,4 +96,6 @@ Rails.application.configure do
 
   # Automatically execute asset precompilation on startup in case of changes have been detected in assets
   config.assets.redmine_detect_update = true
+
+  config.secret_key_base = YAML.load_file('/etc/redmine/secure_config.yaml')['secret_token']
 end
