@@ -93,4 +93,6 @@ Rails.application.configure do
 
   # No email in production log
   config.action_mailer.logger = nil
+
+  config.secret_key_base = ENV['redmine_secret_key_base']
 end
