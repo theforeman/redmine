@@ -2,10 +2,11 @@
 /.idea
 /.loadpath
 /.powrc
+/.psql_history
+/.bash_history
 /.rvmrc
 /.ruby-version
 /config/additional_environment.rb
-/config/configuration.yml
 /config/database.yml
 /config/email.yml
 /config/secrets.yml
@@ -21,8 +22,6 @@
 /lib/redmine/scm/adapters/mercurial/redminehelper.pyo
 /log/*.log*
 /log/mongrel_debug
-/plugins/*
-!/plugins/README
 /public/dispatch.*
 /public/plugin_assets/*
 /public/themes/*
@@ -37,6 +36,7 @@
 /tmp/test/*
 /tmp/thumbnails/*
 /vendor/cache
+/vendor/ruby
 *.rbc
 
 /.bundle
