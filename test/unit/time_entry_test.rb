@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,7 +29,12 @@ class TimeEntryTest < ActiveSupport::TestCase
            :journals, :journal_details,
            :issue_categories, :enumerations,
            :groups_users,
-           :enabled_modules
+           :enabled_modules,
+           :custom_fields, :custom_fields_projects, :custom_values
+
+  def setup
+    User.current = nil
+  end
 
   def test_visibility_with_permission_to_view_all_time_entries
     user = User.generate!
@@ -62,25 +69,25 @@ class TimeEntryTest < ActiveSupport::TestCase
   end
 
   def test_hours_format
-    assertions = { "2"      => 2.0,
-                   "21.1"   => 21.1,
-                   "2,1"    => 2.1,
-                   "1,5h"   => 1.5,
-                   "7:12"   => 7.2,
-                   "10h"    => 10.0,
-                   "10 h"   => 10.0,
-                   "45m"    => 0.75,
-                   "45 m"   => 0.75,
-                   "3h15"   => 3.25,
-                   "3h 15"  => 3.25,
-                   "3 h 15"   => 3.25,
-                   "3 h 15m"  => 3.25,
-                   "3 h 15 m" => 3.25,
-                   "3 hours"  => 3.0,
-                   "12min"    => 0.2,
-                   "12 Min"    => 0.2,
-                  }
-
+    assertions = {
+      "2"      => 2.0,
+      "21.1"   => 21.1,
+      "2,1"    => 2.1,
+      "1,5h"   => 1.5,
+      "7:12"   => 7.2,
+      "10h"    => 10.0,
+      "10 h"   => 10.0,
+      "45m"    => 0.75,
+      "45 m"   => 0.75,
+      "3h15"   => 3.25,
+      "3h 15"  => 3.25,
+      "3 h 15"   => 3.25,
+      "3 h 15m"  => 3.25,
+      "3 h 15 m" => 3.25,
+      "3 hours"  => 3.0,
+      "12min"    => 0.2,
+      "12 Min"    => 0.2,
+    }
     assertions.each do |k, v|
       t = TimeEntry.new(:hours => k)
       assert_equal v, t.hours, "Converting #{k} failed:"
@@ -89,6 +96,64 @@ class TimeEntryTest < ActiveSupport::TestCase
 
   def test_hours_should_default_to_nil
     assert_nil TimeEntry.new.hours
+  end
+
+  def test_should_accept_0_hours
+    entry = TimeEntry.generate
+    entry.hours = 0
+    assert entry.save
+  end
+
+  def test_should_not_accept_0_hours_if_disabled
+    with_settings :timelog_accept_0_hours => '0' do
+      entry = TimeEntry.generate
+      entry.hours = 0
+      assert !entry.save
+      assert entry.errors[:hours].present?
+    end
+  end
+
+  def test_should_not_accept_more_than_maximum_hours_per_day_and_user
+    with_settings :timelog_max_hours_per_day => '8' do
+      entry = TimeEntry.generate(:spent_on => '2017-07-16', :hours => 6.0, :user_id => 2)
+      assert entry.save
+
+      entry = TimeEntry.generate(:spent_on => '2017-07-16', :hours => 1.5, :user_id => 2)
+      assert entry.save
+
+      entry = TimeEntry.generate(:spent_on => '2017-07-16', :hours => 3.0, :user_id => 2)
+      assert !entry.save
+    end
+  end
+
+  def test_activity_id_should_default_activity_id
+    project = Project.find(1)
+    default_activity = TimeEntryActivity.find(10)
+    entry = TimeEntry.new(project: project)
+    assert_equal entry.activity_id, default_activity.id
+
+    # If there are project specific activities
+    project_specific_default_activity = TimeEntryActivity.create!(name: 'Development', parent_id: 10, project_id: project.id, is_default: false)
+    entry = TimeEntry.new(project: project)
+    assert_not_equal entry.activity_id, default_activity.id
+    assert_equal entry.activity_id, project_specific_default_activity.id
+  end
+
+  def test_should_accept_future_dates
+    entry = TimeEntry.generate
+    entry.spent_on = User.current.today + 1
+
+    assert entry.save
+  end
+
+  def test_should_not_accept_future_dates_if_disabled
+    with_settings :timelog_accept_future_dates => '0' do
+      entry = TimeEntry.generate
+      entry.spent_on = User.current.today + 1
+
+      assert !entry.save
+      assert entry.errors[:base].present?
+    end
   end
 
   def test_spent_on_with_blank
@@ -140,6 +205,7 @@ class TimeEntryTest < ActiveSupport::TestCase
                           :issue    => issue,
                           :project  => project,
                           :user     => anon,
+                          :author     => anon,
                           :activity => activity)
     assert_equal 1, te.errors.count
   end
@@ -177,11 +243,33 @@ class TimeEntryTest < ActiveSupport::TestCase
 
   def test_create_with_required_issue_id_and_comment_should_be_validated
     set_language_if_valid 'en'
-    with_settings :timelog_required_fields => ['issue_id' , 'comments'] do
-      entry = TimeEntry.new(:project => Project.find(1), :spent_on => Date.today, :user => User.find(1), :activity => TimeEntryActivity.first, :hours => 1)
-
+    with_settings :timelog_required_fields => ['issue_id', 'comments'] do
+      entry = TimeEntry.new(:project => Project.find(1),
+                            :spent_on => Date.today,
+                            :author => User.find(1),
+                            :user => User.find(1),
+                            :activity => TimeEntryActivity.first,
+                            :hours => 1)
       assert !entry.save
       assert_equal ["Comment cannot be blank", "Issue cannot be blank"], entry.errors.full_messages.sort
     end
+  end
+
+  def test_create_should_validate_user_id
+    set_language_if_valid 'en'
+    entry = TimeEntry.new(:spent_on => '2010-01-01',
+                          :hours    => 10,
+                          :project_id => 1,
+                          :user_id    => 4)
+
+    assert !entry.save
+    assert_equal ["User is invalid"], entry.errors.full_messages.sort
+  end
+
+  def test_assignable_users_should_include_active_project_members_with_log_time_permission
+    Role.find(2).remove_permission! :log_time
+    time_entry = TimeEntry.find(1)
+
+    assert_equal [2], time_entry.assignable_users.map(&:id)
   end
 end

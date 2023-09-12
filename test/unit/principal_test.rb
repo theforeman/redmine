@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,6 +22,10 @@ require File.expand_path('../../test_helper', __FILE__)
 class PrincipalTest < ActiveSupport::TestCase
   fixtures :users, :projects, :members, :member_roles, :roles,
            :email_addresses
+
+  def setup
+    User.current = nil
+  end
 
   def test_active_scope_should_return_groups_and_active_users
     result = Principal.active.to_a
@@ -52,11 +56,11 @@ class PrincipalTest < ActiveSupport::TestCase
     assert_equal expected.map(&:id).sort, Principal.visible(user).pluck(:id).sort
   end
 
-  def test_member_of_scope_should_return_the_union_of_all_members
+  def test_member_of_scope_should_return_the_union_of_all_active_and_locked_members
     projects = Project.find([1])
-    assert_equal [3, 2], Principal.member_of(projects).sort.map(&:id)
+    assert_equal [3, 5, 2], Principal.member_of(projects).sort.map(&:id)
     projects = Project.find([1, 2])
-    assert_equal [3, 2, 8, 11], Principal.member_of(projects).sort.map(&:id)
+    assert_equal [3, 5, 2, 8, 11], Principal.member_of(projects).sort.map(&:id)
   end
 
   def test_member_of_scope_should_be_empty_for_no_projects
@@ -89,28 +93,28 @@ class PrincipalTest < ActiveSupport::TestCase
     results = Principal.like('jsmi')
 
     assert results.any?
-    assert results.all? {|u| u.login.match(/jsmi/i) }
+    assert results.all? {|u| u.login.match(/jsmi/i)}
   end
 
   test "like scope should search firstname" do
     results = Principal.like('john')
 
     assert results.any?
-    assert results.all? {|u| u.firstname.match(/john/i) }
+    assert results.all? {|u| u.firstname.match(/john/i)}
   end
 
   test "like scope should search lastname" do
     results = Principal.like('smi')
 
     assert results.any?
-    assert results.all? {|u| u.lastname.match(/smi/i) }
+    assert results.all? {|u| u.lastname.match(/smi/i)}
   end
 
   test "like scope should search mail" do
     results = Principal.like('somenet')
 
     assert results.any?
-    assert results.all? {|u| u.mail.match(/somenet/i) }
+    assert results.all? {|u| u.mail.match(/somenet/i)}
   end
 
   test "like scope should search firstname and lastname" do
@@ -127,10 +131,36 @@ class PrincipalTest < ActiveSupport::TestCase
     assert_equal User.find(2), results.first
   end
 
+  test "like scope should find lastname with spaces" do
+    user = User.find(1)
+    user.update_columns(:firstname => 'Leonardo', :lastname => 'da Vinci')
+
+    results = Principal.like('Leonardo da Vinci')
+
+    assert_equal 1, results.count
+    assert_equal user, results.first
+  end
+
   def test_like_scope_with_cyrillic_name
     user = User.generate!(:firstname => 'Соболев', :lastname => 'Денис')
     results = Principal.like('Собо')
     assert_equal 1, results.count
     assert_equal user, results.first
+  end
+
+  def test_like_scope_should_escape_query
+    user = User.generate!(:firstname => 'Leonardo', :lastname => 'da Vinci')
+    r = Principal.like('Vi_ci')
+    assert_not_include user, r
+    r = Principal.like('Vi%ci')
+    assert_not_include user, r
+
+    user.update_column :lastname, 'da Vi%ci'
+    r = Principal.like('vi%ci')
+    assert_include user, r
+
+    user.update_column :lastname, 'da Vi_ci'
+    r = Principal.like('vi_ci')
+    assert_include user, r
   end
 end

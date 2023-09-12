@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,6 +30,10 @@ class IssueStatusTest < ActiveSupport::TestCase
            :issues, :journals, :journal_details,
            :custom_fields, :custom_fields_projects, :custom_fields_trackers, :custom_values
 
+  def setup
+    User.current = nil
+  end
+
   def test_create
     status = IssueStatus.new :name => "Assigned"
     assert !status.save
@@ -43,23 +49,30 @@ class IssueStatusTest < ActiveSupport::TestCase
     assert_difference 'IssueStatus.count', -1 do
       assert status.destroy
     end
-    assert_nil WorkflowTransition.where(:old_status_id => status.id).first
-    assert_nil WorkflowTransition.where(:new_status_id => status.id).first
+    assert_not WorkflowTransition.where(:old_status_id => status.id).exists?
+    assert_not WorkflowTransition.where(:new_status_id => status.id).exists?
   end
 
   def test_destroy_status_in_use
     # Status assigned to an Issue
     status = Issue.find(1).status
-    assert_raise(RuntimeError, "Cannot delete status") { status.destroy }
+    assert_raise(RuntimeError, "Cannot delete status") {status.destroy}
   end
 
   def test_new_statuses_allowed_to
     WorkflowTransition.delete_all
-
-    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2, :author => false, :assignee => false)
-    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 3, :author => true, :assignee => false)
-    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 4, :author => false, :assignee => true)
-    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 5, :author => true, :assignee => true)
+    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                               :old_status_id => 1, :new_status_id => 2,
+                               :author => false, :assignee => false)
+    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                               :old_status_id => 1, :new_status_id => 3,
+                               :author => true, :assignee => false)
+    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                               :old_status_id => 1, :new_status_id => 4,
+                               :author => false, :assignee => true)
+    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                               :old_status_id => 1, :new_status_id => 5,
+                               :author => true, :assignee => true)
     status = IssueStatus.find(1)
     role = Role.find(1)
     tracker = Tracker.find(1)

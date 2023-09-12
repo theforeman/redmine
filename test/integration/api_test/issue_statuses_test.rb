@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +26,7 @@ class Redmine::ApiTest::IssueStatusesTest < Redmine::ApiTest::Base
     get '/issue_statuses.xml'
 
     assert_response :success
-    assert_equal 'application/xml', @response.content_type
+    assert_equal 'application/xml', @response.media_type
     assert_select 'issue_statuses[type=array] issue_status id', :text => '2' do
       assert_select '~ name', :text => 'Assigned'
     end

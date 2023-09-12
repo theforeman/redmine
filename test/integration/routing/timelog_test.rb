@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -55,6 +57,7 @@ class RoutingTimelogsTest < Redmine::RoutingTest
 
   def test_timelogs_bulk_edit
     should_route 'GET /time_entries/bulk_edit' => 'timelog#bulk_edit'
+    should_route 'POST /time_entries/bulk_edit' => 'timelog#bulk_edit'
     should_route 'POST /time_entries/bulk_update' => 'timelog#bulk_update'
     should_route 'DELETE /time_entries/destroy' => 'timelog#destroy'
   end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +33,7 @@ class IssuesTest < Redmine::IntegrationTest
            :enumerations,
            :custom_fields,
            :custom_values,
-           :custom_fields_trackers,
+           :custom_fields_trackers, :custom_fields_projects,
            :attachments
 
   # create an issue
@@ -42,7 +44,9 @@ class IssuesTest < Redmine::IntegrationTest
     assert_response :success
 
     issue = new_record(Issue) do
-      post '/projects/ecookbook/issues', :params => {
+      post(
+        '/projects/ecookbook/issues',
+        :params => {
           :issue => {
             :tracker_id => "1",
             :start_date => "2006-12-26",
@@ -56,6 +60,7 @@ class IssuesTest < Redmine::IntegrationTest
             :custom_field_values => {'2' => 'Value for field 2'}
           }
         }
+      )
     end
     # check redirection
     assert_redirected_to :controller => 'issues', :action => 'show', :id => issue
@@ -71,12 +76,15 @@ class IssuesTest < Redmine::IntegrationTest
     Role.anonymous.remove_permission! :add_issues
 
     assert_no_difference 'Issue.count' do
-      post '/projects/1/issues', :params => {
+      post(
+        '/projects/1/issues',
+        :params => {
           :issue => {
             :tracker_id => "1",
             :subject => "new test issue"
           }
         }
+      )
     end
     assert_response 302
   end
@@ -86,12 +94,15 @@ class IssuesTest < Redmine::IntegrationTest
     Member.create!(:project_id => 1, :principal => Group.anonymous, :role_ids => [3])
 
     issue = new_record(Issue) do
-      post '/projects/1/issues', :params => {
+      post(
+        '/projects/1/issues',
+        :params => {
           :issue => {
             :tracker_id => "1",
             :subject => "new test issue"
           }
         }
+      )
       assert_response 302
     end
     assert_equal User.anonymous, issue.author
@@ -101,26 +112,105 @@ class IssuesTest < Redmine::IntegrationTest
   def test_issue_attachments
     log_user('jsmith', 'jsmith')
     set_tmp_attachments_directory
-
     attachment = new_record(Attachment) do
-      put '/issues/1', :params => {
+      put(
+        '/issues/1',
+        :params => {
           :issue => {:notes => 'Some notes'},
-          :attachments => {'1' => {'file' => uploaded_test_file('testfile.txt', 'text/plain'), 'description' => 'This is an attachment'}}
+          :attachments => {
+            '1' => {
+              'file' => uploaded_test_file('testfile.txt', 'text/plain'),
+              'description' => 'This is an attachment'
+            }
+          }
         }
+      )
       assert_redirected_to "/issues/1"
     end
-
     assert_equal Issue.find(1), attachment.container
     assert_equal 'testfile.txt', attachment.filename
     assert_equal 'This is an attachment', attachment.description
     # verify the size of the attachment stored in db
-    #assert_equal file_data_1.length, attachment.filesize
+    assert_equal 59, attachment.filesize
     # verify that the attachment was written to disk
     assert File.exist?(attachment.diskfile)
-
     # remove the attachments
     Issue.find(1).attachments.each(&:destroy)
     assert_equal 0, Issue.find(1).attachments.length
+  end
+
+  def test_edit_add_attachment_form
+    log_user('jsmith', 'jsmith')
+    role = Role.find(1)
+
+    role.add_permission! :edit_issues
+    role.remove_permission! :edit_own_issues
+    role.remove_permission! :add_issue_notes
+
+    get '/issues/1'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+
+    get '/issues/1/edit'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+
+    role.remove_permission! :edit_issues
+    role.add_permission! :edit_own_issues
+    role.remove_permission! :add_issue_notes
+
+    get '/issues/1'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+
+    get '/issues/1/edit'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+
+    role.remove_permission! :edit_issues
+    role.remove_permission! :edit_own_issues
+    role.add_permission! :add_issue_notes
+
+    get '/issues/1'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+
+    get '/issues/1/edit'
+    assert_response :success
+    assert_select 'div#new-attachments', 1
+  end
+
+  def test_edit_check_permission_for_add_attachment
+    log_user('jsmith', 'jsmith')
+    role = Role.find(1)
+
+    role.remove_permission! :edit_issues
+    role.remove_permission! :edit_own_issues
+    role.add_permission! :add_issue_notes
+
+    role.permissions_all_trackers = {'view_issues' => '0', 'add_issue_notes' => '0' }
+    role.permissions_tracker_ids = {'view_issues' => ['1'], 'add_issue_notes' => ['2'] }
+    role.save!
+
+    assert_no_difference 'Attachment.count' do
+      put(
+        '/issues/1',
+        :params => {
+          :issue => {:notes => 'Some notes'},
+          :attachments => {
+            '1' => {
+              'file' => uploaded_test_file('testfile.txt', 'text/plain'),
+              'description' => 'This is an attachment'
+            }
+          }
+        }
+      )
+    end
+    assert_redirected_to '/issues/1'
+
+    follow_redirect!
+    assert_response :success
+    assert_select '.flash', '1 file(s) could not be saved.'
   end
 
   def test_next_and_previous_links_should_be_displayed_after_query_grouped_and_sorted_by_version
@@ -128,7 +218,7 @@ class IssuesTest < Redmine::IntegrationTest
       get '/projects/ecookbook/issues?set_filter=1&group_by=fixed_version&sort=priority:desc,fixed_version,id'
       assert_response :success
       assert_select 'td.id', :text => '5'
-  
+
       get '/issues/5'
       assert_response :success
       assert_select '.next-prev-links .position', :text => '5 of 6'
@@ -140,7 +230,7 @@ class IssuesTest < Redmine::IntegrationTest
       get '/projects/ecookbook/issues?set_filter=1&tracker_id=1'
       assert_response :success
       assert_select 'td.id', :text => '5'
-  
+
       get '/issues/5'
       assert_response :success
       assert_select '.next-prev-links .position', :text => '3 of 5'
@@ -149,16 +239,17 @@ class IssuesTest < Redmine::IntegrationTest
   end
 
   def test_next_and_previous_links_should_be_displayed_after_saved_query
-    query = IssueQuery.create!(:name => 'Calendar Query',
-      :visibility => IssueQuery::VISIBILITY_PUBLIC,
-      :filters => {'tracker_id' => {:operator => '=', :values => ['1']}}
-    )
-
+    query =
+      IssueQuery.create!(
+        :name => 'Calendar Query',
+        :visibility => IssueQuery::VISIBILITY_PUBLIC,
+        :filters => {'tracker_id' => {:operator => '=', :values => ['1']}}
+      )
     with_settings :default_language => 'en' do
       get "/projects/ecookbook/issues?set_filter=1&query_id=#{query.id}"
       assert_response :success
       assert_select 'td.id', :text => '5'
-  
+
       get '/issues/5'
       assert_response :success
       assert_select '.next-prev-links .position', :text => '6 of 8'
@@ -174,10 +265,7 @@ class IssuesTest < Redmine::IntegrationTest
   end
 
   def test_other_formats_links_on_index_without_project_id_in_url
-    get '/issues', :params => {
-        :project_id => 'ecookbook'
-      }
-
+    get('/issues', :params => {:project_id => 'ecookbook'})
     %w(Atom PDF CSV).each do |format|
       assert_select 'a[rel=nofollow][href=?]', "/issues.#{format.downcase}?project_id=ecookbook", :text => format
     end
@@ -241,7 +329,9 @@ class IssuesTest < Redmine::IntegrationTest
 
     # Create issue
     issue = new_record(Issue) do
-      post '/projects/ecookbook/issues', :params => {
+      post(
+        '/projects/ecookbook/issues',
+        :params => {
           :issue => {
             :tracker_id => '1',
             :priority_id => '4',
@@ -249,6 +339,7 @@ class IssuesTest < Redmine::IntegrationTest
             :custom_field_values => {@field.id.to_s => users.first.id.to_s}
           }
         }
+      )
       assert_response 302
     end
 
@@ -267,12 +358,15 @@ class IssuesTest < Redmine::IntegrationTest
     with_settings :default_language => 'en' do
       # Update issue
       assert_difference 'Journal.count' do
-        put "/issues/#{issue.id}", :params => {
+        put(
+          "/issues/#{issue.id}",
+          :params => {
             :issue => {
               :notes => 'Updating custom field',
               :custom_field_values => {@field.id.to_s => new_tester.id.to_s}
             }
           }
+        )
         assert_redirected_to "/issues/#{issue.id}"
       end
       # Issue view
@@ -301,5 +395,16 @@ class IssuesTest < Redmine::IntegrationTest
       get '/watchers/watch?object_type=issue&object_id=1'
       assert_response 404
     end
+  end
+
+  def test_invalid_operators_should_render_404
+    get '/projects/ecookbook/issues', :params => {
+      'set_filter' => '1',
+      'f' => ['status_id', 'cf_9'],
+      'op' => {'status_id' => 'o', 'cf_9' => '=6546546546'},
+      'v' => {'cf_9' => ['2021-05-25']}
+    }
+
+    assert_response 404
   end
 end

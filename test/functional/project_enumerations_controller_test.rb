@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,7 +31,7 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
            :custom_fields_trackers, :custom_values,
            :time_entries
 
-  self.use_transactional_fixtures = false
+  self.use_transactional_tests = false
 
   def setup
     @request.session[:user_id] = nil
@@ -40,7 +42,9 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
     @request.session[:user_id] = 2 # manager
     billable_field = TimeEntryActivityCustomField.find_by_name("Billable")
 
-    put :update, :params => {
+    put(
+      :update,
+      :params => {
         :project_id => 1,
         :enumerations => {
           "9"=> {"parent_id"=>"9", "custom_field_values"=> {"7" => "1"}, "active"=>"0"}, # Design, De-activate
@@ -49,7 +53,7 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
           "11"=>{"parent_id"=>"11", "custom_field_values"=>{"7"=>"1"}, "active"=>"1"} # QA, no changes
         }
       }
-
+    )
     assert_response :redirect
     assert_redirected_to '/projects/ecookbook/settings/activities'
 
@@ -89,6 +93,26 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
     assert_nil project.time_entry_activities.find_by_name("QA"), "Custom QA activity created when it wasn't modified"
   end
 
+  def test_update_should_not_create_project_specific_activities_when_setting_empty_value_in_custom_field_with_default_value_of_nil
+    system_activity = TimeEntryActivity.find(9) # Design
+    custom_field_value = system_activity.custom_field_values.detect{|cfv| cfv.custom_field.id == 7}
+    assert_nil custom_field_value.value
+
+    assert_no_difference 'TimeEntryActivity.count' do
+      @request.session[:user_id] = 2 # manager
+      put(
+        :update,
+        :params => {
+          :project_id => 1,
+          :enumerations => {
+            "9" => {"parent_id" => "9", "custom_field_values" => {"7" => ""}, "active" => "1"}
+          }
+        }
+      )
+      assert_response :redirect
+    end
+  end
+
   def test_update_will_update_project_specific_activities
     @request.session[:user_id] = 2 # manager
 
@@ -107,15 +131,22 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
                                                  })
     assert project_activity_two.save
 
-
-    put :update, :params => {
+    put(
+      :update,
+      :params => {
         :project_id => 1,
         :enumerations => {
-          project_activity.id => {"custom_field_values"=> {"7" => "1"}, "active"=>"0"}, # De-activate
-          project_activity_two.id => {"custom_field_values"=>{"7" => "1"}, "active"=>"0"} # De-activate
+          project_activity.id => {
+            "custom_field_values"=> {"7" => "1"},
+            "active"=>"0"
+          }, # De-activate
+          project_activity_two.id => {
+            "custom_field_values"=>{"7" => "1"},
+            "active"=>"0"
+          } # De-activate
         }
       }
-
+    )
     assert_response :redirect
     assert_redirected_to '/projects/ecookbook/settings/activities'
 
@@ -138,15 +169,21 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
     assert_equal 3, TimeEntry.where(:activity_id => 9, :project_id => 1).count
 
     @request.session[:user_id] = 2 # manager
-    put :update, :params => {
+    put(
+      :update,
+      :params => {
         :project_id => 1,
         :enumerations => {
           "9"=> {
-            "parent_id"=>"9", "custom_field_values"=> {
-            "7" => "1"}, "active"=>"0"} # Design, De-activate      
-            
-          }
+            "parent_id"=>"9",
+              "custom_field_values"=> {
+                "7" => "1"
+              },
+            "active"=>"0"
+          } # Design, De-activate
+        }
       }
+    )
     assert_response :redirect
 
     # No more TimeEntries using the system activity
@@ -155,7 +192,7 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
     # All TimeEntries using project activity
     project_specific_activity = TimeEntryActivity.find_by_parent_id_and_project_id(9, 1)
     assert_equal 3, TimeEntry.where(:activity_id => project_specific_activity.id,
-                                    :project_id => 1).count
+                                    :project_id => 1).count,
                  "No Time Entries assigned to the project activity"
   end
 
@@ -163,16 +200,18 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
     # TODO: Need to cause an exception on create but these tests
     # aren't setup for mocking.  Just create a record now so the
     # second one is a dupicate
+    user = User.find(1)
     parent = TimeEntryActivity.find(9)
     TimeEntryActivity.create!({:name => parent.name, :project_id => 1,
                                :position => parent.position, :active => true, :parent_id => 9})
-    TimeEntry.create!({:project_id => 1, :hours => 1.0, :user => User.find(1),
+    TimeEntry.create!({:project_id => 1, :hours => 1.0, :user => user, :author => user,
                        :issue_id => 3, :activity_id => 10, :spent_on => '2009-01-01'})
     assert_equal 3, TimeEntry.where(:activity_id => 9, :project_id => 1).count
     assert_equal 1, TimeEntry.where(:activity_id => 10, :project_id => 1).count
 
     @request.session[:user_id] = 2 # manager
-    put :update, :params => {
+    put(
+      :update, :params => {
         :project_id => 1,
         :enumerations => {
           # Design
@@ -181,15 +220,16 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
           "10"=> {"parent_id"=>"10", "custom_field_values"=>{"7"=>"0"}, "active"=>"1"}
         }
       }
+    )
     assert_response :redirect
 
     # TimeEntries shouldn't have been reassigned on the failed record
     assert_equal 3, TimeEntry.where(:activity_id => 9,
-                                    :project_id => 1).count
+                                    :project_id => 1).count,
                  "Time Entries are not assigned to system activities"
     # TimeEntries shouldn't have been reassigned on the saved record either
     assert_equal 1, TimeEntry.where(:activity_id => 10,
-                                    :project_id => 1).count
+                                    :project_id => 1).count,
                  "Time Entries are not assigned to system activities"
   end
 
@@ -210,9 +250,7 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
                                                  })
     assert project_activity_two.save
 
-    delete :destroy, :params => {
-        :project_id => 1
-      }
+    delete(:destroy, :params => {:project_id => 1})
     assert_response :redirect
     assert_redirected_to '/projects/ecookbook/settings/activities'
 
@@ -233,22 +271,28 @@ class ProjectEnumerationsControllerTest < Redmine::ControllerTest
              update_all("activity_id = '#{project_activity.id}'")
     assert_equal 3, TimeEntry.where(:activity_id => project_activity.id,
                                     :project_id => 1).count
-    delete :destroy, :params => {
-        :project_id => 1
-      }
+    delete(:destroy, :params => {:project_id => 1})
     assert_response :redirect
     assert_redirected_to '/projects/ecookbook/settings/activities'
 
     assert_nil TimeEntryActivity.find_by_id(project_activity.id)
-    assert_equal 0, TimeEntry.where(
-                      :activity_id => project_activity.id,
-                      :project_id => 1
-                    ).count,
-                 "TimeEntries still assigned to project specific activity"
-    assert_equal 3, TimeEntry.where(
-                      :activity_id => 9,
-                      :project_id => 1
-                    ).count,
-                 "TimeEntries still assigned to project specific activity"
+    assert_equal(
+      0,
+      TimeEntry.
+        where(
+          :activity_id => project_activity.id,
+          :project_id => 1
+        ).count,
+      "TimeEntries still assigned to project specific activity"
+    )
+    assert_equal(
+      3,
+      TimeEntry.
+        where(
+          :activity_id => 9,
+          :project_id => 1
+        ).count,
+      "TimeEntries still assigned to project specific activity"
+    )
   end
 end

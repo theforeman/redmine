@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,6 +23,7 @@ class CustomFieldUserFormatTest < ActiveSupport::TestCase
   fixtures :custom_fields, :projects, :members, :users, :member_roles, :trackers, :issues
 
   def setup
+    User.current = nil
     @field = IssueCustomField.create!(:name => 'Tester', :field_format => 'user')
   end
 

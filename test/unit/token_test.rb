@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,6 +21,10 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class TokenTest < ActiveSupport::TestCase
   fixtures :tokens, :users, :email_addresses
+
+  def setup
+    User.current = nil
+  end
 
   def test_create
     token = Token.new
@@ -42,7 +48,7 @@ class TokenTest < ActiveSupport::TestCase
 
     ["autologin", "session"].each do |action|
       assert_difference 'Token.count', 10 do
-        10.times { Token.create!(:user => user, :action => action) }
+        10.times {Token.create!(:user => user, :action => action)}
       end
 
       assert_no_difference 'Token.count' do

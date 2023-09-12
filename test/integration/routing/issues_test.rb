@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,12 +35,15 @@ class RoutingIssuesTest < Redmine::RoutingTest
     should_route 'GET /issues/64/edit' => 'issues#edit', :id => '64'
     should_route 'PUT /issues/64' => 'issues#update', :id => '64'
     should_route 'DELETE /issues/64' => 'issues#destroy', :id => '64'
+
+    should_route "GET /issues/3/tab/time_entries" => 'issues#issue_tab', :id => '3', :name => 'time_entries'
   end
 
   def test_issues_bulk_edit
     should_route 'GET /issues/bulk_edit' => 'issues#bulk_edit'
     should_route 'POST /issues/bulk_edit' => 'issues#bulk_edit' # For updating the bulk edit form
     should_route 'POST /issues/bulk_update' => 'issues#bulk_update'
+    should_route 'PATCH /issues/bulk_update' => 'issues#bulk_update'
   end
 
   def test_issues_scoped_under_project

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,6 +21,10 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class CustomValueTest < ActiveSupport::TestCase
   fixtures :custom_fields, :custom_values, :users
+
+  def setup
+    User.current = nil
+  end
 
   def test_new_without_value_should_set_default_value
     field = CustomField.generate!(:default_value => 'Default string')

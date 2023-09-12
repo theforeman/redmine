@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,6 +37,7 @@ class MemberTest < ActiveSupport::TestCase
   include Redmine::I18n
 
   def setup
+    User.current = nil
     @jsmith = Member.find(1)
   end
 
@@ -85,8 +88,8 @@ class MemberTest < ActiveSupport::TestCase
     member = Member.new(:project_id => 1, :user_id => user.id, :role_ids => [])
     assert !member.save
     assert_include I18n.translate('activerecord.errors.messages.empty'), member.errors[:role]
-    assert_equal "R\xc3\xb4le doit \xc3\xaatre renseign\xc3\xa9(e)".force_encoding('UTF-8'),
-      [member.errors.full_messages].flatten.join
+    assert_equal 'Rôle doit être renseigné(e)',
+                 [member.errors.full_messages].flatten.join
   end
 
   def test_validate_member_role
@@ -117,16 +120,16 @@ class MemberTest < ActiveSupport::TestCase
         @jsmith.destroy
       end
     end
-    assert_raise(ActiveRecord::RecordNotFound) { Member.find(@jsmith.id) }
+    assert_raise(ActiveRecord::RecordNotFound) {Member.find(@jsmith.id)}
     category1.reload
     assert_nil category1.assigned_to_id
   end
 
   def test_destroy_should_trigger_callbacks_only_once
-    Member.class_eval { def destroy_test_callback; end}
+    Member.class_eval {def destroy_test_callback; end}
     Member.after_destroy :destroy_test_callback
 
-    m = Member.create!(:user_id => 1, :project_id => 1, :role_ids => [1,3])
+    m = Member.create!(:user_id => 1, :project_id => 1, :role_ids => [1, 3])
 
     Member.any_instance.expects(:destroy_test_callback).once
     assert_difference 'Member.count', -1 do
@@ -168,7 +171,8 @@ class MemberTest < ActiveSupport::TestCase
 
   def test_managed_roles_should_return_all_roles_for_role_with_all_roles_managed
     member = Member.new
-    member.roles << Role.generate!(:permissions => [:manage_members], :all_roles_managed => true)
+    member.roles <<
+      Role.generate!(:permissions => [:manage_members], :all_roles_managed => true)
     assert_equal Role.givable.all, member.managed_roles
   end
 
@@ -180,14 +184,20 @@ class MemberTest < ActiveSupport::TestCase
 
   def test_managed_roles_should_return_limited_roles_for_role_without_all_roles_managed
     member = Member.new
-    member.roles << Role.generate!(:permissions => [:manage_members], :all_roles_managed => false, :managed_role_ids => [2, 3])
+    member.roles <<
+      Role.generate!(:permissions => [:manage_members],
+                     :all_roles_managed => false, :managed_role_ids => [2, 3])
     assert_equal [2, 3], member.managed_roles.map(&:id).sort
   end
 
   def test_managed_roles_should_cumulated_managed_roles
     member = Member.new
-    member.roles << Role.generate!(:permissions => [:manage_members], :all_roles_managed => false, :managed_role_ids => [3])
-    member.roles << Role.generate!(:permissions => [:manage_members], :all_roles_managed => false, :managed_role_ids => [2])
+    member.roles <<
+      Role.generate!(:permissions => [:manage_members],
+                     :all_roles_managed => false, :managed_role_ids => [3])
+    member.roles <<
+      Role.generate!(:permissions => [:manage_members],
+                     :all_roles_managed => false, :managed_role_ids => [2])
     assert_equal [2, 3], member.managed_roles.map(&:id).sort
   end
 
@@ -203,8 +213,16 @@ class MemberTest < ActiveSupport::TestCase
     user = User.generate!
 
     assert_difference 'Member.count', 2 do
-      members = Member.create_principal_memberships(user, :project_ids => [parent.id, child.id], :role_ids => [1])
-      assert members.none?(&:new_record?), "Unsaved members were returned: #{members.select(&:new_record?).map{|m| m.errors.full_messages}*","}"
+      members =
+        Member.create_principal_memberships(
+          user,
+          :project_ids => [parent.id, child.id],
+          :role_ids => [1]
+        )
+      assert(
+        members.none?(&:new_record?),
+        "Unsaved members were returned: #{members.select(&:new_record?).map{|m| m.errors.full_messages}*","}"
+      )
     end
   end
 end

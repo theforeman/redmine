@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +25,7 @@ class ActivityTest < ActiveSupport::TestCase
            :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions
 
   def setup
+    User.current = nil
     @project = Project.find(1)
   end
 
@@ -125,7 +128,7 @@ class ActivityTest < ActiveSupport::TestCase
   end
 
   def test_event_group_for_wiki_content_version
-    content = WikiContent::Version.find(1)
+    content = WikiContentVersion.find(1)
     assert_equal content.page, content.event_group
   end
 
@@ -168,7 +171,7 @@ class ActivityTest < ActiveSupport::TestCase
 
   def test_event_types_should_include_activity_provider_with_nil_permission
     Redmine::Activity.register 'test', :class_name => 'ActivityTest::TestActivityProviderWithNilPermission'
-    user = MockUser.new()
+    user = MockUser.new
     f = Redmine::Activity::Fetcher.new(user, :project => Project.find(1))
     assert_include 'test', f.event_types
   ensure
@@ -178,7 +181,7 @@ class ActivityTest < ActiveSupport::TestCase
   def test_event_types_should_use_default_permission_for_activity_provider_without_permission
     Redmine::Activity.register 'test', :class_name => 'ActivityTest::TestActivityProviderWithoutPermission'
 
-    user = MockUser.new()
+    user = MockUser.new
     f = Redmine::Activity::Fetcher.new(user, :project => Project.find(1))
     assert_not_include 'test', f.event_types
 
