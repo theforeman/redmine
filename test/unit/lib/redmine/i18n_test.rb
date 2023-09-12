@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -68,7 +70,7 @@ class Redmine::I18nTest < ActiveSupport::TestCase
         end
         assert l('date.day_names').is_a?(Array)
         assert_equal 7, l('date.day_names').size
-  
+
         assert l('date.month_names').is_a?(Array)
         assert_equal 13, l('date.month_names').size
       end
@@ -156,15 +158,14 @@ class Redmine::I18nTest < ActiveSupport::TestCase
 
   def test_l_hours_short
     set_language_if_valid 'en'
-    assert_equal '2.00 h', l_hours_short(2.0)
+    assert_equal '2:00 h', l_hours_short(2.0)
   end
 
   def test_number_to_currency_default
     set_language_if_valid 'bs'
     assert_equal "KM -1000,20", number_to_currency(-1000.2)
     set_language_if_valid 'de'
-    euro_sign = "\xe2\x82\xac".force_encoding('UTF-8')
-    assert_equal "-1000,20 #{euro_sign}", number_to_currency(-1000.2)
+    assert_equal '-1000,20 €', number_to_currency(-1000.2)
   end
 
   def test_lu_should_not_error_when_user_language_is_an_empty_string
@@ -189,8 +190,7 @@ class Redmine::I18nTest < ActiveSupport::TestCase
     assert_nil options.detect {|option| option.size != 2}
     assert_nil options.detect {|option| !option.first.is_a?(String) || !option.last.is_a?(String)}
     assert_include ["English", "en"], options
-    ja = "Japanese (\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e)".force_encoding('UTF-8')
-    assert_include [ja, "ja"], options
+    assert_include ['Japanese (日本語)', "ja"], options
   end
 
   def test_languages_options_should_return_strings_with_utf8_encoding
@@ -241,21 +241,29 @@ class Redmine::I18nTest < ActiveSupport::TestCase
 
   def test_utf8
     set_language_if_valid 'ja'
-    str_ja_yes  = "\xe3\x81\xaf\xe3\x81\x84".force_encoding('UTF-8')
     i18n_ja_yes = l(:general_text_Yes)
-    assert_equal str_ja_yes, i18n_ja_yes
+    assert_equal 'はい', i18n_ja_yes
     assert_equal "UTF-8", i18n_ja_yes.encoding.to_s
   end
 
   def test_traditional_chinese_locale
     set_language_if_valid 'zh-TW'
-    str_tw = "Traditional Chinese (\xe7\xb9\x81\xe9\xab\x94\xe4\xb8\xad\xe6\x96\x87)".force_encoding('UTF-8')
-    assert_equal str_tw, l(:general_lang_name)
+    assert_equal 'Chinese/Traditional (繁體中文)', l(:general_lang_name)
   end
 
   def test_french_locale
     set_language_if_valid 'fr'
-    str_fr = "French (Fran\xc3\xa7ais)".force_encoding('UTF-8')
-    assert_equal str_fr, l(:general_lang_name)
+    assert_equal 'French (Français)', l(:general_lang_name)
+  end
+
+  def test_custom_pluralization_rules
+    pluralizers = I18n.backend.instance_variable_get(:@pluralizers)
+    I18n.backend.instance_variable_set(:@pluralizers, nil)
+    I18n.backend.store_translations :pt, i18n: {plural: {rule: ->(n) {[0, 1].include?(n) ? :one : :other }}}
+    I18n.backend.store_translations :pt, apples: {one: 'one or none', other: 'more than one'}
+    assert_equal 'one or none', ll(:pt, :apples, count: 0)
+    assert_equal 'more than one', ll(:pt, :apples, count: 2)
+  ensure
+    I18n.backend.instance_variable_set(:@pluralizers, pluralizers)
   end
 end

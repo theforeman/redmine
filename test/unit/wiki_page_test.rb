@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,6 +23,7 @@ class WikiPageTest < ActiveSupport::TestCase
   fixtures :projects, :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions
 
   def setup
+    User.current = nil
     @wiki = Wiki.find(1)
     @page = @wiki.pages.first
   end
@@ -139,13 +142,19 @@ class WikiPageTest < ActiveSupport::TestCase
     assert_nil child.parent_id
   end
 
-  def test_destroy
+  def test_destroy_should_delete_content_and_its_versions
+    set_tmp_attachments_directory
     page = WikiPage.find(1)
-    page.destroy
+    assert_difference 'WikiPage.count', -1 do
+      assert_difference 'WikiContent.count', -1 do
+        assert_difference 'WikiContentVersion.count', -3 do
+          page.destroy
+        end
+      end
+    end
     assert_nil WikiPage.find_by_id(1)
-    # make sure that page content and its history are deleted
     assert_equal 0, WikiContent.where(:page_id => 1).count
-    assert_equal 0, WikiContent.versioned_class.where(:page_id => 1).count
+    assert_equal 0, WikiContentVersion.where(:page_id => 1).count
   end
 
   def test_destroy_should_not_nullify_children
@@ -190,7 +199,7 @@ class WikiPageTest < ActiveSupport::TestCase
   end
 
   def test_diff_for_page_with_deleted_version_should_pick_the_previous_available_version
-    WikiContent::Version.find_by_page_id_and_version(1, 2).destroy
+    WikiContentVersion.find_by_page_id_and_version(1, 2).destroy
 
     page = WikiPage.find(1)
     diff = page.diff(3)

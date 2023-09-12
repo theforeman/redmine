@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,6 +37,24 @@ class RolesControllerTest < Redmine::ControllerTest
     end
   end
 
+  def test_index_should_show_warning_when_no_workflow_is_defined
+    Role.find_by_name('Developer').workflow_rules.destroy_all
+    Role.find_by_name('Anonymous').workflow_rules.destroy_all
+
+    get :index
+    assert_response :success
+    assert_select 'table.roles' do
+      # Manager
+      assert_select 'tr.givable:nth-of-type(1) span.icon-warning', :count => 0
+      # Developer
+      assert_select 'tr.givable:nth-of-type(2) span.icon-warning', :text => /#{I18n.t(:text_role_no_workflow)}/
+      # Reporter
+      assert_select 'tr.givable:nth-of-type(3) span.icon-warning', :count => 0
+      # No warnings for built-in roles such as Anonymous and Non-member
+      assert_select 'tr.builtin span.icon-warning', :count => 0
+    end
+  end
+
   def test_new
     get :new
     assert_response :success
@@ -49,8 +69,10 @@ class RolesControllerTest < Redmine::ControllerTest
 
     get :new
     assert_response :success
-    assert_equal %w(view_documents view_issues),
-      css_select('input[name="role[permissions][]"][checked=checked]').map {|e| e.attr('value')}.sort
+    assert_equal(
+      %w(view_documents view_issues),
+      css_select('input[name="role[permissions][]"][checked=checked]').map {|e| e.attr(:value)}.sort
+    )
   end
 
   def test_new_with_copy
@@ -76,25 +98,31 @@ class RolesControllerTest < Redmine::ControllerTest
   end
 
   def test_create_with_validaton_failure
-    post :create, :params => {
-      :role => {
-        :name => '',
-        :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
-        :assignable => '0'
+    post(
+      :create,
+      :params => {
+        :role => {
+          :name => '',
+          :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
+          :assignable => '0'
+        }
       }
-    }
+    )
     assert_response :success
     assert_select_error /Name cannot be blank/
   end
 
   def test_create_without_workflow_copy
-    post :create, :params => {
-      :role => {
-        :name => 'RoleWithoutWorkflowCopy',
-        :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
-        :assignable => '0'
+    post(
+      :create,
+      :params => {
+        :role => {
+          :name => 'RoleWithoutWorkflowCopy',
+          :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
+          :assignable => '0'
+        }
       }
-    }
+    )
     assert_redirected_to '/roles'
     role = Role.find_by_name('RoleWithoutWorkflowCopy')
     assert_not_nil role
@@ -103,14 +131,17 @@ class RolesControllerTest < Redmine::ControllerTest
   end
 
   def test_create_with_workflow_copy
-    post :create, :params => {
-      :role => {
-        :name => 'RoleWithWorkflowCopy',
-        :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
-        :assignable => '0'
-      },
-      :copy_workflow_from => '1'
-    }
+    post(
+      :create,
+      :params => {
+        :role => {
+          :name => 'RoleWithWorkflowCopy',
+          :permissions => ['add_issues', 'edit_issues', 'log_time', ''],
+          :assignable => '0'
+        },
+        :copy_workflow_from => '1'
+      }
+    )
     assert_redirected_to '/roles'
     role = Role.find_by_name('RoleWithWorkflowCopy')
     assert_not_nil role
@@ -119,13 +150,16 @@ class RolesControllerTest < Redmine::ControllerTest
 
   def test_create_with_managed_roles
     role = new_record(Role) do
-      post :create, :params => {
-        :role => {
-          :name => 'Role',
-          :all_roles_managed => '0',
-          :managed_role_ids => ['2', '3', '']
+      post(
+        :create,
+        :params => {
+          :role => {
+            :name => 'Role',
+            :all_roles_managed => '0',
+            :managed_role_ids => ['2', '3', '']
+          }
         }
-      }
+      )
       assert_response 302
     end
     assert_equal false, role.all_roles_managed
@@ -138,6 +172,7 @@ class RolesControllerTest < Redmine::ControllerTest
 
     assert_select 'input[name=?][value=?]', 'role[name]', 'Manager'
     assert_select 'select[name=?]', 'role[issues_visibility]'
+    assert_select '#role-permissions-trackers table .delete_issues_shown'
   end
 
   def test_edit_anonymous
@@ -146,6 +181,7 @@ class RolesControllerTest < Redmine::ControllerTest
 
     assert_select 'input[name=?]', 'role[name]', 0
     assert_select 'select[name=?]', 'role[issues_visibility]', 0
+    assert_select '#role-permissions-trackers table .delete_issues_shown', 0
   end
 
   def test_edit_invalid_should_respond_with_404
@@ -154,27 +190,33 @@ class RolesControllerTest < Redmine::ControllerTest
   end
 
   def test_update
-    put :update, :params => {
-      :id => 1,
-      :role => {
-        :name => 'Manager',
-        :permissions => ['edit_project', ''],
-        :assignable => '0'
+    put(
+      :update,
+      :params => {
+        :id => 1,
+        :role => {
+          :name => 'Manager',
+          :permissions => ['edit_project', ''],
+          :assignable => '0'
+        }
       }
-    }
+    )
     assert_redirected_to '/roles'
     role = Role.find(1)
     assert_equal [:edit_project], role.permissions
   end
 
   def test_update_trackers_permissions
-    put :update, :params => {
-      :id => 1,
-      :role => {
-        :permissions_all_trackers => {'add_issues' => '0'},
-        :permissions_tracker_ids => {'add_issues' => ['1', '3', '']}
+    put(
+      :update,
+      :params => {
+        :id => 1,
+        :role => {
+          :permissions_all_trackers => {'add_issues' => '0'},
+          :permissions_tracker_ids => {'add_issues' => ['1', '3', '']}
+        }
       }
-    }
+    )
     assert_redirected_to '/roles'
     role = Role.find(1)
 
@@ -202,11 +244,11 @@ class RolesControllerTest < Redmine::ControllerTest
   def test_destroy_role_in_use
     delete :destroy, :params => {:id => 1}
     assert_redirected_to '/roles'
-    assert_equal 'This role is in use and cannot be deleted.', flash[:error] 
+    assert_equal 'This role is in use and cannot be deleted.', flash[:error]
     assert_not_nil Role.find_by_id(1)
   end
 
-  def test_get_permissions
+  def test_permissions
     get :permissions
     assert_response :success
 
@@ -214,25 +256,79 @@ class RolesControllerTest < Redmine::ControllerTest
     assert_select 'input[name=?][type=checkbox][value=delete_issues]:not([checked])', 'permissions[3][]'
   end
 
-  def test_post_permissions
-    post :permissions, :params => {
-      :permissions => {
-        '0' => '',
-        '1' => ['edit_issues'],
-        '3' => ['add_issues', 'delete_issues']
+  def test_permissions_with_filter
+    get(
+      :permissions,
+      :params => {
+        :ids => ['2', '3']
       }
+    )
+    assert_response :success
+
+    assert_select 'table.permissions thead th', 3
+    assert_select 'input[name=?][type=checkbox][value=add_issues][checked=checked]', 'permissions[3][]'
+    assert_select 'input[name=?][type=checkbox][value=delete_issues]:not([checked])', 'permissions[3][]'
+  end
+
+  def test_permissions_csv_export
+    get(
+      :permissions,
+      :params => {
+        :format => 'csv'
+      }
+    )
+    assert_response :success
+
+    assert_equal 'text/csv; header=present', @response.media_type
+    lines = @response.body.chomp.split("\n")
+    # Number of lines
+    permissions = Redmine::AccessControl.permissions - Redmine::AccessControl.public_permissions
+    permissions = permissions.group_by{|p| p.project_module.to_s}.sort.collect(&:last).flatten
+    assert_equal permissions.size + 1, lines.size
+    # Header
+    assert_equal 'Module,Permissions,Manager,Developer,Reporter,Non member,Anonymous', lines.first
+    # Details
+    to_test = {
+      :add_project => '"",Create project,Yes,No,No,No,""',
+      :add_issue_notes => 'Issue tracking,Add notes,Yes,Yes,Yes,Yes,Yes',
+      :manage_wiki => 'Wiki,Manage wiki,Yes,No,No,"",""'
     }
+    to_test.each do |name, expected|
+      index = permissions.find_index {|p| p.name == name}
+      assert_not_nil index
+      assert_equal expected, lines[index + 1]
+    end
+  end
+
+  def test_update_permissions
+    post(
+      :update_permissions,
+      :params => {
+        :permissions => {
+          '1' => ['edit_issues'],
+          '3' => ['add_issues', 'delete_issues']
+        }
+      }
+    )
     assert_redirected_to '/roles'
 
     assert_equal [:edit_issues], Role.find(1).permissions
     assert_equal [:add_issues, :delete_issues], Role.find(3).permissions
-    assert Role.find(2).permissions.empty?
   end
 
-  def test_clear_all_permissions
-    post :permissions, :params => {:permissions => { '0' => '' }}
-    assert_redirected_to '/roles'
-    assert Role.find(1).permissions.empty?
+  def test_update_permissions_should_not_update_other_roles
+    assert_no_changes lambda {Role.find(2).permissions} do
+      assert_changes lambda {Role.find(1).permissions} do
+        post(
+          :update_permissions,
+          :params => {
+            :permissions => {
+              '1' => ['edit_issues']
+            }
+          }
+        )
+      end
+    end
   end
 
   def test_move_highest

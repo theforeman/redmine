@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -50,7 +52,7 @@ class JournalTest < ActiveSupport::TestCase
     journal = issue.init_journal(user, issue)
 
     assert journal.save
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_should_not_save_journal_with_blank_notes_and_no_details
@@ -118,6 +120,28 @@ class JournalTest < ActiveSupport::TestCase
     end
   end
 
+  def test_create_should_add_wacher
+    user = User.first
+    user.pref.auto_watch_on=['issue_contributed_to']
+    user.save
+    journal = Journal.new(:journalized => Issue.first, :notes => 'notes', :user => user)
+
+    assert_difference 'Watcher.count', 1 do
+      assert_equal true, journal.save
+    end
+  end
+
+  def test_create_should_not_add_watcher
+    user = User.first
+    user.pref.auto_watch_on=[]
+    user.save
+    journal = Journal.new(:journalized => Issue.first, :notes => 'notes', :user => user)
+
+    assert_no_difference 'Watcher.count' do
+      assert_equal true, journal.save
+    end
+  end
+
   def test_visible_scope_for_anonymous
     # Anonymous user should see issues of public projects only
     journals = Journal.visible(User.anonymous).to_a
@@ -163,7 +187,7 @@ class JournalTest < ActiveSupport::TestCase
     d = JournalDetail.new(:property => 'cf', :prop_key => '2')
     journals = [Journal.new(:details => [d])]
 
-    d.expects(:instance_variable_set).with("@custom_field", CustomField.find(2)).once
+    d.expects(:instance_variable_set).with(:@custom_field, CustomField.find(2)).once
     Journal.preload_journals_details_custom_fields(journals)
   end
 
@@ -219,5 +243,27 @@ class JournalTest < ActiveSupport::TestCase
 
     visible_details = journal.visible_details(User.find(2))
     assert_equal 2, visible_details.size
+  end
+
+  def test_attachments
+    journal = Journal.new
+    [0, 1].map{ |i| Attachment.generate!(:file => mock_file_with_options(:original_filename => "image#{i}.png")) }.each do |attachment|
+      journal.details << JournalDetail.new(:property => 'attachment', :prop_key => attachment.id, :value => attachment.filename)
+    end
+
+    attachments = journal.attachments
+    assert_equal 2, attachments.size
+    attachments.each_with_index do |attachment, i|
+      assert_kind_of Attachment, attachment
+      assert_equal "image#{i}.png", attachment.filename
+    end
+  end
+
+  def test_notified_mentions_should_not_include_users_who_cannot_view_private_notes
+    journal = Journal.generate!(journalized: Issue.find(2), user: User.find(1), private_notes: true, notes: 'Hello @dlopper, @jsmith and @admin.')
+
+    # User "dlopper" has "Developer" role on project "eCookbook"
+    # Role "Developer" does not have the "View private notes" permission
+    assert_equal [1, 2], journal.notified_mentions.map(&:id)
   end
 end

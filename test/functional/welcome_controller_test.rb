@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,7 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class WelcomeControllerTest < Redmine::ControllerTest
-  fixtures :projects, :news, :users, :members
+  fixtures :projects, :news, :users, :members, :roles, :member_roles, :enabled_modules
 
   def setup
     Setting.default_language = 'en'
@@ -75,13 +77,6 @@ class WelcomeControllerTest < Redmine::ControllerTest
       get :index
       assert_select 'html[lang=fi]'
     end
-  end
-
-  def test_robots
-    get :robots
-    assert_response :success
-    assert_equal 'text/plain', @response.content_type
-    assert @response.body.match(%r{^Disallow: /projects/ecookbook/issues\r?$})
   end
 
   def test_warn_on_leaving_unsaved_turn_on

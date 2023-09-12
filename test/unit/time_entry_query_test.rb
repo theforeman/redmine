@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +27,12 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
            :journals, :journal_details,
            :issue_categories, :enumerations,
            :groups_users,
-           :enabled_modules
+           :enabled_modules,
+           :custom_fields, :custom_fields_trackers, :custom_fields_projects
+
+  def setup
+    User.current = nil
+  end
 
   def test_filter_values_without_project_should_be_arrays
     q = TimeEntryQuery.new
@@ -34,7 +41,7 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
     q.available_filters.each do |name, filter|
       values = filter.values
       assert (values.nil? || values.is_a?(Array)),
-        "#values for #{name} filter returned a #{values.class.name}"
+             "#values for #{name} filter returned a #{values.class.name}"
     end
   end
 
@@ -45,7 +52,7 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
     q.available_filters.each do |name, filter|
       values = filter.values
       assert (values.nil? || values.is_a?(Array)),
-        "#values for #{name} filter returned a #{values.class.name}"
+             "#values for #{name} filter returned a #{values.class.name}"
     end
   end
 
@@ -81,9 +88,12 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
 
   def test_project_query_should_include_project_issue_custom_fields_only_as_filters
     global = IssueCustomField.generate!(:is_for_all => true, :is_filter => true)
-    field_on_project = IssueCustomField.generate!(:is_for_all => false, :project_ids => [3], :is_filter => true)
-    field_not_on_project = IssueCustomField.generate!(:is_for_all => false, :project_ids => [1,2], :is_filter => true)
-
+    field_on_project =
+      IssueCustomField.generate!(:is_for_all => false, :project_ids => [3],
+                                 :is_filter => true)
+    field_not_on_project =
+      IssueCustomField.generate!(:is_for_all => false, :project_ids => [1, 2],
+                                 :is_filter => true)
     query = TimeEntryQuery.new(:project => Project.find(3))
 
     assert_include "issue.cf_#{global.id}", query.available_filters.keys
@@ -93,13 +103,51 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
 
   def test_project_query_should_include_project_issue_custom_fields_only_as_columns
     global = IssueCustomField.generate!(:is_for_all => true, :is_filter => true)
-    field_on_project = IssueCustomField.generate!(:is_for_all => false, :project_ids => [3], :is_filter => true)
-    field_not_on_project = IssueCustomField.generate!(:is_for_all => false, :project_ids => [1,2], :is_filter => true)
-
+    field_on_project =
+      IssueCustomField.generate!(:is_for_all => false, :project_ids => [3],
+                                 :is_filter => true)
+    field_not_on_project =
+      IssueCustomField.generate!(:is_for_all => false, :project_ids => [1, 2],
+                                 :is_filter => true)
     query = TimeEntryQuery.new(:project => Project.find(3))
 
     assert_include "issue.cf_#{global.id}", query.available_columns.map(&:name).map(&:to_s)
     assert_include "issue.cf_#{field_on_project.id}", query.available_columns.map(&:name).map(&:to_s)
     assert_not_include "issue.cf_#{field_not_on_project.id}", query.available_columns.map(&:name).map(&:to_s)
+  end
+
+  def test_issue_category_filter_should_not_be_available_in_global_queries
+    query = TimeEntryQuery.new(:project => nil, :name => '_')
+    assert !query.available_filters.has_key?('issue.category_id')
+  end
+
+  def test_project_status_filter_should_be_available_in_global_queries
+    query = TimeEntryQuery.new(:project => nil, :name => '_')
+    assert query.available_filters.has_key?('project.status')
+  end
+
+  def test_project_status_filter_should_be_available_when_project_has_subprojects
+    query = TimeEntryQuery.new(:project => Project.find(1), :name => '_')
+    assert query.available_filters.has_key?('project.status')
+  end
+
+  def test_project_status_filter_should_not_be_available_when_project_is_leaf
+    query = TimeEntryQuery.new(:project => Project.find(2), :name => '_')
+    assert !query.available_filters.has_key?('project.status')
+  end
+
+  def test_results_scope_should_be_in_the_same_order_when_paginating
+    4.times {TimeEntry.generate!}
+    q = TimeEntryQuery.new
+    q.sort_criteria = {'0' => ['user', 'asc']}
+    time_entry_ids = q.results_scope.pluck(:id)
+    paginated_time_entry_ids = []
+    # Test with a maximum of 2 records per page.
+    ((q.results_scope.count / 2) + 1).times do |i|
+      paginated_time_entry_ids += q.results_scope.offset((i * 2)).limit(2).pluck(:id)
+    end
+
+    # Non-paginated time entry ids and paginated time entry ids should be in the same order.
+    assert_equal time_entry_ids, paginated_time_entry_ids
   end
 end

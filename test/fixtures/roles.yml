@@ -1,15 +1,16 @@
---- 
-roles_001: 
+---
+roles_001:
   name: Manager
   id: 1
   builtin: 0
   issues_visibility: all
   users_visibility: all
   permissions: |
-    --- 
+    ---
     - :add_project
     - :edit_project
     - :close_project
+    - :delete_project
     - :select_project_modules
     - :manage_members
     - :manage_versions
@@ -36,6 +37,7 @@ roles_001:
     - :view_time_entries
     - :edit_time_entries
     - :delete_time_entries
+    - :import_time_entries
     - :view_news
     - :manage_news
     - :comment_news
@@ -51,10 +53,17 @@ roles_001:
     - :protect_wiki_pages
     - :delete_wiki_pages
     - :rename_wiki_pages
+    - :view_wiki_page_watchers
+    - :add_wiki_page_watchers
+    - :delete_wiki_page_watchers
+    - :manage_wiki
     - :view_messages
     - :add_messages
     - :edit_messages
     - :delete_messages
+    - :view_message_watchers
+    - :add_message_watchers
+    - :delete_message_watchers
     - :manage_boards
     - :view_files
     - :manage_files
@@ -66,15 +75,16 @@ roles_001:
     - :import_issues
 
   position: 1
-roles_002: 
+roles_002:
   name: Developer
   id: 2
   builtin: 0
   issues_visibility: default
   users_visibility: all
   permissions: |
-    --- 
+    ---
     - :edit_project
+    - :delete_project
     - :manage_members
     - :manage_versions
     - :manage_categories
@@ -105,10 +115,12 @@ roles_002:
     - :edit_wiki_pages
     - :protect_wiki_pages
     - :delete_wiki_pages
+    - :view_wiki_page_watchers
     - :view_messages
     - :add_messages
     - :edit_own_messages
     - :delete_own_messages
+    - :view_message_watchers
     - :manage_boards
     - :view_files
     - :manage_files
@@ -116,14 +128,14 @@ roles_002:
     - :view_changesets
 
   position: 2
-roles_003: 
+roles_003:
   name: Reporter
   id: 3
   builtin: 0
   issues_visibility: default
   users_visibility: all
   permissions: |
-    --- 
+    ---
     - :edit_project
     - :manage_members
     - :manage_versions
@@ -150,8 +162,10 @@ roles_003:
     - :view_wiki_edits
     - :edit_wiki_pages
     - :delete_wiki_pages
+    - :view_wiki_page_watchers
     - :view_messages
     - :add_messages
+    - :view_message_watchers
     - :manage_boards
     - :view_files
     - :manage_files
@@ -159,14 +173,14 @@ roles_003:
     - :view_changesets
 
   position: 3
-roles_004: 
+roles_004:
   name: Non member
   id: 4
   builtin: 1
   issues_visibility: default
   users_visibility: all
   permissions: |
-    --- 
+    ---
     - :view_issues
     - :add_issues
     - :edit_issues
@@ -191,14 +205,14 @@ roles_004:
     - :view_changesets
 
   position: 1
-roles_005: 
+roles_005:
   name: Anonymous
   id: 5
   builtin: 2
   issues_visibility: default
   users_visibility: all
   permissions: |
-    --- 
+    ---
     - :view_issues
     - :add_issue_notes
     - :view_gantt
@@ -214,4 +228,3 @@ roles_005:
     - :view_changesets
 
   position: 1
-

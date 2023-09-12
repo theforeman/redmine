@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +27,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "GET /projects/:project_id/wiki/index.xml should return wiki pages" do
     get '/projects/ecookbook/wiki/index.xml'
     assert_response 200
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
     assert_select 'wiki_pages[type=array]' do
       assert_select 'wiki_page', :count => Wiki.find(1).pages.count
       assert_select 'wiki_page' do
@@ -44,7 +46,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "GET /projects/:project_id/wiki/:title.xml should return wiki page" do
     get '/projects/ecookbook/wiki/CookBook_documentation.xml'
     assert_response 200
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
     assert_select 'wiki_page' do
       assert_select 'title', :text => 'CookBook_documentation'
       assert_select 'version', :text => '3'
@@ -59,7 +61,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "GET /projects/:project_id/wiki/:title.xml?include=attachments should include attachments" do
     get '/projects/ecookbook/wiki/Page_with_an_inline_image.xml?include=attachments'
     assert_response 200
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
     assert_select 'wiki_page' do
       assert_select 'title', :text => 'Page_with_an_inline_image'
       assert_select 'attachments[type=array]' do
@@ -74,13 +76,13 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "GET /projects/:project_id/wiki/:title.xml with unknown title and edit permission should respond with 404" do
     get '/projects/ecookbook/wiki/Invalid_Page.xml', :headers => credentials('jsmith')
     assert_response 404
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
   end
 
   test "GET /projects/:project_id/wiki/:title/:version.xml should return wiki page version" do
     get '/projects/ecookbook/wiki/CookBook_documentation/2.xml'
     assert_response 200
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
     assert_select 'wiki_page' do
       assert_select 'title', :text => 'CookBook_documentation'
       assert_select 'version', :text => '2'
@@ -97,16 +99,23 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
 
     get '/projects/ecookbook/wiki/CookBook_documentation/2.xml'
     assert_response 401
-    assert_equal 'application/xml', response.content_type
+    assert_equal 'application/xml', response.media_type
   end
 
   test "PUT /projects/:project_id/wiki/:title.xml should update wiki page" do
     assert_no_difference 'WikiPage.count' do
-      assert_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/CookBook_documentation.xml',
-          :params => {:wiki_page => {:text => 'New content from API', :comments => 'API update'}},
+      assert_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/CookBook_documentation.xml',
+          :params => {
+            :wiki_page => {
+              :text => 'New content from API',
+              :comments => 'API update'
+            }
+          },
           :headers => credentials('jsmith')
-        assert_response 200
+        )
+        assert_response :no_content
       end
     end
 
@@ -117,13 +126,32 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
     assert_equal 'jsmith', page.content.author.login
   end
 
+  test "GET /projects/:project_id/wiki/:title/:version.xml should not includ author if not exists" do
+    WikiContentVersion.find_by_id(2).update(author_id: nil)
+
+    get '/projects/ecookbook/wiki/CookBook_documentation/2.xml'
+    assert_response 200
+    assert_equal 'application/xml', response.media_type
+    assert_select 'wiki_page' do
+      assert_select 'author', 0
+    end
+  end
+
   test "PUT /projects/:project_id/wiki/:title.xml with current versino should update wiki page" do
     assert_no_difference 'WikiPage.count' do
-      assert_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/CookBook_documentation.xml',
-          :params => {:wiki_page => {:text => 'New content from API', :comments => 'API update', :version => '3'}},
+      assert_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/CookBook_documentation.xml',
+          :params => {
+            :wiki_page => {
+              :text => 'New content from API',
+              :comments => 'API update',
+              :version => '3'
+            }
+          },
           :headers => credentials('jsmith')
-        assert_response 200
+        )
+        assert_response :no_content
       end
     end
 
@@ -136,10 +164,18 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
 
   test "PUT /projects/:project_id/wiki/:title.xml with stale version should respond with 409" do
     assert_no_difference 'WikiPage.count' do
-      assert_no_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/CookBook_documentation.xml',
-          :params => {:wiki_page => {:text => 'New content from API', :comments => 'API update', :version => '2'}},
+      assert_no_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/CookBook_documentation.xml',
+          :params => {
+            :wiki_page => {
+              :text => 'New content from API',
+              :comments => 'API update',
+              :version => '2'
+            }
+          },
           :headers => credentials('jsmith')
+        )
         assert_response 409
       end
     end
@@ -147,10 +183,17 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
 
   test "PUT /projects/:project_id/wiki/:title.xml should create the page if it does not exist" do
     assert_difference 'WikiPage.count' do
-      assert_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/New_page_from_API.xml',
-          :params => {:wiki_page => {:text => 'New content from API', :comments => 'API create'}},
+      assert_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/New_page_from_API.xml',
+          :params => {
+            :wiki_page => {
+              :text => 'New content from API',
+              :comments => 'API create'
+            }
+          },
           :headers => credentials('jsmith')
+        )
         assert_response 201
       end
     end
@@ -168,11 +211,22 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
     set_tmp_attachments_directory
     attachment = Attachment.create!(:file => uploaded_test_file("testfile.txt", "text/plain"), :author_id => 2)
     assert_difference 'WikiPage.count' do
-      assert_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/New_page_from_API.xml',
-            :params => {:wiki_page => {:text => 'New content from API with Attachments', :comments => 'API create with Attachments',
-                            :uploads => [:token => attachment.token, :filename => 'testfile.txt', :content_type => "text/plain"]}},
-            :headers => credentials('jsmith')
+      assert_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/New_page_from_API.xml',
+          :params => {
+            :wiki_page => {
+              :text => 'New content from API with Attachments',
+              :comments => 'API create with Attachments',
+              :uploads => [
+                :token => attachment.token,
+                :filename => 'testfile.txt',
+                :content_type => "text/plain"
+              ]
+            }
+          },
+          :headers => credentials('jsmith')
+        )
         assert_response 201
       end
     end
@@ -185,10 +239,18 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
 
   test "PUT /projects/:project_id/wiki/:title.xml with parent" do
     assert_difference 'WikiPage.count' do
-      assert_difference 'WikiContent::Version.count' do
-        put '/projects/ecookbook/wiki/New_subpage_from_API.xml',
-          :params => {:wiki_page => {:parent_title => 'CookBook_documentation', :text => 'New content from API', :comments => 'API create'}},
+      assert_difference 'WikiContentVersion.count' do
+        put(
+          '/projects/ecookbook/wiki/New_subpage_from_API.xml',
+          :params => {
+            :wiki_page => {
+              :parent_title => 'CookBook_documentation',
+              :text => 'New content from API',
+              :comments => 'API create'
+            }
+          },
           :headers => credentials('jsmith')
+        )
         assert_response 201
       end
     end
@@ -201,7 +263,7 @@ class Redmine::ApiTest::WikiPagesTest < Redmine::ApiTest::Base
   test "DELETE /projects/:project_id/wiki/:title.xml should destroy the page" do
     assert_difference 'WikiPage.count', -1 do
       delete '/projects/ecookbook/wiki/CookBook_documentation.xml', :headers => credentials('jsmith')
-      assert_response 200
+      assert_response :no_content
     end
 
     assert_nil WikiPage.find_by_id(1)

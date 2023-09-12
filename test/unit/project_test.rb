@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -151,13 +153,13 @@ class ProjectTest < ActiveSupport::TestCase
 
   def test_members_should_be_active_users
     Project.all.each do |project|
-      assert_nil project.members.detect {|m| !(m.user.is_a?(User) && m.user.active?) }
+      assert_nil project.members.detect {|m| !(m.user.is_a?(User) && m.user.active?)}
     end
   end
 
   def test_users_should_be_active_users
     Project.all.each do |project|
-      assert_nil project.users.detect {|u| !(u.is_a?(User) && u.active?) }
+      assert_nil project.users.detect {|u| !(u.is_a?(User) && u.active?)}
     end
   end
 
@@ -192,18 +194,23 @@ class ProjectTest < ActiveSupport::TestCase
   def test_unarchive
     user = @ecookbook.members.first.user
     @ecookbook.archive
-    # A subproject of an archived project can not be unarchived
-    assert !@ecookbook_sub1.unarchive
 
     # Unarchive project
     assert @ecookbook.unarchive
-    @ecookbook.reload
     assert @ecookbook.active?
     assert !@ecookbook.archived?
     assert user.projects.include?(@ecookbook)
-    # Subproject can now be unarchived
+  end
+
+  def test_unarchive_child_project_should_unarchive_ancestors
+    @ecookbook.archive
     @ecookbook_sub1.reload
-    assert @ecookbook_sub1.unarchive
+    assert_equal Project::STATUS_ARCHIVED, @ecookbook_sub1.status
+
+    @ecookbook_sub1.unarchive
+    assert_equal Project::STATUS_ACTIVE, @ecookbook_sub1.status
+    @ecookbook.reload
+    assert_equal Project::STATUS_ACTIVE, @ecookbook.status
   end
 
   def test_unarchive_a_child_of_a_closed_project_should_set_status_to_closed
@@ -226,17 +233,31 @@ class ProjectTest < ActiveSupport::TestCase
     # some boards
     assert @ecookbook.boards.any?
 
+    # generate some dependent objects
+    overridden_activity = TimeEntryActivity.new({:name => "Project", :project => @ecookbook})
+    assert overridden_activity.save!
+
+    query = IssueQuery.generate!(:project => @ecookbook, :visibility => Query::VISIBILITY_ROLES, :roles => Role.where(:id => [1, 3]).to_a)
+
     @ecookbook.destroy
     # make sure that the project non longer exists
-    assert_raise(ActiveRecord::RecordNotFound) { Project.find(@ecookbook.id) }
+    assert_raise(ActiveRecord::RecordNotFound) {Project.find(@ecookbook.id)}
     # make sure related data was removed
-    assert_nil Member.where(:project_id => @ecookbook.id).first
-    assert_nil Board.where(:project_id => @ecookbook.id).first
-    assert_nil Issue.where(:project_id => @ecookbook.id).first
+    assert_not Member.where(:project_id => @ecookbook.id).exists?
+    assert_not Board.where(:project_id => @ecookbook.id).exists?
+    assert_not Issue.where(:project_id => @ecookbook.id).exists?
+    assert_not Enumeration.where(:project_id => @ecookbook.id).exists?
+
+    assert_not Query.where(:project_id => @ecookbook.id).exists?
+    assert_nil ActiveRecord::Base.connection.select_value("SELECT 1 FROM queries_roles WHERE query_id = #{query.id}")
   end
 
   def test_destroy_should_destroy_subtasks
-    issues = (0..2).to_a.map {Issue.create!(:project_id => 1, :tracker_id => 1, :author_id => 1, :subject => 'test')}
+    issues =
+      (0..2).to_a.map do
+        Issue.generate!(:project_id => 1, :tracker_id => 1,
+                      :author_id => 1, :subject => 'test')
+      end
     issues[0].update! :parent_issue_id => issues[1].id
     issues[2].update! :parent_issue_id => issues[1].id
     assert_equal 2, issues[1].children.count
@@ -276,7 +297,7 @@ class ProjectTest < ActiveSupport::TestCase
     assert_equal 0, Wiki.count
     assert_equal 0, WikiPage.count
     assert_equal 0, WikiContent.count
-    assert_equal 0, WikiContent::Version.count
+    assert_equal 0, WikiContentVersion.count
     assert_equal 0, Project.connection.select_all("SELECT * FROM projects_trackers").count
     assert_equal 0, Project.connection.select_all("SELECT * FROM custom_fields_projects").count
     assert_equal 0, CustomValue.where(:customized_type => ['Project', 'Issue', 'TimeEntry', 'Version']).count
@@ -315,15 +336,13 @@ class ProjectTest < ActiveSupport::TestCase
   end
 
   def test_set_parent_should_add_roots_in_alphabetical_order
-    ProjectCustomField.delete_all
-    Project.delete_all
-    Project.create!(:name => 'Project C', :identifier => 'project-c').set_parent!(nil)
-    Project.create!(:name => 'Project B', :identifier => 'project-b').set_parent!(nil)
-    Project.create!(:name => 'Project D', :identifier => 'project-d').set_parent!(nil)
-    Project.create!(:name => 'Project A', :identifier => 'project-a').set_parent!(nil)
-
-    assert_equal 4, Project.count
-    assert_equal Project.all.sort_by(&:name), Project.all.sort_by(&:lft)
+    projects = new_records(Project, 4) do
+      Project.create!(:name => 'Project C', :identifier => 'project-c').set_parent!(nil)
+      Project.create!(:name => 'Project B', :identifier => 'project-b').set_parent!(nil)
+      Project.create!(:name => 'Project D', :identifier => 'project-d').set_parent!(nil)
+      Project.create!(:name => 'Project A', :identifier => 'project-a').set_parent!(nil)
+    end
+    assert_equal projects.sort_by(&:name), projects.sort_by(&:lft)
   end
 
   def test_set_parent_should_add_children_in_alphabetical_order
@@ -337,6 +356,13 @@ class ProjectTest < ActiveSupport::TestCase
     parent.reload
     assert_equal 4, parent.children.size
     assert_equal parent.children.sort_by(&:name), parent.children.to_a
+  end
+
+  def test_validate_custom_field_values_of_project
+    User.current = User.find(3)
+    ProjectCustomField.generate!(:name => 'CustomFieldTest', :field_format => 'int', :is_required => true, :visible => false, :role_ids => [1])
+    p = Project.new(:name => 'Project test', :identifier => 'project-t')
+    assert p.save!
   end
 
   def test_set_parent_should_update_issue_fixed_version_associations_when_a_fixed_version_is_moved_out_of_the_hierarchy
@@ -365,9 +391,13 @@ class ProjectTest < ActiveSupport::TestCase
     issue_with_local_fixed_version.reload
     issue_with_hierarchy_fixed_version.reload
 
-    assert_equal 4, issue_with_local_fixed_version.fixed_version_id, "Fixed version was not keep on an issue local to the moved project"
-    assert_nil issue_with_hierarchy_fixed_version.fixed_version_id, "Fixed version is still set after moving the Project out of the hierarchy where the version is defined in"
-    assert_nil parent_issue.fixed_version_id, "Fixed version is still set after moving the Version out of the hierarchy for the issue."
+    assert_equal 4, issue_with_local_fixed_version.fixed_version_id,
+                 "Fixed version was not keep on an issue local to the moved project"
+    assert_nil issue_with_hierarchy_fixed_version.fixed_version_id,
+               "Fixed version is still set after moving the Project out of the hierarchy " \
+                 "where the version is defined in"
+    assert_nil parent_issue.fixed_version_id,
+               "Fixed version is still set after moving the Version out of the hierarchy for the issue."
   end
 
   def test_parent
@@ -450,18 +480,30 @@ class ProjectTest < ActiveSupport::TestCase
     assert Project.find(3).allowed_parents.include?(nil)
   end
 
-  def test_users_by_role
-    users_by_role = Project.find(1).users_by_role
-    assert_kind_of Hash, users_by_role
+  def test_principals_by_role
+    group = Group.find(10)
+    Member.create!(:principal => group, :project_id => 1, :role_ids => [1])
+
+    principals_by_role = Project.find(1).principals_by_role
+    assert_kind_of Hash, principals_by_role
     role = Role.find(1)
-    assert_kind_of Array, users_by_role[role]
-    assert users_by_role[role].include?(User.find(2))
+    assert_kind_of Array, principals_by_role[role]
+    assert principals_by_role[role].include?(User.find(2))
+    assert principals_by_role[role].include?(group)
+  end
+
+  def test_principals_by_role_should_only_return_active_users
+    principals_by_role = Project.find(1).principals_by_role
+    locked_user = User.find(5)
+    assert Project.find(1).memberships.map(&:principal).include?(locked_user)
+    assert_not principals_by_role.values.flatten.include?(locked_user)
   end
 
   def test_rolled_up_trackers
     parent = Project.find(1)
-    parent.trackers = Tracker.find([1,2])
+    parent.trackers = Tracker.find([1, 2])
     child = parent.children.find(3)
+    child.trackers = Tracker.find([2, 3])
 
     assert_equal [1, 2], parent.tracker_ids
     assert_equal [2, 3], child.trackers.collect(&:id)
@@ -475,12 +517,12 @@ class ProjectTest < ActiveSupport::TestCase
 
   def test_rolled_up_trackers_should_ignore_archived_subprojects
     parent = Project.find(1)
-    parent.trackers = Tracker.find([1,2])
+    parent.trackers = Tracker.find([1, 2])
     child = parent.children.find(3)
-    child.trackers = Tracker.find([1,3])
+    child.trackers = Tracker.find([1, 3])
     parent.children.each(&:archive)
 
-    assert_equal [1,2], parent.rolled_up_trackers.collect(&:id)
+    assert_equal [1, 2], parent.rolled_up_trackers.collect(&:id)
   end
 
   def test_rolled_up_statuses
@@ -516,7 +558,7 @@ class ProjectTest < ActiveSupport::TestCase
     parent_version_1 = Version.generate!(:project => project)
     parent_version_2 = Version.generate!(:project => project)
     assert_equal [parent_version_1, parent_version_2].sort,
-      project.rolled_up_versions.sort
+                 project.rolled_up_versions.sort
   end
 
   test "#rolled_up_versions should include versions for a subproject" do
@@ -527,7 +569,7 @@ class ProjectTest < ActiveSupport::TestCase
     subproject_version = Version.generate!(:project => subproject)
 
     assert_equal [parent_version_1, parent_version_2, subproject_version].sort,
-      project.rolled_up_versions.sort
+                 project.rolled_up_versions.sort
   end
 
   test "#rolled_up_versions should include versions for a sub-subproject" do
@@ -540,7 +582,7 @@ class ProjectTest < ActiveSupport::TestCase
     project.reload
 
     assert_equal [parent_version_1, parent_version_2, sub_subproject_version].sort,
-      project.rolled_up_versions.sort
+                 project.rolled_up_versions.sort
   end
 
   test "#rolled_up_versions should only check active projects" do
@@ -554,7 +596,7 @@ class ProjectTest < ActiveSupport::TestCase
 
     assert !subproject.active?
     assert_equal [parent_version_1, parent_version_2].sort,
-      project.rolled_up_versions.sort
+                 project.rolled_up_versions.sort
   end
 
   def test_shared_versions_none_sharing
@@ -612,7 +654,7 @@ class ProjectTest < ActiveSupport::TestCase
     child = parent.children.find(3)
     private_child = parent.children.find(5)
 
-    assert_equal [1,2,3], parent.version_ids.sort
+    assert_equal [1, 2, 3], parent.version_ids.sort
     assert_equal [4], child.version_ids
     assert_equal [6], private_child.version_ids
     assert_equal [7], Version.where(:sharing => 'system').collect(&:id)
@@ -622,7 +664,7 @@ class ProjectTest < ActiveSupport::TestCase
       assert_kind_of Version, version
     end
 
-    assert_equal [1,2,3,4,6,7], parent.shared_versions.collect(&:id).sort
+    assert_equal [1, 2, 3, 4, 6, 7], parent.shared_versions.collect(&:id).sort
   end
 
   def test_shared_versions_should_ignore_archived_subprojects
@@ -631,7 +673,7 @@ class ProjectTest < ActiveSupport::TestCase
     child.archive
     parent.reload
 
-    assert_equal [1,2,3], parent.version_ids.sort
+    assert_equal [1, 2, 3], parent.version_ids.sort
     assert_equal [4], child.version_ids
     assert !parent.shared_versions.collect(&:id).include?(4)
   end
@@ -641,7 +683,7 @@ class ProjectTest < ActiveSupport::TestCase
     parent = Project.find(1)
     child = parent.children.find(5)
 
-    assert_equal [1,2,3], parent.version_ids.sort
+    assert_equal [1, 2, 3], parent.version_ids.sort
     assert_equal [6], child.version_ids
 
     versions = parent.shared_versions.visible(user)
@@ -705,28 +747,28 @@ class ProjectTest < ActiveSupport::TestCase
     @project.enabled_module_names = []
     @project.reload
     assert_equal [], @project.enabled_module_names
-    #with string
+    # with string
     @project.enable_module!("issue_tracking")
     assert_equal ["issue_tracking"], @project.enabled_module_names
-    #with symbol
+    # with symbol
     @project.enable_module!(:gantt)
     assert_equal ["issue_tracking", "gantt"], @project.enabled_module_names
-    #don't add a module twice
+    # don't add a module twice
     @project.enable_module!("issue_tracking")
     assert_equal ["issue_tracking", "gantt"], @project.enabled_module_names
   end
 
   test "enabled_modules should disable a module" do
     @project = Project.find(1)
-    #with string
+    # with string
     assert @project.enabled_module_names.include?("issue_tracking")
     @project.disable_module!("issue_tracking")
     assert ! @project.reload.enabled_module_names.include?("issue_tracking")
-    #with symbol
+    # with symbol
     assert @project.enabled_module_names.include?("gantt")
     @project.disable_module!(:gantt)
     assert ! @project.reload.enabled_module_names.include?("gantt")
-    #with EnabledModule object
+    # with EnabledModule object
     first_module = @project.enabled_modules.first
     @project.disable_module!(first_module)
     assert ! @project.reload.enabled_module_names.include?(first_module.name)
@@ -783,7 +825,6 @@ class ProjectTest < ActiveSupport::TestCase
     assert_kind_of ActiveRecord::Relation, project.activities
   end
 
-
   def test_activities_should_use_the_project_specific_activities
     project = Project.find(1)
     overridden_activity = TimeEntryActivity.new({:name => "Project", :project => project})
@@ -795,9 +836,11 @@ class ProjectTest < ActiveSupport::TestCase
 
   def test_activities_should_not_include_the_inactive_project_specific_activities
     project = Project.find(1)
-    overridden_activity = TimeEntryActivity.new({:name => "Project", :project => project, :parent => TimeEntryActivity.first, :active => false})
+    overridden_activity = TimeEntryActivity.new({:name => "Project",
+                                                 :project => project,
+                                                 :parent => TimeEntryActivity.first,
+                                                 :active => false})
     assert overridden_activity.save!
-
     assert !project.activities.include?(overridden_activity), "Inactive Project specific Activity found"
   end
 
@@ -806,11 +849,14 @@ class ProjectTest < ActiveSupport::TestCase
     overridden_activity = TimeEntryActivity.new({:name => "Project", :project => Project.find(2)})
     assert overridden_activity.save!
 
-    assert !project.activities.include?(overridden_activity), "Project specific Activity found on a different project"
+    assert !project.activities.include?(overridden_activity),
+           "Project specific Activity found on a different project"
   end
 
   def test_activities_should_handle_nils
-    overridden_activity = TimeEntryActivity.new({:name => "Project", :project => Project.find(1), :parent => TimeEntryActivity.first})
+    overridden_activity =
+      TimeEntryActivity.new({:name => "Project", :project => Project.find(1),
+                             :parent => TimeEntryActivity.first})
     TimeEntryActivity.delete_all
 
     # No activities
@@ -826,16 +872,24 @@ class ProjectTest < ActiveSupport::TestCase
   def test_activities_should_override_system_activities_with_project_activities
     project = Project.find(1)
     parent_activity = TimeEntryActivity.first
-    overridden_activity = TimeEntryActivity.new({:name => "Project", :project => project, :parent => parent_activity})
+    overridden_activity =
+      TimeEntryActivity.new({:name => "Project", :project => project,
+                             :parent => parent_activity})
     assert overridden_activity.save!
 
-    assert project.activities.include?(overridden_activity), "Project specific Activity not found"
-    assert !project.activities.include?(parent_activity), "System Activity found when it should have been overridden"
+    assert project.activities.include?(overridden_activity),
+           "Project specific Activity not found"
+    assert !project.activities.include?(parent_activity),
+           "System Activity found when it should have been overridden"
   end
 
   def test_activities_should_include_inactive_activities_if_specified
     project = Project.find(1)
-    overridden_activity = TimeEntryActivity.new({:name => "Project", :project => project, :parent => TimeEntryActivity.first, :active => false})
+    overridden_activity =
+      TimeEntryActivity.new(
+        {:name => "Project", :project => project,
+         :parent => TimeEntryActivity.first, :active => false}
+      )
     assert overridden_activity.save!
 
     assert project.activities(true).include?(overridden_activity), "Inactive Project specific Activity not found"
@@ -845,11 +899,15 @@ class ProjectTest < ActiveSupport::TestCase
     project = Project.find(1)
     system_activity = TimeEntryActivity.find_by_name('Design')
     assert system_activity.active?
-    overridden_activity = TimeEntryActivity.create!(:name => "Project", :project => project, :parent => system_activity, :active => false)
+    overridden_activity =
+      TimeEntryActivity.create!(:name => "Project", :project => project,
+                                :parent => system_activity, :active => false)
     assert overridden_activity.save!
 
-    assert !project.activities.include?(overridden_activity), "Inactive Project specific Activity not found"
-    assert !project.activities.include?(system_activity), "System activity found when the project has an inactive override"
+    assert !project.activities.include?(overridden_activity),
+           "Inactive Project specific Activity not found"
+    assert !project.activities.include?(system_activity),
+           "System activity found when the project has an inactive override"
   end
 
   def test_close_completed_versions
@@ -947,9 +1005,11 @@ class ProjectTest < ActiveSupport::TestCase
     project = Project.generate!
     project.trackers << Tracker.generate!
     v1 = Version.generate!(:project => project)
-    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('Closed'), :fixed_version => v1)
+    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('Closed'),
+                    :fixed_version => v1)
     v2 = Version.generate!(:project => project)
-    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('Closed'), :fixed_version => v2)
+    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('Closed'),
+                    :fixed_version => v2)
 
     assert_equal 100, project.completed_percent
   end
@@ -958,9 +1018,11 @@ class ProjectTest < ActiveSupport::TestCase
     project = Project.generate!
     project.trackers << Tracker.generate!
     v1 = Version.generate!(:project => project)
-    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 50, :fixed_version => v1)
+    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('New'),
+                    :estimated_hours => 10, :done_ratio => 50, :fixed_version => v1)
     v2 = Version.generate!(:project => project)
-    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 50, :fixed_version => v2)
+    Issue.generate!(:project => project, :status => IssueStatus.find_by_name('New'),
+                    :estimated_hours => 10, :done_ratio => 50, :fixed_version => v2)
 
     assert_equal 50, project.completed_percent
   end
@@ -970,7 +1032,8 @@ class ProjectTest < ActiveSupport::TestCase
     role = Role.generate!
 
     user_with_membership_notification = User.generate!(:mail_notification => 'selected')
-    Member.create!(:project => project, :roles => [role], :principal => user_with_membership_notification, :mail_notification => true)
+    Member.create!(:project => project, :roles => [role],
+                   :principal => user_with_membership_notification, :mail_notification => true)
 
     all_events_user = User.generate!(:mail_notification => 'all')
     Member.create!(:project => project, :roles => [role], :principal => all_events_user)
@@ -987,12 +1050,18 @@ class ProjectTest < ActiveSupport::TestCase
     only_owned_user = User.generate!(:mail_notification => 'only_owner')
     Member.create!(:project => project, :roles => [role], :principal => only_owned_user)
 
-    assert project.notified_users.include?(user_with_membership_notification), "should include members with a mail notification"
-    assert project.notified_users.include?(all_events_user), "should include users with the 'all' notification option"
-    assert !project.notified_users.include?(no_events_user), "should not include users with the 'none' notification option"
-    assert !project.notified_users.include?(only_my_events_user), "should not include users with the 'only_my_events' notification option"
-    assert !project.notified_users.include?(only_assigned_user), "should not include users with the 'only_assigned' notification option"
-    assert !project.notified_users.include?(only_owned_user), "should not include users with the 'only_owner' notification option"
+    assert project.notified_users.include?(user_with_membership_notification),
+           "should include members with a mail notification"
+    assert project.notified_users.include?(all_events_user),
+           "should include users with the 'all' notification option"
+    assert !project.notified_users.include?(no_events_user),
+           "should not include users with the 'none' notification option"
+    assert !project.notified_users.include?(only_my_events_user),
+           "should not include users with the 'only_my_events' notification option"
+    assert !project.notified_users.include?(only_assigned_user),
+           "should not include users with the 'only_assigned' notification option"
+    assert !project.notified_users.include?(only_owned_user),
+           "should not include users with the 'only_owner' notification option"
   end
 
   def test_override_roles_without_builtin_group_memberships
@@ -1006,26 +1075,89 @@ class ProjectTest < ActiveSupport::TestCase
     assert_kind_of String, p.css_classes
     assert_not_include 'archived', p.css_classes.split
     assert_not_include 'closed', p.css_classes.split
+    assert_include 'public', p.css_classes.split
   end
 
   def test_css_classes_for_archived_project
     p = Project.new
     p.status = Project::STATUS_ARCHIVED
     assert_include 'archived', p.css_classes.split
+    assert_include 'public', p.css_classes.split
   end
 
   def test_css_classes_for_closed_project
     p = Project.new
     p.status = Project::STATUS_CLOSED
     assert_include 'closed', p.css_classes.split
+    assert_include 'public', p.css_classes.split
+  end
+
+  def test_css_classes_for_private_project
+    p = Project.new
+    p.is_public = false
+    assert_not_include 'public', p.css_classes.split
   end
 
   def test_combination_of_visible_and_distinct_scopes_in_case_anonymous_group_has_memberships_should_not_error
     project = Project.find(1)
-    member = Member.create!(:project => project, :principal => Group.anonymous, :roles => [Role.generate!])
+    member = Member.create!(:project => project, :principal => Group.anonymous,
+                            :roles => [Role.generate!])
     project.members << member
     assert_nothing_raised do
       Project.distinct.visible.to_a
     end
+  end
+
+  def test_safe_attributes_should_include_only_custom_fields_visible_to_user
+    cf1 = ProjectCustomField.create!(:name => 'Visible field',
+                                   :field_format => 'string',
+                                   :visible => false, :role_ids => [1])
+    cf2 = ProjectCustomField.create!(:name => 'Non visible field',
+                                   :field_format => 'string',
+                                   :visible => false, :role_ids => [3])
+    user = User.find(2)
+    project = Project.find(1)
+
+    project.send(
+      :safe_attributes=,
+      {
+        'custom_field_values' => {
+          cf1.id.to_s => 'value1', cf2.id.to_s => 'value2'
+        }
+      },
+      user
+    )
+    assert_equal 'value1', project.custom_field_value(cf1)
+    assert_nil project.custom_field_value(cf2)
+
+    project.send(
+      :safe_attributes=,
+      {
+        'custom_fields' =>
+          [
+            {'id' => cf1.id.to_s, 'value' => 'valuea'},
+            {'id' => cf2.id.to_s, 'value' => 'valueb'}
+          ]
+      },
+      user
+    )
+    assert_equal 'valuea', project.custom_field_value(cf1)
+    assert_nil project.custom_field_value(cf2)
+  end
+
+  def test_like_scope_should_escape_query
+    project = Project.find 'ecookbook'
+    r = Project.like('eco_k')
+    assert_not_include project, r
+    r = Project.like('eco%k')
+    assert_not_include project, r
+
+    project.update_column :name, 'Eco%kbook'
+    r = Project.like('eco%k')
+    assert_include project, r
+
+    project.update_column :name, 'Eco_kbook'
+    r = Project.like('eco_k')
+    assert_include project, r
   end
 end

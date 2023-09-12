@@ -2,10 +2,10 @@
 /.idea
 /.loadpath
 /.powrc
-/.psql_history
-/.bash_history
 /.rvmrc
+/.ruby-version
 /config/additional_environment.rb
+/config/configuration.yml
 /config/database.yml
 /config/email.yml
 /config/secrets.yml
@@ -14,12 +14,15 @@
 /coverage
 /db/*.db
 /db/*.sqlite3
+/db/*.sqlite3-*
 /db/schema.rb
 /files/*
 /lib/redmine/scm/adapters/mercurial/redminehelper.pyc
 /lib/redmine/scm/adapters/mercurial/redminehelper.pyo
 /log/*.log*
 /log/mongrel_debug
+/plugins/*
+!/plugins/README
 /public/dispatch.*
 /public/plugin_assets/*
 /public/themes/*
@@ -34,12 +37,11 @@
 /tmp/test/*
 /tmp/thumbnails/*
 /vendor/cache
-/vendor/rails
-/vendor/ruby
 *.rbc
 
 /.bundle
 /Gemfile.lock
 /Gemfile.local
 
-/.ruby-version
+/node_modules
+yarn-error.log

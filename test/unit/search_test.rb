@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,10 +37,11 @@ class SearchTest < ActiveSupport::TestCase
            :changesets
 
   def setup
+    User.current = nil
     @project = Project.find(1)
-    @issue_keyword = '%unable to print recipes%'
+    @issue_keyword = 'unable to print recipes'
     @issue = Issue.find(1)
-    @changeset_keyword = '%very first commit%'
+    @changeset_keyword = 'very first commit'
     @changeset = Changeset.find(100)
   end
 
@@ -137,7 +138,7 @@ class SearchTest < ActiveSupport::TestCase
     issue = Issue.find(1)
     assert_equal 2, issue.journals.where("notes LIKE '%notes%'").count
 
-    r = Issue.search_results('%notes%')
+    r = Issue.search_results('notes')
     assert_equal 1, r.size
     assert_equal issue, r.first
   end
@@ -146,6 +147,30 @@ class SearchTest < ActiveSupport::TestCase
     issue = Issue.generate!(:subject => "AzerTY")
 
     r = Issue.search_results('AZERty')
+    assert_include issue, r
+  end
+
+  def test_search_should_not_allow_like_injection
+    issue = Issue.generate!(:subject => "asdf")
+
+    r = Issue.search_results('as_f')
+    assert_not_include issue, r
+
+    r = Issue.search_results('as%f')
+    assert_not_include issue, r
+  end
+
+  def test_search_should_find_underscore
+    issue = Issue.generate!(:subject => "as_f")
+
+    r = Issue.search_results('as_f')
+    assert_include issue, r
+  end
+
+  def test_search_should_find_percent_sign
+    issue = Issue.generate!(:subject => "as%f")
+
+    r = Issue.search_results('as%f')
     assert_include issue, r
   end
 
@@ -187,17 +212,25 @@ class SearchTest < ActiveSupport::TestCase
   end
 
   def test_fetcher_should_handle_accents_in_phrases
-    f = Redmine::Search::Fetcher.new('No special chars "in a phrase"', User.anonymous, %w(issues), Project.all)
+    f = Redmine::Search::Fetcher.new('No special chars "in a phrase"',
+                                     User.anonymous, %w(issues), Project.all)
     assert_equal ['No', 'special', 'chars', 'in a phrase'], f.tokens
 
-    f = Redmine::Search::Fetcher.new('Special chars "in a phrase Öö"', User.anonymous, %w(issues), Project.all)
+    f = Redmine::Search::Fetcher.new('Special chars "in a phrase Öö"',
+                                     User.anonymous, %w(issues), Project.all)
     assert_equal ['Special', 'chars', 'in a phrase Öö'], f.tokens
+  end
+
+  def test_fetcher_should_exclude_single_character_tokens_except_for_chinese_characters
+    f = Redmine::Search::Fetcher.new('ca f é 漢 あ 한',
+                                     User.anonymous, %w(issues), Project.all)
+    assert_equal ['ca', '漢'], f.tokens
   end
 
   private
 
   def remove_permission(role, permission)
-    role.permissions = role.permissions - [ permission ]
+    role.permissions = role.permissions - [permission]
     role.save
   end
 end

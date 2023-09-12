@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,13 +20,14 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class WatcherTest < ActiveSupport::TestCase
-  fixtures :projects, :users, :email_addresses, :members, :member_roles, :roles, :enabled_modules,
+  fixtures :projects, :groups_users, :users, :email_addresses, :members, :member_roles, :roles, :enabled_modules,
            :issues, :issue_statuses, :enumerations, :trackers, :projects_trackers,
            :boards, :messages,
            :wikis, :wiki_pages,
            :watchers
 
   def setup
+    User.current = nil
     @user = User.find(1)
     @issue = Issue.find(1)
   end
@@ -37,9 +40,12 @@ class WatcherTest < ActiveSupport::TestCase
   end
 
   def test_watch
+    group = Group.find(10)
+    assert @issue.add_watcher(group)
     assert @issue.add_watcher(@user)
     @issue.reload
-    assert @issue.watchers.detect { |w| w.user == @user }
+    assert @issue.watchers.detect {|w| w.user == @user}
+    assert @issue.watchers.detect {|w| w.user == group}
   end
 
   def test_cant_watch_twice
@@ -52,6 +58,19 @@ class WatcherTest < ActiveSupport::TestCase
     @issue.reload
     assert @issue.watched_by?(@user)
     assert Issue.watched_by(@user).include?(@issue)
+  end
+
+  def test_watched_by_group
+    group = Group.find(10)
+    user = User.find(8)
+    assert @issue.add_watcher(group)
+    @issue.reload
+
+    assert @issue.watched_by?(group)
+    assert Issue.watched_by(group).include?(@issue)
+
+    assert @issue.watched_by?(user)
+    assert Issue.watched_by(user).include?(@issue)
   end
 
   def test_watcher_users
@@ -100,12 +119,14 @@ class WatcherTest < ActiveSupport::TestCase
   def test_addable_watcher_users
     addable_watcher_users = @issue.addable_watcher_users
     assert_kind_of Array, addable_watcher_users
-    assert_kind_of User, addable_watcher_users.first
+    addable_watcher_users.each do |addable_watcher|
+      assert_equal true, addable_watcher.is_a?(User) || addable_watcher.is_a?(Group)
+    end
   end
 
   def test_addable_watcher_users_should_not_include_user_that_cannot_view_the_object
     issue = Issue.new(:project => Project.find(1), :is_private => true)
-    assert_nil issue.addable_watcher_users.detect {|user| !issue.visible?(user)}
+    assert_nil issue.addable_watcher_users.detect {|user| user.is_a?(User) && !issue.visible?(user)}
   end
 
   def test_any_watched_should_return_false_if_no_object_is_watched
@@ -144,9 +165,12 @@ class WatcherTest < ActiveSupport::TestCase
   end
 
   def test_unwatch
+    group = Group.find(10)
+    assert @issue.add_watcher(group)
     assert @issue.add_watcher(@user)
     @issue.reload
     assert_equal 1, @issue.remove_watcher(@user)
+    assert_equal 1, @issue.remove_watcher(group)
   end
 
   def test_prune_with_user

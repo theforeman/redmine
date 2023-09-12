@@ -46,15 +46,17 @@ Output example of rhmanifest::
     </rhmanifest>
 """
 import re, time, cgi, urllib
-from mercurial import cmdutil, commands, node, error, hg
+from mercurial import cmdutil, commands, node, error, hg, registrar
 
 cmdtable = {}
-command = cmdutil.command(cmdtable)
+command = registrar.command(cmdtable) if hasattr(registrar, 'command') else cmdutil.command(cmdtable)
 
 _x = cgi.escape
 _u = lambda s: cgi.escape(urllib.quote(s))
 
 def _changectx(repo, rev):
+    if isinstance(rev, str):
+       rev = repo.lookup(rev)
     if hasattr(repo, 'changectx'):
         return repo.changectx(rev)
     else:
@@ -83,7 +85,7 @@ def _tags(ui, repo):
         except error.LookupError:
             continue
         ui.write('<tag revision="%d" node="%s" name="%s"/>\n'
-                 % (r, _x(node.hex(n)), _x(t)))
+                 % (r, _x(node.hex(n)), _u(t)))
 
 def _branches(ui, repo):
     # see mercurial/commands.py:branches
@@ -108,7 +110,7 @@ def _branches(ui, repo):
     for t, n, r in sorted(iterbranches(), key=lambda e: e[2], reverse=True):
         if lookup(r, n) in branchheads(t):
             ui.write('<branch revision="%d" node="%s" name="%s"/>\n'
-                     % (r, _x(node.hex(n)), _x(t)))
+                     % (r, _x(node.hex(n)), _u(t)))
 
 def _manifest(ui, repo, path, rev):
     ctx = _changectx(repo, rev)

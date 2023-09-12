@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,7 @@
 
 require File.expand_path('../../test_helper', __FILE__)
 
-class RepositoriesBazaarControllerTest < Redmine::ControllerTest
+class RepositoriesBazaarControllerTest < Redmine::RepositoryControllerTest
   tests RepositoriesController
 
   fixtures :projects, :users, :email_addresses, :roles, :members, :member_roles,
@@ -26,15 +28,17 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
   REPOSITORY_PATH = Rails.root.join('tmp/test/bazaar_repository').to_s
   REPOSITORY_PATH_TRUNK = File.join(REPOSITORY_PATH, "trunk")
   PRJ_ID = 3
-  CHAR_1_UTF8_HEX   = "\xc3\x9c".dup.force_encoding('UTF-8')
 
   def setup
+    super
     User.current = nil
     @project = Project.find(PRJ_ID)
-    @repository = Repository::Bazaar.create(
-                    :project      => @project,
-                    :url          => REPOSITORY_PATH_TRUNK,
-                    :log_encoding => 'UTF-8')
+    @repository =
+      Repository::Bazaar.create(
+        :project      => @project,
+        :url          => REPOSITORY_PATH_TRUNK,
+        :log_encoding => 'UTF-8'
+      )
     assert @repository
   end
 
@@ -42,10 +46,13 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     def test_get_new
       @request.session[:user_id] = 1
       @project.repository.destroy
-      get :new, :params => {
+      get(
+        :new,
+        :params => {
           :project_id => 'subproject1',
           :repository_scm => 'Bazaar'
         }
+      )
       assert_response :success
       assert_select 'select[name=?]', 'repository_scm' do
         assert_select 'option[value=?][selected=selected]', 'Bazaar'
@@ -53,9 +60,12 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     end
 
     def test_browse_root
-      get :show, :params => {
+      get(
+        :show,
+        :params => {
           :id => PRJ_ID
         }
+      )
       assert_response :success
       assert_select 'table.entries tbody' do
         assert_select 'tr', 2
@@ -65,10 +75,14 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     end
 
     def test_browse_directory
-      get :show, :params => {
+      get(
+        :show,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['directory'])[:param]
         }
+      )
       assert_response :success
       assert_select 'table.entries tbody' do
         assert_select 'tr', 3
@@ -79,11 +93,15 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     end
 
     def test_browse_at_given_revision
-      get :show, :params => {
+      get(
+        :show,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash([])[:param],
           :rev => 3
         }
+      )
       assert_response :success
       assert_select 'table.entries tbody' do
         assert_select 'tr', 4
@@ -95,40 +113,56 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     end
 
     def test_changes
-      get :changes, :params => {
+      get(
+        :changes,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['doc-mkdir.txt'])[:param]
         }
+      )
       assert_response :success
       assert_select 'h2', :text => /doc-mkdir.txt/
     end
 
     def test_entry_show
-      get :entry, :params => {
+      get(
+        :entry,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['directory', 'doc-ls.txt'])[:param]
         }
+      )
       assert_response :success
       # Line 19
       assert_select 'tr#L29 td.line-code', :text => /Show help message/
     end
 
     def test_entry_download
-      get :entry, :params => {
+      get(
+        :entry,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['directory', 'doc-ls.txt'])[:param],
           :format => 'raw'
         }
+      )
       assert_response :success
       # File content
       assert @response.body.include?('Show help message')
     end
 
     def test_directory_entry
-      get :entry, :params => {
+      get(
+        :entry,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['directory'])[:param]
         }
+      )
       assert_response :success
       assert_select 'table.entries tbody'
     end
@@ -136,25 +170,34 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     def test_diff
       # Full diff of changeset 3
       ['inline', 'sbs'].each do |dt|
-        get :diff, :params => {
+        get(
+          :diff,
+          :params => {
             :id => PRJ_ID,
+            :repository_id => @repository.id,
             :rev => 3,
             :type => dt
           }
+        )
         assert_response :success
         # Line 11 removed
-        assert_select 'th.line-num:contains(11) ~ td.diff_out', :text => /Display more information/
+        assert_select 'th.line-num[data-txt=11] ~ td.diff_out', :text => /Display more information/
       end
     end
 
     def test_annotate
-      get :annotate, :params => {
+      get(
+        :annotate,
+        :params => {
           :id => PRJ_ID,
+          :repository_id => @repository.id,
           :path => repository_path_hash(['doc-mkdir.txt'])[:param]
         }
+      )
       assert_response :success
 
-      assert_select "th.line-num", :text => '2' do
+      assert_select "th.line-num" do
+        assert_select 'a[data-txt=?]', '2'
         assert_select "+ td.revision" do
           assert_select "a", :text => '3'
           assert_select "+ td.author", :text => "jsmith@" do
@@ -166,20 +209,26 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     end
 
     def test_annotate_author_escaping
-      repository = Repository::Bazaar.create(
-                    :project      => @project,
-                    :url          => File.join(REPOSITORY_PATH, "author_escaping"),
-                    :identifier => 'author_escaping',
-                    :log_encoding => 'UTF-8')
+      repository =
+        Repository::Bazaar.create(
+          :project      => @project,
+          :url          => File.join(REPOSITORY_PATH, "author_escaping"),
+          :identifier => 'author_escaping',
+          :log_encoding => 'UTF-8'
+        )
       assert repository
-      get :annotate, :params => {
+      get(
+        :annotate,
+        :params => {
           :id => PRJ_ID,
           :repository_id => 'author_escaping',
           :path => repository_path_hash(['author-escaping-test.txt'])[:param]
         }
+      )
       assert_response :success
 
-      assert_select "th.line-num", :text => '1' do
+      assert_select "th.line-num" do
+        assert_select "a[data-txt=?]", '1'
         assert_select "+ td.revision" do
           assert_select "a", :text => '2'
           assert_select "+ td.author", :text => "test &" do
@@ -197,23 +246,29 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
         log_encoding = Encoding.locale_charmap
       end
       unless log_encoding.nil?
-        repository = Repository::Bazaar.create(
-                      :project      => @project,
-                      :url          => File.join(REPOSITORY_PATH, "author_non_ascii"),
-                      :identifier => 'author_non_ascii',
-                      :log_encoding => log_encoding)
+        repository =
+          Repository::Bazaar.create(
+            :project      => @project,
+            :url          => File.join(REPOSITORY_PATH, "author_non_ascii"),
+            :identifier => 'author_non_ascii',
+            :log_encoding => log_encoding
+          )
         assert repository
-        get :annotate, :params => {
+        get(
+          :annotate,
+          :params => {
             :id => PRJ_ID,
             :repository_id => 'author_non_ascii',
             :path => repository_path_hash(['author-non-ascii-test.txt'])[:param]
           }
+        )
         assert_response :success
 
-        assert_select "th.line-num", :text => '1' do
+        assert_select "th.line-num" do
+          assert_select 'a[data-txt=?]', '1'
           assert_select "+ td.revision" do
             assert_select "a", :text => '2'
-            assert_select "+ td.author", :text => "test #{CHAR_1_UTF8_HEX}" do
+            assert_select "+ td.author", :text => "test Ü" do
               assert_select "+ td",
                             :text => "author non ASCII test"
             end
@@ -229,9 +284,12 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
       assert @repository.changesets.count > 0
 
       assert_difference 'Repository.count', -1 do
-        delete :destroy, :params => {
+        delete(
+          :destroy,
+          :params => {
             :id => @repository.id
           }
+        )
       end
       assert_response 302
       @project.reload
@@ -241,18 +299,23 @@ class RepositoriesBazaarControllerTest < Redmine::ControllerTest
     def test_destroy_invalid_repository
       @request.session[:user_id] = 1 # admin
       @project.repository.destroy
-      @repository = Repository::Bazaar.create!(
-                    :project      => @project,
-                    :url          => "/invalid",
-                    :log_encoding => 'UTF-8')
+      @repository =
+        Repository::Bazaar.create!(
+          :project      => @project,
+          :url          => "/invalid",
+          :log_encoding => 'UTF-8'
+        )
       @repository.fetch_changesets
       @repository.reload
       assert_equal 0, @repository.changesets.count
 
       assert_difference 'Repository.count', -1 do
-        delete :destroy, :params => {
+        delete(
+          :destroy,
+          :params => {
             :id => @repository.id
           }
+        )
       end
       assert_response 302
       @project.reload

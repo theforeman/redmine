@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2023  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,7 +21,8 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class WatchersControllerTest < Redmine::ControllerTest
   fixtures :projects, :users, :roles, :members, :member_roles, :enabled_modules,
-           :issues, :trackers, :projects_trackers, :issue_statuses, :enumerations, :watchers
+           :issues, :trackers, :projects_trackers, :issue_statuses, :enumerations, :watchers,
+           :boards, :messages, :wikis, :wiki_pages
 
   def setup
     User.current = nil
@@ -153,6 +156,20 @@ class WatchersControllerTest < Redmine::ControllerTest
     assert_match /ajax-modal/, response.body
   end
 
+  def test_new_for_message
+    @request.session[:user_id] = 2
+    get :new, :params => {:object_type => 'message', :object_id => '1'}, :xhr => true
+    assert_response :success
+    assert_match /ajax-modal/, response.body
+  end
+
+  def test_new_for_wiki_page
+    @request.session[:user_id] = 2
+    get :new, :params => {:object_type => 'wiki_page', :object_id => '1'}, :xhr => true
+    assert_response :success
+    assert_match /ajax-modal/, response.body
+  end
+
   def test_new_with_multiple_objects
     @request.session[:user_id] = 2
     get :new, :params => {:object_type => 'issue', :object_id => ['1', '2']}, :xhr => true
@@ -174,6 +191,20 @@ class WatchersControllerTest < Redmine::ControllerTest
     assert_match /ajax-modal/, response.body
   end
 
+  def test_new_with_multiple_objects_from_different_projects
+    @request.session[:user_id] = 2
+    get :new, :params => {
+      :object_id => [7, 9],
+      :object_type => 'issue'
+    }, :xhr => true
+    assert_response :success
+
+    assert_match(
+      %r{/watchers/autocomplete_for_user\?object_id%5B%5D=7&object_id%5B%5D=9&object_type=issue},
+      response.body
+    )
+  end
+
   def test_create_as_html
     @request.session[:user_id] = 2
     assert_difference('Watcher.count') do
@@ -185,6 +216,19 @@ class WatchersControllerTest < Redmine::ControllerTest
       assert_include 'Watcher added', response.body
     end
     assert Issue.find(2).watched_by?(User.find(4))
+  end
+
+  def test_create_group_as_html
+    @request.session[:user_id] = 2
+    assert_difference('Watcher.count') do
+      post :create, :params => {
+        :object_type => 'issue', :object_id => '2',
+        :watcher => {:user_id => '10'}
+      }
+      assert_response :success
+      assert_include 'Watcher added', response.body
+    end
+    assert Issue.find(2).watched_by?(Group.find(10))
   end
 
   def test_create
@@ -201,47 +245,120 @@ class WatchersControllerTest < Redmine::ControllerTest
     assert Issue.find(2).watched_by?(User.find(4))
   end
 
-  def test_create_with_mutiple_users
+  def test_create_for_message
     @request.session[:user_id] = 2
-    assert_difference('Watcher.count', 2) do
+    assert_difference('Watcher.count') do
       post :create, :params => {
-        :object_type => 'issue', :object_id => '2',
-        :watcher => {:user_ids => ['4', '7']}
+        :object_type => 'message', :object_id => '1',
+        :watcher => {:user_id => '4'}
       }, :xhr => true
       assert_response :success
       assert_match /watchers/, response.body
       assert_match /ajax-modal/, response.body
     end
-    assert Issue.find(2).watched_by?(User.find(4))
-    assert Issue.find(2).watched_by?(User.find(7))
+    assert Message.find(1).watched_by?(User.find(4))
+  end
+
+  def test_create_for_wiki_page
+    @request.session[:user_id] = 2
+    assert_difference('Watcher.count') do
+      post :create, :params => {
+        :object_type => 'wiki_page', :object_id => '1',
+        :watcher => {:user_id => '4'}
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+      assert_match /ajax-modal/, response.body
+    end
+    assert WikiPage.find(1).watched_by?(User.find(4))
+  end
+
+  def test_create_with_mutiple_users
+    @request.session[:user_id] = 2
+    assert_difference('Watcher.count', 3) do
+      post :create, :params => {
+        :object_type => 'issue', :object_id => '2',
+        :watcher => {:user_ids => ['4', '7', '10']}
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+      assert_match /ajax-modal/, response.body
+    end
+    issue = Issue.find(2)
+    assert issue.watched_by?(User.find(4))
+    assert issue.watched_by?(User.find(7))
+    assert issue.watched_by?(Group.find(10))
+  end
+
+  def test_create_for_message_with_mutiple_users
+    @request.session[:user_id] = 2
+    assert_difference('Watcher.count', 3) do
+      post :create, :params => {
+        :object_type => 'message', :object_id => '1',
+        :watcher => {:user_ids => ['4', '7', '10']}
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+      assert_match /ajax-modal/, response.body
+    end
+    message = Message.find(1)
+    assert message.watched_by?(User.find(4))
+    assert message.watched_by?(User.find(7))
+    assert message.watched_by?(Group.find(10))
+  end
+
+  def test_create_for_wiki_page_with_mutiple_users
+    @request.session[:user_id] = 2
+    assert_difference('Watcher.count', 3) do
+      post :create, :params => {
+        :object_type => 'wiki_page', :object_id => '1',
+        :watcher => {:user_ids => ['4', '7', '10']}
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+      assert_match /ajax-modal/, response.body
+    end
+    wiki_page = WikiPage.find(1)
+    assert wiki_page.watched_by?(User.find(4))
+    assert wiki_page.watched_by?(User.find(7))
+    assert wiki_page.watched_by?(Group.find(10))
   end
 
   def test_create_with_mutiple_objects
     @request.session[:user_id] = 2
-    assert_difference('Watcher.count', 4) do
+    assert_difference('Watcher.count', 6) do
       post :create, :params => {
         :object_type => 'issue', :object_id => ['1', '2'],
-        :watcher => {:user_ids => ['4', '7']}
+        :watcher => {:user_ids => ['4', '7', '10']}
       }, :xhr => true
       assert_response :success
       assert_match /watchers/, response.body
       assert_match /ajax-modal/, response.body
     end
-    assert Issue.find(1).watched_by?(User.find(4))
-    assert Issue.find(2).watched_by?(User.find(4))
-    assert Issue.find(1).watched_by?(User.find(7))
-    assert Issue.find(2).watched_by?(User.find(7))
+    issue1 = Issue.find(1)
+    issue2 = Issue.find(2)
+    user4 = User.find(4)
+    user7 = User.find(7)
+    group10 = Group.find(10)
+    assert issue1.watched_by?(user4)
+    assert issue2.watched_by?(user4)
+    assert issue1.watched_by?(user7)
+    assert issue2.watched_by?(user7)
+    assert issue1.watched_by?(group10)
+    assert issue2.watched_by?(group10)
   end
 
   def test_autocomplete_on_watchable_creation
     @request.session[:user_id] = 2
+    group = Group.generate!(:name => 'Group Minimum')
     get :autocomplete_for_user, :params => {:q => 'mi', :project_id => 'ecookbook'}, :xhr => true
     assert_response :success
-    assert_select 'input', :count => 4
+    assert_select 'input', :count => 5
     assert_select 'input[name=?][value="1"]', 'watcher[user_ids][]'
     assert_select 'input[name=?][value="2"]', 'watcher[user_ids][]'
     assert_select 'input[name=?][value="8"]', 'watcher[user_ids][]'
     assert_select 'input[name=?][value="9"]', 'watcher[user_ids][]'
+    assert_select %(input[name=?][value="#{group.id}"]), 'watcher[user_ids][]'
   end
 
   def test_search_non_member_on_create
@@ -309,6 +426,41 @@ class WatchersControllerTest < Redmine::ControllerTest
     assert_not_include hidden.name, response.body
   end
 
+  def test_autocomplete_for_user_should_not_return_users_without_object_visibility
+    @request.session[:user_id] = 1
+    get :autocomplete_for_user, :params => {
+      q: 'rober',
+      project_id: 'onlinestore',
+      object_id: '4',
+      object_type: 'issue'
+    }, :xhr => true
+
+    assert_response :success
+
+    assert response.body.blank?
+  end
+
+  def test_autocomplete_with_multiple_objects_from_different_projects
+    @request.session[:user_id] = 2
+
+    # 7 => eCookbook
+    # 9 => Private child of eCookbook
+    get :autocomplete_for_user, :params => {
+      :object_id => [7, 9],
+      :object_type => 'issue'
+    }, :xhr => true
+
+    assert_response :success
+
+    # All users from two projects eCookbook (7) and Private child of eCookbook (9)
+    assert_select 'input', :count => 5
+    assert_select 'input[name=?][value="1"]', 'watcher[user_ids][]'
+    assert_select 'input[name=?][value="2"]', 'watcher[user_ids][]'
+    assert_select 'input[name=?][value="3"]', 'watcher[user_ids][]'
+    assert_select 'input[name=?][value="8"]', 'watcher[user_ids][]'
+    assert_select 'input[name=?][value="10"]', 'watcher[user_ids][]'
+  end
+
   def test_append
     @request.session[:user_id] = 2
     assert_no_difference 'Watcher.count' do
@@ -340,6 +492,23 @@ class WatchersControllerTest < Redmine::ControllerTest
     assert !Issue.find(2).watched_by?(User.find(3))
   end
 
+  def test_destroy_group_as_html
+    @request.session[:user_id] = 2
+    issue = Issue.find(2)
+    group = Group.find(10)
+    issue.add_watcher(group)
+    assert issue.watched_by?(group)
+    assert_difference('Watcher.count', -1) do
+      delete :destroy, :params => {
+        :object_type => 'issue', :object_id => '2', :user_id => '10'
+      }
+      assert_response :success
+      assert_include 'Watcher removed', response.body
+    end
+    issue.reload
+    assert !issue.watched_by?(group)
+  end
+
   def test_destroy
     @request.session[:user_id] = 2
     assert_difference('Watcher.count', -1) do
@@ -350,6 +519,38 @@ class WatchersControllerTest < Redmine::ControllerTest
       assert_match /watchers/, response.body
     end
     assert !Issue.find(2).watched_by?(User.find(3))
+  end
+
+  def test_destroy_for_meessage
+    @request.session[:user_id] = 2
+    message = Message.find(1)
+    user = User.find(1)
+    assert message.watched_by?(user)
+    assert_difference('Watcher.count', -1) do
+      delete :destroy, :params => {
+        :object_type => 'message', :object_id => '1', :user_id => '1'
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+    end
+    message.reload
+    assert !message.watched_by?(user)
+  end
+
+  def test_destroy_for_wiki_page
+    @request.session[:user_id] = 2
+    wiki_page = WikiPage.find(1)
+    user = User.find(1)
+    assert wiki_page.watched_by?(user)
+    assert_difference('Watcher.count', -1) do
+      delete :destroy, :params => {
+        :object_type => 'wiki_page', :object_id => '1', :user_id => '1'
+      }, :xhr => true
+      assert_response :success
+      assert_match /watchers/, response.body
+    end
+    wiki_page.reload
+    assert !wiki_page.watched_by?(user)
   end
 
   def test_destroy_locked_user

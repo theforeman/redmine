@@ -5,6 +5,7 @@ syntax: glob
 .loadpath
 .powrc
 .rvmrc
+.ruby-version
 config/additional_environment.rb
 config/configuration.yml
 config/database.yml
@@ -15,6 +16,7 @@ config/initializers/secret_token.rb
 coverage
 db/*.db
 db/*.sqlite3
+db/*.sqlite3-*
 db/schema.rb
 files/*
 lib/redmine/scm/adapters/mercurial/redminehelper.pyc
@@ -40,3 +42,5 @@ vendor/cache
 Gemfile.lock
 Gemfile.local
 
+node_modules
+yarn-error.log

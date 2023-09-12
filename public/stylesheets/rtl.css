@@ -29,15 +29,13 @@ h1, h2, h3, h4 {padding:2px 00px 1px 10px;}
 #login-form table {margin-left:auto; margin-right:auto;}
 div.modal p.buttons {text-align:left;}
 
-input#openid_url {padding-left:0px; padding-right:18px;}
-
 /***** Links *****/
 
 #sidebar a.selected {padding:1px 2px 2px 3px; margin-left:0px; margin-right:-2px;}
 #admin-menu a.selected {padding-left:0!important; padding-right:20px!important; background-position:right 2px 40%;}
 
-a.collapsible {padding-left:0px; padding-right:12px; background: url(../images/arrow_expanded.png) no-repeat right -3px top 40%;}
-a.collapsible.collapsed {background: url(../images/arrow_collapsed.png) no-repeat right -5px top 40%;}
+a.collapsible {padding-left:0px; padding-right:12px; background: url(../images/arrow_down.png) no-repeat right 0px top 50%;}
+a.collapsible.collapsed {background-image: url(../images/arrow_left.png);}
 
 /***** Tables *****/
 table.list td {padding-left:0px; padding-right:10px;}
@@ -133,7 +131,8 @@ div.issue div.subject div div {padding-left:0px; padding-right:16px;}
 
 div.issue span.private, div.journal span.private {margin-right:0px; margin-left:2px;}
 
-fieldset.collapsible>legend {padding-left:0px; padding-right:16px; background: url(../images/arrow_expanded.png) no-repeat right 40%;}
+fieldset.collapsible>legend {padding-left:0px; padding-right:18px; background: url(../images/arrow_down.png) no-repeat right 50%;}
+fieldset.collapsible.collapsed>legend { background-image: url(../images/arrow_left.png); }
 
 fieldset#filters td.add-filter {text-align:left; }
 
@@ -317,8 +316,8 @@ div.wiki pre {
 }
 
 div.wiki ul.toc {
-  margin-right:0px; margin-left:12px;
-  margin-left:0;    margin-right:0;
+  margin-left:0;
+  margin-right:0;
 }
 
 div.wiki ul.toc.right { float: left; margin-left:0; margin-right:12px;}
@@ -372,12 +371,7 @@ td.username img.gravatar {margin:0 0 0 0.5em; }
 /* Custom JQuery styles */
 .ui-datepicker-title select {margin-left:4px !important; margin-right:0 !important;}
 
-/************* CodeRay styles *************/
-.syntaxhl .line-numbers {margin:0px 0px 0px 5px;}
-
 /***** Media print specific styles *****/
-@media print {
-}
 
 /* Accessibility specific styles */
 .hidden-for-sighted {
