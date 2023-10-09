@@ -1,0 +1,50 @@
+---
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+env:
+  RAILS_ENV: test
+  DATABASE_ADAPTER: sqlite3
+  SCMS: git
+
+concurrency:
+  group: ${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  ruby:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - '3.0'
+          - '3.1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install dependencies
+        run: sudo apt-get install -y gsfonts
+      - name: Setup Database
+        run: "printf 'test:\n  adapter: sqlite3\n  database: db/redmine.sqlite3\nproduction:\n  adapter: postgresql' > config/database.yml"
+      - name: Setup secure config
+        run: |
+          sudo mkdir -p /etc/redmine
+          printf '{"data_dir":"/var/lib/redmine"}' | sudo tee /etc/redmine/secure_config.yaml
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Setup redmine
+        run: bundle exec rake ci:setup redmine:plugins:migrate
+      - name: Run tests
+        run: bundle exec rake test
+      - name: Run zeitwerk:check
+        run: bundle exec rake zeitwerk:check
