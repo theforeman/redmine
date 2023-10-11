@@ -2723,6 +2723,7 @@ class IssuesControllerTest < Redmine::ControllerTest
 
   def test_show_with_thumbnails_enabled_should_display_thumbnails
     skip unless convert_installed?
+    skip if Redmine::Plugin.installed?(:redmine_lightbox2)
     @request.session[:user_id] = 2
     with_settings :thumbnails_enabled => '1' do
       get(:show, :params => {:id => 14})
