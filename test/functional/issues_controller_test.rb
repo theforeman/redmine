@@ -2723,6 +2723,7 @@ class IssuesControllerTest < Redmine::ControllerTest
 
   def test_show_with_thumbnails_enabled_should_display_thumbnails
     skip unless convert_installed?
+    skip if Redmine::Plugin.installed?(:redmine_lightbox2)
     @request.session[:user_id] = 2
     with_settings :thumbnails_enabled => '1' do
       get(:show, :params => {:id => 14})
@@ -2771,12 +2772,8 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_response :success
 
     # long text custom field should not be render in the attributes div
-    assert_select "div.attributes div.attribute.cf_#{field.id} p strong", 0, :text => 'Long text'
-    assert_select(
-      "div.attributes div.attribute.cf_#{field.id} div.value",
-      0,
-      :text => 'This is a long text'
-    )
+    assert_select "div.attributes div.attribute.cf_#{field.id} p strong", 0
+    assert_select "div.attributes div.attribute.cf_#{field.id} div.value", 0
     # long text custom field should be render under description field
     assert_select "div.description ~ div.attribute.cf_#{field.id} p strong", :text => 'Long text'
     assert_select(
@@ -3821,10 +3818,11 @@ class IssuesControllerTest < Redmine::ControllerTest
     end
 
     assert_select 'div#trackers_description' do
-      assert_select 'h3', 1, :text => 'Trackers description'
+      assert_select 'h3', :text => 'Trackers description', :count => 1
       # only Bug and Feature have descriptions
-      assert_select 'dt', 2, :text => 'Bug'
-      assert_select 'dd', 2, :text => 'Description for Bug tracker'
+      assert_select 'dt', 2
+      assert_select 'dt', :text => 'Bug', :count => 1
+      assert_select 'dd', :text => 'Description for Bug tracker', :count => 1
     end
   end
 
