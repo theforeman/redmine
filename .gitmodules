@@ -7,8 +7,8 @@
 	url = https://github.com/ares/redmine_ruby_code.git
 [submodule "plugins/redmine_vote"]
 	path = plugins/redmine_vote
-	url = https://github.com/evgeni/redmine_vote
-	branch = redmine-5
+	url = https://github.com/theforeman/redmine_vote
+	branch = master
 [submodule "plugins/redmine_lightbox2"]
 	path = plugins/redmine_lightbox2
 	url = https://github.com/theforeman/redmine_lightbox2
