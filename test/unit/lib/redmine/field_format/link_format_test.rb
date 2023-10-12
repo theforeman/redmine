@@ -98,9 +98,9 @@ class Redmine::LinkFieldFormatTest < ActionView::TestCase
   def test_link_field_with_multiple_values_returns_array_of_links
     skip "this test is broken"
     field = IssueCustomField.new(:field_format => 'link')
-    custom_value = CustomValue.new(:custom_field => field, :customized => Issue.new, :value => ["foo.bar", "bar.foo"])
+    custom_value = CustomFieldValue.new(:custom_field => field, :customized => Issue.new, :value => ["foo.bar", "bar.foo"])
 
     assert_equal ["foo.bar", "bar.foo"], field.format.formatted_custom_value(self, custom_value, false)
-    assert_equal ['<a href="http://foo.bar">foo.bar</a>', '<a href="http://bar.foo">bar.foo</a>'], field.format.formatted_custom_value(self, custom_value, true)
+    assert_equal ['<a class="external" href="http://foo.bar">foo.bar</a>', '<a class="external" href="http://bar.foo">bar.foo</a>'], field.format.formatted_custom_value(self, custom_value, true)
   end
 end
