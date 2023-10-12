@@ -46,5 +46,7 @@ jobs:
         run: bundle exec rake ci:setup redmine:plugins:migrate
       - name: Run tests
         run: bundle exec rake test
+      - name: Run plugin tests
+        run: bundle exec rake redmine:plugins:test
       - name: Run zeitwerk:check
         run: bundle exec rake zeitwerk:check

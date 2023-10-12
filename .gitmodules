@@ -1,18 +1,15 @@
 [submodule "plugins/redmine_omniauth_github"]
 	path = plugins/redmine_omniauth_github
-	url = https://github.com/evgeni/redmine_omniauth_github
-	branch = ci
+	url = https://github.com/theforeman/redmine_omniauth_github
+	branch = master
 [submodule "plugins/redmine_ruby_code"]
 	path = plugins/redmine_ruby_code
 	url = https://github.com/ares/redmine_ruby_code.git
 [submodule "plugins/redmine_vote"]
 	path = plugins/redmine_vote
-	url = https://github.com/evgeni/redmine_vote
-	branch = redmine-5
+	url = https://github.com/theforeman/redmine_vote
+	branch = master
 [submodule "plugins/redmine_lightbox2"]
 	path = plugins/redmine_lightbox2
 	url = https://github.com/theforeman/redmine_lightbox2
 	branch = redmine-5
-[submodule "plugins/redmine_issue_field_visibility"]
-	path = plugins/redmine_issue_field_visibility
-	url = https://github.com/planio-gmbh/redmine_issue_field_visibility
