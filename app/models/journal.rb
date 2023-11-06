@@ -150,10 +150,6 @@ class Journal < ActiveRecord::Base
     journalized.visible?(*args)
   end
 
-  def visible?(*args)
-    journalized.visible?(*args)
-  end
-
   # Returns a string of css classes
   def css_classes
     s = +'journal'
