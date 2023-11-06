@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class TimeEntryQueryTest < ActiveSupport::TestCase
   fixtures :issues, :projects, :users,
@@ -111,9 +111,9 @@ class TimeEntryQueryTest < ActiveSupport::TestCase
                                  :is_filter => true)
     query = TimeEntryQuery.new(:project => Project.find(3))
 
-    assert_include "issue.cf_#{global.id}", query.available_columns.map(&:name).map(&:to_s)
-    assert_include "issue.cf_#{field_on_project.id}", query.available_columns.map(&:name).map(&:to_s)
-    assert_not_include "issue.cf_#{field_not_on_project.id}", query.available_columns.map(&:name).map(&:to_s)
+    assert_include "issue.cf_#{global.id}", query.available_columns.map {|c| c.name.to_s}
+    assert_include "issue.cf_#{field_on_project.id}", query.available_columns.map  {|c| c.name.to_s}
+    assert_not_include "issue.cf_#{field_not_on_project.id}", query.available_columns.map {|c| c.name.to_s}
   end
 
   def test_issue_category_filter_should_not_be_available_in_global_queries

@@ -26,6 +26,7 @@ class Journal < ActiveRecord::Base
   belongs_to :issue, :foreign_key => :journalized_id
 
   belongs_to :user
+  belongs_to :updated_by, :class_name => 'User'
   has_many :details, :class_name => "JournalDetail", :dependent => :delete_all, :inverse_of => :journal
   attr_accessor :indice
 
@@ -78,6 +79,7 @@ class Journal < ActiveRecord::Base
   safe_attributes(
     'private_notes',
     :if => lambda {|journal, user| user.allowed_to?(:set_notes_private, journal.project)})
+  safe_attributes 'updated_by'
 
   # Returns a SQL condition to filter out journals with notes that are not visible to user
   def self.visible_notes_condition(user=User.current, options={})
@@ -140,7 +142,12 @@ class Journal < ActiveRecord::Base
   end
 
   def attachments
-    details.select{ |d| d.property == 'attachment' }.map{ |d| Attachment.find_by(:id => d.prop_key) }.compact
+    ids = details.select {|d| d.property == 'attachment' && d.value.present?}.map(&:prop_key)
+    Attachment.where(id: ids).sort_by {|a| ids.index(a.id.to_s)}
+  end
+
+  def visible?(*args)
+    journalized.visible?(*args)
   end
 
   def visible?(*args)
@@ -333,8 +340,8 @@ class Journal < ActiveRecord::Base
   end
 
   def add_watcher
-    if user &&
-        user.allowed_to?(:add_issue_watchers, project) &&
+    if user&.active? &&
+        user&.allowed_to?(:add_issue_watchers, project) &&
         user.pref.auto_watch_on?('issue_contributed_to') &&
         !Watcher.any_watched?(Array.wrap(journalized), user)
       journalized.set_watcher(user, true)

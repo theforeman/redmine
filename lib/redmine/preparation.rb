@@ -39,6 +39,7 @@ module Redmine
         map.permission :edit_project, {:projects => [:settings, :edit, :update]}, :require => :member
         map.permission :close_project, {:projects => [:close, :reopen]}, :require => :member, :read => true
         map.permission :delete_project, {:projects => :destroy}, :require => :member, :read => true
+        map.permission :select_project_publicity, {}, :require => :member
         map.permission :select_project_modules, {:projects => :modules}, :require => :member
         map.permission :view_members, {:members => [:index, :show]}, :public => true, :read => true
         map.permission :manage_members, {:projects => :settings, :members => [:index, :show, :new, :create, :edit, :update, :destroy, :autocomplete]}, :require => :member
@@ -168,7 +169,7 @@ module Redmine
                   :caption => :label_project_plural
         menu.push :administration, {:controller => 'admin', :action => 'index'},
                   :if => Proc.new {User.current.admin?}, :last => true
-        menu.push :help, Info.help_url, :last => true
+        menu.push :help, Info.help_url, :html => {:target => '_blank', :rel => 'noopener'}, :last => true
       end
 
       MenuManager.map :account_menu do |menu|
@@ -394,9 +395,9 @@ module Redmine
 
       WikiFormatting.map do |format|
         format.register :textile
-        format.register :markdown if Object.const_defined?(:Redcarpet)
+        format.register :markdown, label: 'Markdown (deprecated)' if Object.const_defined?(:Redcarpet)
         if Object.const_defined?(:CommonMarker)
-          format.register :common_mark, label: 'CommonMark Markdown (GitHub Flavored) - experimental'
+          format.register :common_mark, label: 'CommonMark Markdown (GitHub Flavored)'
         end
       end
 

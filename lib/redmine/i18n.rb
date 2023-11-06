@@ -103,6 +103,10 @@ module Redmine
       ::I18n.t('date.day_names')[day % 7]
     end
 
+    def abbr_day_name(day)
+      ::I18n.t('date.abbr_day_names')[day % 7]
+    end
+
     def day_letter(day)
       ::I18n.t('date.abbr_day_names')[day % 7].first
     end
@@ -161,7 +165,10 @@ module Redmine
       module Implementation
         # Get available locales from the translations filenames
         def available_locales
-          @available_locales ||= ::I18n.load_path.map {|path| File.basename(path, '.*')}.uniq.sort.map(&:to_sym)
+          @available_locales ||= begin
+            redmine_locales = Dir[Rails.root / 'config' / 'locales' / '*.yml'].map { |f| File.basename(f, '.yml').to_sym }
+            super & redmine_locales
+          end
         end
       end
 

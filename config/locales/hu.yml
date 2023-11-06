@@ -157,6 +157,7 @@
         must_contain_lowercase: "must contain lowercase letters (a-z)"
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
+        domain_not_allowed: "contains a domain not allowed (%{domain})"
 
   actionview_instancetag_blank_option: Kérem válasszon
 
@@ -177,7 +178,6 @@
   notice_account_password_updated: A jelszó módosítása megtörtént.
   notice_account_wrong_password: Hibás jelszó
   notice_account_register_done: A fiók sikeresen létrehozva. Aktiválásához kattints az e-mailben kapott linkre
-  notice_account_unknown_email: Ismeretlen felhasználó.
   notice_can_t_change_password: A fiók külső azonosítási forrást használ. A jelszó megváltoztatása nem lehetséges.
   notice_account_lost_email_sent: Egy e-mail üzenetben postáztunk Önnek egy leírást az új jelszó beállításáról.
   notice_account_activated: Fiókját aktiváltuk. Most már be tud jelentkezni a rendszerbe.
@@ -393,7 +393,6 @@
   label_help: Súgó
   label_reported_issues: Bejelentett feladatok
   label_assigned_to_me_issues: A nekem kiosztott feladatok
-  label_last_login: Utolsó bejelentkezés
   label_registered_on: Regisztrált
   label_activity: Történések
   label_new: Új
@@ -517,10 +516,6 @@
   label_latest_revision_plural: Legutolsó revíziók
   label_view_revisions: Revíziók megtekintése
   label_max_size: Maximális méret
-  label_sort_highest: Az elejére
-  label_sort_higher: Eggyel feljebb
-  label_sort_lower: Eggyel lejjebb
-  label_sort_lowest: Az aljára
   label_roadmap: Életút
   label_roadmap_due_in: "Elkészültéig várhatóan még %{value}"
   label_roadmap_overdue: "%{value} késésben"
@@ -942,7 +937,7 @@
   label_additional_workflow_transitions_for_author: További átmenetek engedélyezettek, ha a felhasználó a szerző
   label_bulk_edit_selected_time_entries: A kiválasztott idő bejegyzések csoportos szerkesztése
   text_time_entries_destroy_confirmation: Biztos benne, hogy törölni szeretné a kiválasztott idő bejegyzés(eke)t?
-  label_role_anonymous: Anonymous
+  label_role_anonymous: Anonim
   label_role_non_member: Nem tag
   label_issue_note_added: Jegyzet hozzáadva
   label_issue_status_updated: Állapot módosítva
@@ -1085,7 +1080,7 @@
   text_scm_command_not_available: SCM command is not available. Please check settings on the administration panel.
   notice_account_not_activated_yet: You haven't activated your account yet. If you want
     to receive a new activation email, please <a href="%{url}">click this link</a>.
-  notice_account_locked: Your account is locked.
+  notice_account_locked: Az Ön fiókja zárolva van.
   label_hidden: Hidden
   label_visibility_private: to me only
   label_visibility_roles: to these roles only
@@ -1109,7 +1104,7 @@
   label_issue_assigned_to_updated: Assignee updated
   label_check_for_updates: Check for updates
   label_latest_compatible_version: Latest compatible version
-  label_unknown_plugin: Unknown plugin
+  label_unknown_plugin: Ismeretlen plugin
   label_radio_buttons: radio buttons
   label_group_anonymous: Anonymous users
   label_group_non_member: Non member users
@@ -1130,7 +1125,7 @@
   field_address: E-mail
   setting_max_additional_emails: Maximum number of additional email addresses
   label_email_address_plural: Emails
-  label_email_address_add: Add email address
+  label_email_address_add: Email cím hozzáadása
   label_enable_notifications: Enable notifications
   label_disable_notifications: Disable notifications
   setting_search_results_per_page: Search results per page
@@ -1196,11 +1191,11 @@
   mail_body_security_notification_notify_disabled: Email address %{value} no longer
     receives notifications.
   mail_body_settings_updated: ! 'The following settings were changed:'
-  field_remote_ip: IP address
-  label_wiki_page_new: New wiki page
+  field_remote_ip: IP-cím
+  label_wiki_page_new: Új wiki oldal
   label_relations: Relations
-  button_filter: Filter
-  mail_body_password_updated: Your password has been changed.
+  button_filter: Szűrés
+  mail_body_password_updated: A jelszava megváltozott.
   label_no_preview: No preview available
   error_no_tracker_allowed_for_new_issue_in_project: The project doesn't have any trackers
     for which you can create an issue
@@ -1211,7 +1206,7 @@
   error_no_projects_with_tracker_allowed_for_new_issue: There are no projects with trackers
     for which you can create an issue
   field_textarea_font: Font used for text areas
-  label_font_default: Default font
+  label_font_default: Alapértelmezett betűtípus
   label_font_monospace: Monospaced font
   label_font_proportional: Proportional font
   setting_timespan_format: Time span format
@@ -1228,8 +1223,8 @@
   label_user_mail_option_only_owner: Only for things I watch or I am the owner of
   warning_fields_cleared_on_bulk_edit: Changes will result in the automatic deletion
     of values from one or more fields on the selected objects
-  field_updated_by: Updated by
-  field_last_updated_by: Last updated by
+  field_updated_by: Frissítette
+  field_last_updated_by: Utoljára frissítette
   field_full_width_layout: Full width layout
   label_last_notes: Last notes
   field_digest: Checksum
@@ -1237,7 +1232,7 @@
   setting_show_custom_fields_on_registration: Show custom fields on registration
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
-  label_no_preview_download: Download
+  label_no_preview_download: Letöltés
   setting_close_duplicate_issues: Close duplicate issues automatically
   error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
     same day (%{logged_hours} hours have already been logged)
@@ -1273,9 +1268,9 @@
   error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
     for other users
   permission_log_time_for_other_users: Log spent time for other users
-  label_tomorrow: tomorrow
-  label_next_week: next week
-  label_next_month: next month
+  label_tomorrow: holnap
+  label_next_week: jövő hét
+  label_next_month: jövő hónap
   text_role_no_workflow: No workflow defined for this role
   text_status_no_workflow: No tracker uses this status in the workflows
   setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
@@ -1286,7 +1281,7 @@
   label_trackers_description: Trackers description
   label_open_trackers_description: View all trackers description
   label_preferred_body_part_text: Text
-  label_preferred_body_part_html: HTML (experimental)
+  label_preferred_body_part_html: HTML
   field_parent_issue_subject: Parent task subject
   permission_edit_own_issues: Edit own issues
   text_select_apply_tracker: Select tracker
@@ -1299,7 +1294,6 @@
   text_gs_available: ImageMagick PDF support available (optional)
   field_recently_used_projects: Number of recently used projects in jump box
   label_optgroup_bookmarks: Bookmarks
-  label_optgroup_others: Other projects
   label_optgroup_recents: Recently used
   button_project_bookmark: Add bookmark
   button_project_bookmark_delete: Remove bookmark
@@ -1381,7 +1375,7 @@
     used.
   twofa_invalid_code: Code is invalid or outdated.
   twofa_label_enter_otp: Please enter your two-factor authentication code.
-  twofa_too_many_tries: Too many tries.
+  twofa_too_many_tries: Túl sok próbálkozás.
   twofa_resend_code: Resend code
   twofa_code_sent: An authentication code has been sent to you.
   twofa_generate_backup_codes: Generate backup codes
@@ -1403,8 +1397,8 @@
   error_childpages_macro_no_argument: With no argument, this macro can be called from
     wiki pages only
   error_circular_inclusion: Circular inclusion detected
-  error_page_not_found: Page not found
-  error_filename_required: Filename required
+  error_page_not_found: Az oldal nem található
+  error_filename_required: Fájlnév hiányzik
   error_invalid_size_parameter: Invalid size parameter
   error_attachment_not_found: Attachment %{name} not found
   permission_delete_project: Delete the project
@@ -1430,8 +1424,8 @@
   permission_view_wiki_page_watchers: View wiki page watchers list
   permission_add_wiki_page_watchers: Add wiki page watchers
   permission_delete_wiki_page_watchers: Delete wiki page watchers
-  label_wiki_page_watchers: Watchers
-  label_attachment_description: File description
+  label_wiki_page_watchers: Figyelők
+  label_attachment_description: File leírás
   error_no_data_in_file: The file does not contain any data
   field_twofa_required: Require two factor authentication
   twofa_hint_optional_html: Setting <strong>%{label}</strong> will let users set up
@@ -1458,11 +1452,56 @@
   label_bulk_edit: Bulk edit
   button_create_and_follow: Create and follow
   label_subtask: Subtask
-  label_default_query: Default query
-  field_default_project_query: Default project query
+  label_default_query: Alapértelmezett lekérdezés
+  field_default_project_query: Alapértelmezett projekt lekérdezés
   label_required_administrators: required for administrators
   twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> behaves
     like optional, but will require all users with administration rights to set up two-factor
     authentication at their next login.
   label_auto_watch_on: Auto watch
   label_auto_watch_on_issue_contributed_to: Issues I contributed to
+  text_project_close_confirmation: Are you sure you want to close the '%{value}' project
+    to make it read-only?
+  text_project_reopen_confirmation: Are you sure you want to reopen the '%{value}' project?
+  text_project_archive_confirmation: Are you sure you want to archive the '%{value}'
+    project?
+  mail_destroy_project_failed: Project %{value} could not be deleted.
+  mail_destroy_project_successful: Project %{value} was deleted successfully.
+  mail_destroy_project_with_subprojects_successful: Project %{value} and its subprojects
+    were deleted successfully.
+  project_status_scheduled_for_deletion: scheduled for deletion
+  text_projects_bulk_destroy_confirmation: Are you sure you want to delete the selected
+    projects and related data?
+  text_projects_bulk_destroy_head: |
+    You are about to permanently delete the following projects, including possible subprojects and any related data.
+    Please review the information below and confirm that this is indeed what you want to do.
+    This action cannot be undone.
+  text_projects_bulk_destroy_confirm: To confirm, please enter "%{yes}" in the box below.
+  text_subprojects_bulk_destroy: 'including its subproject(s): %{value}'
+  field_current_password: Current password
+  sudo_mode_new_info_html: "<strong>What's happening?</strong> You need to reconfirm
+    your password before taking any administrative actions, this ensures your account
+    stays protected."
+  label_edited: Edited
+  label_time_by_author: "%{time} by %{author}"
+  field_default_time_entry_activity: Default spent time activity
+  field_is_member_of_group: Member of group
+  text_users_bulk_destroy_head: You are about to delete the following users and remove
+    all references to them. This cannot be undone. Often, locking users instead of deleting
+    them is the better solution.
+  text_users_bulk_destroy_confirm: To confirm, please enter "%{yes}" below.
+  permission_select_project_publicity: Set project public or private
+  label_auto_watch_on_issue_created: Issues I created
+  field_any_searchable: Any searchable text
+  label_contains_any_of: contains any of
+  button_apply_issues_filter: Apply issues filter
+  label_view_previous_annotation: View annotation prior to this change
+  label_has_been: has been
+  label_has_never_been: has never been
+  label_changed_from: changed from
+  label_issue_statuses_description: Issue statuses description
+  label_open_issue_statuses_description: View all issue statuses description
+  text_select_apply_issue_status: Select issue status
+  field_name_or_email_or_login: Name, email or login
+  text_default_active_job_queue_changed: Default queue adapter which is well suited
+    only for dev/test changed

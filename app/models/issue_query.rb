@@ -155,11 +155,11 @@ class IssueQuery < Query
     ) if project.nil?
     add_available_filter(
       "tracker_id",
-      :type => :list, :values => trackers.collect{|s| [s.name, s.id.to_s]}
+      :type => :list_with_history, :values => trackers.collect{|s| [s.name, s.id.to_s]}
     )
     add_available_filter(
       "priority_id",
-      :type => :list, :values => IssuePriority.all.collect{|s| [s.name, s.id.to_s]}
+      :type => :list_with_history, :values => IssuePriority.all.collect{|s| [s.name, s.id.to_s]}
     )
     add_available_filter(
       "author_id",
@@ -167,7 +167,7 @@ class IssueQuery < Query
     )
     add_available_filter(
       "assigned_to_id",
-      :type => :list_optional, :values => lambda {assigned_to_values}
+      :type => :list_optional_with_history, :values => lambda {assigned_to_values}
     )
     add_available_filter(
       "member_of_group",
@@ -179,7 +179,7 @@ class IssueQuery < Query
     )
     add_available_filter(
       "fixed_version_id",
-      :type => :list_optional, :values => lambda {fixed_version_values}
+      :type => :list_optional_with_history, :values => lambda {fixed_version_values}
     )
     add_available_filter(
       "fixed_version.due_date",
@@ -194,7 +194,7 @@ class IssueQuery < Query
     )
     add_available_filter(
       "category_id",
-      :type => :list_optional,
+      :type => :list_optional_with_history,
       :values => lambda {project.issue_categories.collect{|s| [s.name, s.id.to_s]}}
     ) if project
     add_available_filter "subject", :type => :text
@@ -271,6 +271,8 @@ class IssueQuery < Query
     add_available_filter "child_id", :type => :tree, :label => :label_subtask_plural
 
     add_available_filter "issue_id", :type => :integer, :label => :label_issue
+
+    add_available_filter "any_searchable", :type => :search
 
     Tracker.disabled_core_fields(trackers).each do |field|
       delete_available_filter field
@@ -564,8 +566,11 @@ class IssueQuery < Query
     when "*", "!*" # Member / Not member
       sw = operator == "!*" ? 'NOT' : ''
       nl = operator == "!*" ? "#{Issue.table_name}.assigned_to_id IS NULL OR" : ''
-      "(#{nl} #{Issue.table_name}.assigned_to_id #{sw} IN (SELECT DISTINCT #{Member.table_name}.user_id FROM #{Member.table_name}" +
-        " WHERE #{Member.table_name}.project_id = #{Issue.table_name}.project_id))"
+      subquery =
+        "SELECT DISTINCT #{Member.table_name}.user_id" +
+        " FROM #{Member.table_name}" +
+        " WHERE #{Member.table_name}.project_id = #{Issue.table_name}.project_id"
+      "(#{nl} #{Issue.table_name}.assigned_to_id #{sw} IN (#{subquery}))"
     when "=", "!"
       role_cond =
         if value.any?
@@ -575,8 +580,11 @@ class IssueQuery < Query
         end
       sw = operator == "!" ? 'NOT' : ''
       nl = operator == "!" ? "#{Issue.table_name}.assigned_to_id IS NULL OR" : ''
-      "(#{nl} #{Issue.table_name}.assigned_to_id #{sw} IN (SELECT DISTINCT #{Member.table_name}.user_id FROM #{Member.table_name}, #{MemberRole.table_name}" +
-        " WHERE #{Member.table_name}.project_id = #{Issue.table_name}.project_id AND #{Member.table_name}.id = #{MemberRole.table_name}.member_id AND #{role_cond}))"
+      subquery =
+        "SELECT DISTINCT #{Member.table_name}.user_id, #{Member.table_name}.project_id" +
+        " FROM #{Member.table_name}, #{MemberRole.table_name}" +
+        " WHERE #{Member.table_name}.id = #{MemberRole.table_name}.member_id AND #{role_cond}"
+      "(#{nl} (#{Issue.table_name}.assigned_to_id, #{Issue.table_name}.project_id) #{sw} IN (#{subquery}))"
     end
   end
 
@@ -612,13 +620,13 @@ class IssueQuery < Query
     when "*", "!*"
       e = (operator == "*" ? "EXISTS" : "NOT EXISTS")
       "#{e} (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id)"
-    when "~", "!~"
-      c = sql_contains("a.filename", value.first)
-      e = (operator == "~" ? "EXISTS" : "NOT EXISTS")
-      "#{e} (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND #{c})"
+    when "~", "!~", "*~"
+      c = sql_contains("a.filename", value.first, :all_words => (operator != "*~"))
+      e = (operator == "!~" ? "NOT EXISTS" : "EXISTS")
+      "#{e} (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND (#{c}))"
     when "^", "$"
       c = sql_contains("a.filename", value.first, (operator == "^" ? :starts_with : :ends_with) => true)
-      "EXISTS (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND #{c})"
+      "EXISTS (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND (#{c}))"
     end
   end
 
@@ -628,15 +636,15 @@ class IssueQuery < Query
       case operator
       when '*', '!*'
         (operator == '*' ? cond_description : "NOT (#{cond_description})")
-      when '~', '!~'
+      when '~', '!~', '*~'
         (operator == '~' ? '' : "#{cond_description} AND ") +
-        sql_contains('a.description', value.first, :match => (operator == '~'))
+        sql_contains('a.description', value.first, :match => (operator != '!~'), :all_words => (operator != '*~'))
       when '^', '$'
         sql_contains('a.description', value.first, (operator == '^' ? :starts_with : :ends_with) => true)
       else
         '1=0'
       end
-    "EXISTS (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND #{c})"
+    "EXISTS (SELECT 1 FROM #{Attachment.table_name} a WHERE a.container_type = 'Issue' AND a.container_id = #{Issue.table_name}.id AND (#{c}))"
   end
 
   def sql_for_parent_id_field(field, operator, value)
@@ -733,13 +741,18 @@ class IssueQuery < Query
              " WHERE #{IssueRelation.table_name}.relation_type =" \
                   " '#{self.class.connection.quote_string(relation_type)}')"
       when "=", "!"
-        op = (operator == "=" ? 'IN' : 'NOT IN')
-        "#{Issue.table_name}.id #{op}" \
-         " (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column}" \
-           " FROM #{IssueRelation.table_name}" \
-             " WHERE #{IssueRelation.table_name}.relation_type =" \
-                  " '#{self.class.connection.quote_string(relation_type)}'" \
-               " AND #{IssueRelation.table_name}.#{target_join_column} = #{value.first.to_i})"
+        ids = value.first.to_s.scan(/\d+/).map(&:to_i).uniq
+        if ids.present?
+          op = (operator == "=" ? 'IN' : 'NOT IN')
+          "#{Issue.table_name}.id #{op}" \
+           " (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column}" \
+             " FROM #{IssueRelation.table_name}" \
+               " WHERE #{IssueRelation.table_name}.relation_type =" \
+                    " '#{self.class.connection.quote_string(relation_type)}'" \
+                 " AND #{IssueRelation.table_name}.#{target_join_column} IN (#{ids.join(",")}))"
+        else
+          "1=0"
+        end
       when "=p", "=!p", "!p"
         op = (operator == "!p" ? 'NOT IN' : 'IN')
         comp = (operator == "=!p" ? '<>' : '=')
@@ -771,6 +784,50 @@ class IssueQuery < Query
 
   def sql_for_project_status_field(field, operator, value, options={})
     sql_for_field(field, operator, value, Project.table_name, "status")
+  end
+
+  def sql_for_any_searchable_field(field, operator, value)
+    question = value.first
+
+    # Fetch search results only from the selected and visible (sub-)projects
+    project_scope = Project.allowed_to(:view_issues)
+    if project
+      projects = project_scope.where(project_statement)
+    elsif has_filter?('project_id')
+      case values_for('project_id').first
+      when 'mine'
+        project_ids = User.current.projects.ids
+      when 'bookmarks'
+        project_ids = User.current.bookmarked_project_ids
+      else
+        project_ids = values_for('project_id')
+      end
+      projects = project_scope.where(
+        sql_for_field('project_id', operator_for('project_id'), project_ids, Project.table_name, 'id')
+      )
+    else
+      projects = nil
+    end
+
+    is_all_words =
+      case operator
+      when '~'        then true
+      when '*~', '!~' then false
+      end
+
+    is_open_issues = has_filter?('status_id') && operator_for('status_id') == 'o'
+
+    fetcher = Redmine::Search::Fetcher.new(
+      question, User.current, ['issue'], projects,
+      all_words: is_all_words, open_issues: is_open_issues, attachments: '0'
+    )
+    ids = fetcher.result_ids.map(&:last)
+    if ids.present?
+      sw = operator == '!~' ? 'NOT' : ''
+      "#{Issue.table_name}.id #{sw} IN (#{ids.join(',')})"
+    else
+      operator == '!~' ? '1=1' : '1=0'
+    end
   end
 
   def find_assigned_to_id_filter_values(values)

@@ -26,7 +26,7 @@ class TrackersController < ApplicationController
   accept_api_auth :index
 
   def index
-    @trackers = Tracker.sorted.to_a
+    @trackers = Tracker.sorted.preload(:default_status).to_a
     respond_to do |format|
       format.html {render :layout => false if request.xhr?}
       format.api
@@ -48,7 +48,7 @@ class TrackersController < ApplicationController
     @tracker.safe_attributes = params[:tracker]
     if @tracker.save
       # workflow copy
-      if !params[:copy_workflow_from].blank? && (copy_from = Tracker.find_by_id(params[:copy_workflow_from]))
+      if params[:copy_workflow_from].present? && (copy_from = Tracker.find_by_id(params[:copy_workflow_from]))
         @tracker.copy_workflow_rules(copy_from)
       end
       flash[:notice] = l(:notice_successful_create)

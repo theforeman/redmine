@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class NewsControllerTest < Redmine::ControllerTest
   fixtures :projects, :users, :email_addresses, :roles, :members, :member_roles,
@@ -78,6 +78,7 @@ class NewsControllerTest < Redmine::ControllerTest
   def test_show
     get(:show, :params => {:id => 1})
     assert_response :success
+    assert_select 'p.breadcrumb a[href=?]', '/projects/ecookbook/news', :text => 'News'
     assert_select 'h2', :text => 'eCookbook first release !'
   end
 
@@ -100,7 +101,7 @@ class NewsControllerTest < Redmine::ControllerTest
     get(:show, :params => {:id => 1})
     assert_response :success
 
-    comments = css_select('#comments .wiki').map(&:text).map(&:strip)
+    comments = css_select('#comments .wiki').map {|e| e.text.strip}
     assert_equal ["This is an other comment", "my first comment"], comments
   end
 

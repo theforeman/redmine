@@ -148,6 +148,7 @@ pl:
         must_contain_lowercase: "musi zawierać małe litery (a-z)"
         must_contain_digits: "musi zawierać cyfry (0-9)"
         must_contain_special_chars: "musi zawierać znaki specjalne (!, $, %, ...)"
+        domain_not_allowed: "zawiera niedozwoloną domenę (%{domain})"
 
   actionview_instancetag_blank_option: wybierz
 
@@ -168,7 +169,6 @@ pl:
   notice_account_password_updated: "Hasło zostało pomyślnie zmienione."
   notice_account_wrong_password: "Nieprawidłowe hasło"
   notice_account_register_done: "Konto zostało pomyślnie utworzone. E-mail zawierający instrukcje aktywacji konta został wysłany na adres %{email}."
-  notice_account_unknown_email: "Nieznany użytkownik."
   notice_account_not_activated_yet: 'Jeszcze nie aktywowałeś swojego konta. Jeśli chcesz otrzymać nowy e-mail aktywacyjny, <a href="%{url}">kliknij tutaj</a>.'
   notice_account_locked: "Twoje konto jest zablokowane."
   notice_can_t_change_password: "To konto ma zewnętrzne źródło uwierzytelniania. Nie możesz zmienić hasła."
@@ -256,7 +256,7 @@ pl:
   error_invalid_size_parameter: "Invalid size parameter"
   error_attachment_not_found: "Załącznik %{name} nie istnieje"
   error_invalid_authenticity_token: "Nieprawidłowy token autentyczności formularza."
-  error_query_statement_invalid: "An error occurred while executing the query and has been logged. Please report this error to your Redmine administrator."
+  error_query_statement_invalid: "Wystąpił błąd podczas wykonywania tej kwerendy i został on zapisany w dzienniku. Poinformuj o tym błędzie administratora Redmine."
 
   mail_subject_lost_password: "Twoje hasło do %{value}"
   mail_body_lost_password: "W celu zmiany swojego hasła użyj poniższego odnośnika:"
@@ -282,6 +282,10 @@ pl:
   mail_body_security_notification_notify_disabled: "Adres e-mail %{value} nie otrzymuje już powiadomień."
   mail_body_settings_updated: "Poniższe ustawienia zostały zmienione:"
   mail_body_password_updated: Twoje hasło zostało zmienione.
+  mail_destroy_project_failed: Nie udało się usunąć projektu %{value}.
+  mail_destroy_project_successful: Projekt %{value} został pomyślnie usunięty.
+  mail_destroy_project_with_subprojects_successful: Projekt %{value} oraz jego podprojekty zostały pomyślnie usunięte.
+
 
   field_name: Nazwa
   field_description: Opis
@@ -309,6 +313,7 @@ pl:
   field_title: Tytuł
   field_project: Projekt
   field_issue: Zagadnienie
+  field_is_member_of_group: Członek grupy
   field_status: Status
   field_notes: Notatki
   field_is_closed: Zagadnienie zamknięte
@@ -320,7 +325,7 @@ pl:
   field_priority: Priorytet
   field_fixed_version: Wersja docelowa
   field_user: Użytkownik
-  field_principal: Przełożony
+  field_principal: Użytkownik lub grupa
   field_role: Rola
   field_homepage: Strona www
   field_is_public: Publiczny
@@ -329,14 +334,15 @@ pl:
   field_login: Login
   field_mail_notification: Powiadomienia e-mail
   field_admin: Administrator
-  field_last_login_on: Ostatnie połączenie
+  field_last_login_on: Ostatnie logowanie
   field_passwd_changed_on: Ostatnia zmiana hasła
   field_language: Język
   field_effective_date: Data
   field_password: Hasło
+  field_current_password: Obecne hasło
   field_new_password: Nowe hasło
   field_password_confirmation: Potwierdzenie
-  field_twofa_scheme: Schemat uwierzytelniania dwuskładnikowego
+  field_twofa_scheme: Rodzaj uwierzytelniania dwuskładnikowego
   field_version: Wersja
   field_type: Typ
   field_host: Host
@@ -419,9 +425,11 @@ pl:
   field_history_default_tab: Domyślna zakładka historii zagadnienia
   field_unique_id: Unikalne ID
   field_toolbar_language_options: Lista języków z podświetlaniem składni dostępna w toolbarze
-  field_twofa_required: Wymagaj dwyskładnikowego uwierzytelnia
+  field_twofa_required: Wymagaj dwuskładnikowego uwierzytelnia
   field_default_issue_query: Domyślna kwerenda dla listy zagadnień
   field_default_project_query: Domyślna kwerenda dla listy projektów
+  field_default_time_entry_activity: Domyślna aktywność dla wpisów dziennika
+  field_any_searchable: Dowolny przeszukiwalny tekst
 
   setting_app_title: Tytuł aplikacji
   setting_welcome_text: Tekst powitalny
@@ -519,13 +527,14 @@ pl:
   setting_timelog_accept_future_dates: Akceptuj wpisy dla dat z przyszłości
   setting_show_status_changes_in_mail_subject: Pokaż zmianę statusu zagadnienia w tytule wiadomości e-mail
   setting_project_list_defaults: Domyślne kolumny wyświetlane na liście projektów
-  setting_twofa: Dwuskładnikowe uwierzytelnienie
+  setting_twofa: Uwierzytelnianie dwuskładnikowe
 
   permission_add_project: Tworzenie projektu
   permission_add_subprojects: Tworzenie podprojektów
   permission_edit_project: Edycja projektów
   permission_close_project: Zamykanie/otwieranie projektów
   permission_delete_project: Usuwanie projektów
+  permission_select_project_publicity: Ustawianie projektu jako prywatny/publiczny
   permission_select_project_modules: Wybieranie modułów projektu
   permission_manage_members: Zarządzanie uczestnikami
   permission_manage_project_activities: Zarządzanie aktywnościami projektu
@@ -679,7 +688,6 @@ pl:
   label_assigned_issues: Przypisane zagadnienia
   label_assigned_to_me_issues: Zagadnienia przypisane do mnie
   label_updated_issues: Zaktualizowane zagadnienia
-  label_last_login: Ostatnie połączenie
   label_registered_on: Zarejestrowany
   label_activity: Aktywność
   label_user_activity: "Aktywność: %{value}"
@@ -761,7 +769,7 @@ pl:
   label_current_status: Obecny status
   label_new_statuses_allowed: Dozwolone nowe statusy
   label_all: wszystko
-  label_any: wszystko
+  label_any: dowolne
   label_none: brak
   label_nobody: nikt
   label_next: Następne
@@ -818,6 +826,7 @@ pl:
   label_more_than_ago: więcej niż dni temu
   label_ago: dni temu
   label_contains: zawiera
+  label_contains_any_of: zawiera dowolne z
   label_not_contains: nie zawiera
   label_starts_with: rozpoczyna się od
   label_ends_with: kończy się na
@@ -846,12 +855,9 @@ pl:
   label_latest_revision_plural: Najnowsze rewizje
   label_view_revisions: Pokaż rewizje
   label_view_all_revisions: Pokaż wszystkie rewizje
+  label_view_previous_annotation: Pokaż adnotacje dla wersji przed tą zmianą
   label_x_revisions: "%{count} rewizji"
   label_max_size: Maksymalny rozmiar
-  label_sort_highest: Przesuń na górę
-  label_sort_higher: Do góry
-  label_sort_lower: Do dołu
-  label_sort_lowest: Przesuń na dół
   label_roadmap: Mapa
   label_roadmap_due_in: "Termin za %{value}"
   label_roadmap_overdue: "%{value} spóźnienia"
@@ -974,6 +980,7 @@ pl:
   label_optional_description: Opcjonalny opis
   label_add_another_file: Dodaj kolejny plik
   label_auto_watch_on: Automatyczne obserwowanie
+  label_auto_watch_on_issue_created: Zagadnienia, które utworzyłem
   label_auto_watch_on_issue_contributed_to: Zagadnienia, w których brałem udział
   label_preferences: Preferencje
   label_chronological_order: W kolejności chronologicznej
@@ -996,7 +1003,7 @@ pl:
   label_group_plural: Grupy
   label_group_new: Nowa grupa
   label_group_anonymous: Anonimowi użytkownicy
-  label_group_non_member: Użytkownicy nie będący uczestnikami
+  label_group_non_member: Użytkownicy niebędący uczestnikami
   label_time_entry_plural: Przepracowany czas
   label_version_sharing_none: Brak współdzielenia
   label_version_sharing_descendants: Z podprojektami
@@ -1021,7 +1028,7 @@ pl:
   label_additional_workflow_transitions_for_author: Dodatkowe przejścia stanów dozwolone, gdy użytkownik jest autorem zagadnienia
   label_additional_workflow_transitions_for_assignee: Dodatkowe przejścia stanów dozwolone, gdy użytkownik jest przypisany do zagadnienia
   label_issues_visibility_all: Wszystkie
-  label_issues_visibility_public: Wszystkie nie prywatne
+  label_issues_visibility_public: Wszystkie nieprywatne
   label_issues_visibility_own: Utworzone lub przypisane do użytkownika
   label_git_report_last_commit: Wyświetlaj ostatni commit dla plików i katalogów
   label_parent_revision: Rodzic
@@ -1114,21 +1121,20 @@ pl:
   label_font_monospace: Czcionka o stałej szerokości
   label_font_proportional: Czcionka proporcjonalna
   label_optgroup_bookmarks: Zakładki
-  label_optgroup_others: Inne projekty
   label_optgroup_recents: Ostatnio używane
   label_last_notes: Ostatnie notatki
   label_default_queries:
     for_all_projects: Dla wszystkich projektów
     for_current_project: Dla obecnego projektu
     for_all_users: Dla wszystkich użytkowników
-    for_this_user: For this user
+    for_this_user: Dla tego użytkownika
   label_nothing_to_preview: Nie ma nic do podglądu
   label_inherited_from_parent_project: Dziedziczone z nadrzędnego projektu
   label_inherited_from_group: "Dziedziczone z grupy %{name}"
   label_trackers_description: Opis typów zagadnień
   label_open_trackers_description: Zobacz wszystkie opisy typów zagadnień
   label_preferred_body_part_text: Tekst
-  label_preferred_body_part_html: HTML (eksperymentalne)
+  label_preferred_body_part_html: HTML
   label_issue_history_properties: Zmiany właściwości
   label_issue_history_notes: Notatki
   label_last_tab_visited: Ostatnio oglądana zakładka
@@ -1142,6 +1148,8 @@ pl:
   label_my_bookmarks: Moje zakładki
   label_assign_to_me: Przypisz do mnie
   label_default_query: Domyślna kwerenda
+  label_edited: Edytowano
+  label_time_by_author: "%{time} przez %{author}"
 
   button_login: Zaloguj się
   button_submit: Wyślij
@@ -1207,6 +1215,7 @@ pl:
   button_edit_object: "Edytuj %{object_name}"
   button_delete_object: "Usuń %{object_name}"
   button_create_and_follow: Utwórz i przejdź
+  button_apply_issues_filter: Zastosuj filtr na liście zagadnień
 
   status_active: aktywny
   status_registered: zarejestrowany
@@ -1215,6 +1224,7 @@ pl:
   project_status_active: aktywny
   project_status_closed: zamknięty
   project_status_archived: zarchiwizowany
+  project_status_scheduled_for_deletion: zaplanowane usunięcie
 
   version_status_open: otwarta
   version_status_locked: zablokowana
@@ -1225,7 +1235,19 @@ pl:
   text_select_mail_notifications: Wybierz akcje, dla których powinno być wysłane powiadomienie e-mail.
   text_regexp_info: "np. ^[A-Z0-9]+$"
   text_project_destroy_confirmation: Czy jesteś pewien, że chcesz usunąć ten projekt i wszystkie powiązane dane?
-  text_subprojects_destroy_warning: "Podprojekty %{value} zostaną także usunięte."
+  text_projects_bulk_destroy_confirmation: Czy jesteś pewien, że chcesz usunąć wybrane projekty i wszystkie powiązane dane?
+  text_projects_bulk_destroy_head: |
+    Zamierzasz usunąć następujące projekty, włącznie z podprojektami i wszystkimi powiązanymi danymi.
+    Sprawdź poniższe informacje i potwierdź, że rzeczywiście chcesz to zrobić.
+    Ta operacja jest nieodwracalna.
+  text_projects_bulk_destroy_confirm: Aby potwierdzić, wpisz "%{yes}" w okienku poniżej.
+  text_subprojects_destroy_warning: "Podprojekty %{value} zostaną również usunięte."
+  text_subprojects_bulk_destroy: "włącznie z podprojektami: %{value}"
+  text_project_close_confirmation: Czy jesteś pewien, że chcesz oznaczyć projekt "%{value}" jako tylko do odczytu?
+  text_project_reopen_confirmation: Czy jesteś pewien, że chcesz ponownie otworzyć projekt "%{value}"?
+  text_project_archive_confirmation: Czy jesteś pewien, że chcesz zarchiwizować projekt "%{value}"?
+  text_users_bulk_destroy_head: 'Zamierzasz usunąć następujących użytkowników i wszystkie odwołania do nich. Tej operacji nie można cofnąć. Zwykle zablokowanie użytkowników jest lepszym rozwiązaniem, niż ich całkowite usunięcie.'
+  text_users_bulk_destroy_confirm: 'Aby potwierdzić, wpisz "%{yes}" w pole poniżej.'
   text_workflow_edit: Zaznacz rolę i typ zagadnienia do edycji przepływu pracy
   text_are_you_sure: Jesteś pewien?
   text_journal_changed: "Zmieniono %{label} z %{old} na %{new}"
@@ -1309,7 +1331,7 @@ pl:
   text_avatar_server_config_html: 'Obecna usługa awatarów to <a href="%{url}">%{url}</a>. Możesz zmienić ją w config/configuration.yml.'
   text_no_subject: brak tematu
   text_allowed_queries_to_select: Można wybrać jedynie publiczne (dostępne dla każdego użytkownika) kwerendy
-  text_setting_config_change: You can configure the behaviour in config/configuration.yml. Please restart the application after editing it.
+  text_setting_config_change: Możesz skonfigurować to zachowanie w pliku config/configuration.yml. Zrestartuj aplikację po dokonaniu zmian.
 
   default_role_manager: Kierownik
   default_role_developer: Programista
@@ -1359,42 +1381,52 @@ pl:
   text_project_is_public_anonymous: Publiczne projekty i ich treść jest publicznie dostępna w sieci.
   label_import_time_entries: Importuj wpisy dziennika
   label_import_users: Importuj użytkowników
+  sudo_mode_new_info_html: <strong>Co się dzieje?</strong> Musisz potwierdzić swoje hasło zanim będziesz mógł wykonywać działania administracyjne. Pozwala to lepiej chronić twoje konto.
 
-  twofa__totp__name: Authenticator app
-  twofa__totp__text_pairing_info_html: 'Scan this QR code or enter the plain text key into a TOTP app (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo Mobile</a>) and enter the code in the field below to activate two-factor authentication.'
-  twofa__totp__label_plain_text_key: Plain text key
-  twofa__totp__label_activate: 'Enable authenticator app'
-  twofa_currently_active: "Currently active: %{twofa_scheme_name}"
-  twofa_not_active: "Not activated"
-  twofa_label_code: Code
-  twofa_hint_disabled_html: Setting <strong>%{label}</strong> will deactivate and unpair two-factor authentication devices for all users.
-  twofa_hint_optional_html: Setting <strong>%{label}</strong> will let users set up two-factor authentication at will, unless it is required by one of their groups.
-  twofa_hint_required_html: Setting <strong>%{label}</strong> will require all users to set up two-factor authentication at their next login.
-  twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> behaves like optional, but will require all users with administration rights to set up two-factor authentication at their next login.
-  twofa_label_setup: Enable two-factor authentication
-  twofa_label_deactivation_confirmation: Disable two-factor authentication
-  twofa_notice_select: "Please select the two-factor scheme you would like to use:"
-  twofa_warning_require: The administrator requires you to enable two-factor authentication.
-  twofa_activated: Two-factor authentication successfully enabled. It is recommended to <a data-method="post" href="%{bc_path}">generate backup codes</a> for your account.
-  twofa_deactivated: Two-factor authentication disabled.
-  twofa_mail_body_security_notification_paired: "Two-factor authentication successfully enabled using %{field}."
-  twofa_mail_body_security_notification_unpaired: "Two-factor authentication disabled for your account."
-  twofa_mail_body_backup_codes_generated: "New two-factor authentication backup codes generated."
-  twofa_mail_body_backup_code_used: "A two-factor authentication backup code has been used."
-  twofa_invalid_code: Code is invalid or outdated.
-  twofa_label_enter_otp: Please enter your two-factor authentication code.
-  twofa_too_many_tries: Too many tries.
-  twofa_resend_code: Resend code
-  twofa_code_sent: An authentication code has been sent to you.
-  twofa_generate_backup_codes: Generate backup codes
-  twofa_text_generate_backup_codes_confirmation: This will invalidate all existing backup codes and generate new ones. Would you like to continue?
-  twofa_notice_backup_codes_generated: Your backup codes have been generated.
-  twofa_warning_backup_codes_generated_invalidated: New backup codes have been generated. Your existing codes from %{time} are now invalid.
-  twofa_label_backup_codes: Two-factor authentication backup codes
-  twofa_text_backup_codes_hint: Use these codes instead of a one-time password should you not have access to your second factor. Each code can only be used once. It is recommended to print and store them in a safe place.
-  twofa_text_backup_codes_created_at: Backup codes generated %{datetime}.
-  twofa_backup_codes_already_shown: Backup codes cannot be shown again, please <a data-method="post" href="%{bc_path}">generate new backup codes</a> if required.
-  twofa_text_group_required: "This setting is only effective when the global two factor authentication setting is set to 'optional'. Currently, two factor authentication is required for all users."
-  twofa_text_group_disabled: "This setting is only effective when the global two factor authentication setting is set to 'optional'. Currently, two factor authentication is disabled."
+  twofa__totp__name: Aplikacja uwierzytelniająca
+  twofa__totp__text_pairing_info_html: 'Zeskanuj ten kod QR lub wpisz klucz do aplikacji TOTP (np. <a href="https://support.google.com/accounts/answer/1066447">Google Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo Mobile</a>) i wpisz kod do pola poniżej by aktywować uwierzytelnianie dwuskładnikowe.'
+  twofa__totp__label_plain_text_key: Klucz
+  twofa__totp__label_activate: 'Włącz aplikację uwierzytelniającą'
+  twofa_currently_active: "Aktualnie aktywne: %{twofa_scheme_name}"
+  twofa_not_active: "Nieaktywne"
+  twofa_label_code: Kod
+  twofa_hint_disabled_html: Ustawienie <strong>%{label}</strong> wyłączy i usunie sparowane urządzenia do uwierzytelniania dwuskładnikowego dla wszystkich użytkowników.
+  twofa_hint_optional_html: Ustawienie <strong>%{label}</strong> umożliwi użytkownikom opcjonalne skonfigurowanie uwierzytelniania dwuskładnikowego, chyba że będzie to wymagane przez jedną z ich grup.
+  twofa_hint_required_html: Ustawienie <strong>%{label}</strong> wymusi wszystkim użytkownikom skonfigurowanie uwierzytelniania dwuskładnikowego przy kolejnym logowaniu.
+  twofa_hint_required_administrators_html: Ustawienie <strong>%{label}</strong> działa jak opcjonalne, ale będzie wymagać od wszystkich użytkowników z uprawnieniami administratora skonfigurowania uwierzytelniania dwuskładnikowego przy kolejnym logowaniu.
+  twofa_label_setup: Włącz uwierzytelnianie dwuskładnikowe
+  twofa_label_deactivation_confirmation: Wyłącz uwierzytelnianie dwuskładnikowe
+  twofa_notice_select: "Wybierz rodzaj uwierzytelniania dwuskładnikowego, który chciałbyś użyć:"
+  twofa_warning_require: Administrator wymaga byś aktywował uwierzytelnianie dwuskładnikowe.
+  twofa_activated: Uwierzytelnianie dwuskładnikowe zostało z powodzeniem włączone. Zalecane jest <a data-method="post" href="%{bc_path}">wygenerowanie kodów zapasowych</a> dla twego konta.
+  twofa_deactivated: Uwierzytelnianie dwuskładnikowe wyłączone.
+  twofa_mail_body_security_notification_paired: "Uwierzytelnianie dwuskładnikowe z powodzeniem włączone używając %{field}."
+  twofa_mail_body_security_notification_unpaired: "Uwierzytelnianie dwuskładnikowe zostało wyłączone dla twojego konta."
+  twofa_mail_body_backup_codes_generated: "Nowe kody zapasowe uwierzytelniania dwuskładnikowego zostały wygenerowane."
+  twofa_mail_body_backup_code_used: "Użyto zapasowego kodu uwierzytelniania dwuskładnikowego."
+  twofa_invalid_code: Kod jest błędny lub nieaktualny.
+  twofa_label_enter_otp: Podaj swój kod uwierzytelniania dwuskładnikowego.
+  twofa_too_many_tries: Zbyt wiele prób.
+  twofa_resend_code: Wyślij ponownie kod
+  twofa_code_sent: Kod uwierzytelniający został do Ciebie wysłany.
+  twofa_generate_backup_codes: Wygeneruj kody zapasowe
+  twofa_text_generate_backup_codes_confirmation: Spowoduje to unieważnienie wszystkich istniejących kodów zapasowych i wygenerowanie nowych. Czy jesteś pewien, że chcesz kontynuować?
+  twofa_notice_backup_codes_generated: Twoje kody zapasowe zostały wygenerowane.
+  twofa_warning_backup_codes_generated_invalidated: Nowe kody zapasowe zostały wygenerowane. Twoje dotychczasowe kody z %{time} są już nieważne.
+  twofa_label_backup_codes: Kody zapasowe uwierzytelniania dwuskładnikowego
+  twofa_text_backup_codes_hint: Użyj tych kodów zamiast hasła jednorazowego, jeżeli nie masz dostępu do drugiego składnika uwierzytelniania. Każdy kod może być użyty tylko raz. Zalecamy je wydrukować i przechowywać w bezpiecznym miejscu.
+  twofa_text_backup_codes_created_at: Kody zapasowe wygenerowano %{datetime}.
+  twofa_backup_codes_already_shown: Kody zapasowe nie mogą być ponownie wyświetlone, <a data-method="post" href="%{bc_path}">wygeneruj nowe kody</a> jeśli są potrzebne.
+  twofa_text_group_required: "To ustawienie działa tylko wtedy, kiedy globalne ustawienie uwierzytelniania dwuskładnikowego jest ustawione na 'opcjonalne'. Aktualnie uwierzytelnianie dwuskładnikowe jest wymagane dla wszystkich użytkowników."
+  twofa_text_group_disabled: "To ustawienie działa tylko wtedy, kiedy globalne ustawienie uwierzytelniania dwuskładnikowego jest ustawione na 'opcjonalne'. Aktualnie uwierzytelnienie dwuskładnikowe jest wyłączone."
   text_user_destroy_confirmation: "Czy jesteś pewien, że chcesz usunąć tego użytkownika i wszystkie odwołania do niego? Tej operacji nie można cofnąć. Zwykle zablokowanie użytkownika jest lepszym rozwiązaniem, niż jego całkowite usunięcie. Aby potwierdzić operację, podaj jego login (%{login}) poniżej."
   text_project_destroy_enter_identifier: "Aby potwierdzić, podaj identyfikator projektu (%{identifier}) poniżej."
+  label_has_been: has been
+  label_has_never_been: has never been
+  label_changed_from: changed from
+  label_issue_statuses_description: Issue statuses description
+  label_open_issue_statuses_description: View all issue statuses description
+  text_select_apply_issue_status: Select issue status
+  field_name_or_email_or_login: Name, email or login
+  text_default_active_job_queue_changed: Default queue adapter which is well suited
+    only for dev/test changed

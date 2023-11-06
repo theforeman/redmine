@@ -157,7 +157,7 @@ module IssuesHelper
 
   # Renders relations stats (total relations (open - closed)) with query links
   def render_relations_stats(issue, relations)
-    open_relations = relations.count{|r| (r.other_issue(issue).closed?)==false}
+    open_relations = relations.count{|r| r.other_issue(issue).closed? == false}
     closed_relations = relations.count{|r| r.other_issue(issue).closed?}
     render_issues_stats(open_relations, closed_relations, {:issue_id => relations.map{|r| r.other_issue(issue).id}.join(',')})
   end
@@ -203,12 +203,12 @@ module IssuesHelper
     s = ''.html_safe
     relations.each do |relation|
       other_issue = relation.other_issue(issue)
-      css = "issue hascontextmenu #{other_issue.css_classes}"
+      css = "issue hascontextmenu #{other_issue.css_classes} #{relation.css_classes_for(other_issue)}"
       buttons =
         if manage_relations
           link_to(
             l(:label_relation_delete),
-            relation_path(relation),
+            relation_path(relation, issue_id: issue.id),
             :remote => true,
             :method => :delete,
             :data => {:confirm => l(:text_are_you_sure)},
@@ -339,13 +339,15 @@ module IssuesHelper
     end
 
     def size
-      @left.size > @right.size ? @left.size : @right.size
+      [@left.size, @right.size].max
     end
 
     def to_html
+      # rubocop:disable Performance/Sum
       content =
         content_tag('div', @left.reduce(&:+), :class => 'splitcontentleft') +
         content_tag('div', @right.reduce(&:+), :class => 'splitcontentleft')
+      # rubocop:enable Performance/Sum
 
       content_tag('div', content, :class => 'splitcontent')
     end
@@ -443,7 +445,7 @@ module IssuesHelper
 
   def email_issue_attributes(issue, user, html)
     items = []
-    %w(author status priority assigned_to category fixed_version start_date due_date).each do |attribute|
+    %w(author status priority assigned_to category fixed_version start_date due_date parent_issue).each do |attribute|
       if issue.disabled_core_fields.grep(/^#{attribute}(_id)?$/).empty?
         attr_value = (issue.send attribute).to_s
         next if attr_value.blank?

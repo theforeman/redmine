@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../application_system_test_case', __FILE__)
+require_relative '../application_system_test_case'
 
 Capybara.default_max_wait_time = 2
 
@@ -43,7 +43,7 @@ class TimelogTest < ApplicationSystemTestCase
     end
     within 'select#time_entry_activity_id' do
       assert has_content?('Development')
-      assert !has_content?('Design')
+      assert has_no_content?('Design')
     end
   end
 
@@ -69,7 +69,7 @@ class TimelogTest < ApplicationSystemTestCase
     fill_in 'Hours', :with => '7'
     page.first(:button, 'Submit').click
 
-    assert_equal "/projects/ecookbook/time_entries", current_path
+    assert_current_path "/projects/ecookbook/time_entries"
     entries = TimeEntry.where(:id => [1,2,3]).to_a
     assert entries.all? {|entry| entry.hours == 7.0}
   end

@@ -121,7 +121,11 @@ class Issue < ActiveRecord::Base
   # Should be after_create but would be called before previous after_save callbacks
   after_save :after_create_from_copy, :create_parent_issue_journal
   after_destroy :update_parent_attributes, :create_parent_issue_journal
+  # add_auto_watcher needs to run before sending notifications, thus it needs
+  # to be added after send_notification (after_ callbacks are run in inverse order)
+  # https://api.rubyonrails.org/v5.2.3/classes/ActiveSupport/Callbacks/ClassMethods.html#method-i-set_callback
   after_create_commit :send_notification
+  after_create_commit :add_auto_watcher
 
   # Returns a SQL conditions string used to find all issues visible by the specified user
   def self.visible_condition(user, options={})
@@ -681,9 +685,7 @@ class Issue < ActiveRecord::Base
   def workflow_rule_by_attribute(user=nil)
     return @workflow_rule_by_attribute if @workflow_rule_by_attribute && user.nil?
 
-    user_real = user || User.current
-    roles = user_real.admin ? Role.all.to_a : user_real.roles_for_project(project)
-    roles = roles.select(&:consider_workflow?)
+    roles = roles_for_workflow(user || User.current)
     return {} if roles.empty?
 
     result = {}
@@ -1070,7 +1072,7 @@ class Issue < ActiveRecord::Base
     statuses = []
     statuses += IssueStatus.new_statuses_allowed(
       initial_status,
-      user.admin ? Role.all.to_a : user.roles_for_project(project),
+      roles_for_workflow(user),
       tracker,
       author == user,
       assignee_transitions_allowed
@@ -1433,9 +1435,9 @@ class Issue < ActiveRecord::Base
   end
 
   def <=>(issue)
-    if issue.nil?
-      -1
-    elsif root_id != issue.root_id
+    return nil unless issue.is_a?(Issue)
+
+    if root_id != issue.root_id
       (root_id || 0) <=> (issue.root_id || 0)
     else
       (lft || 0) <=> (issue.lft || 0)
@@ -1503,6 +1505,8 @@ class Issue < ActiveRecord::Base
       parent_id
     end
   end
+
+  alias :parent_issue :parent
 
   def set_parent_id
     self.parent_id = parent_issue_id
@@ -1887,9 +1891,18 @@ class Issue < ActiveRecord::Base
         next if issue.project.nil? || issue.fixed_version.nil?
 
         unless issue.project.shared_versions.include?(issue.fixed_version)
-          issue.init_journal(User.current)
-          issue.fixed_version = nil
-          issue.save
+          retried = false
+          begin
+            issue.init_journal(User.current)
+            issue.fixed_version = nil
+            issue.save
+          rescue ActiveRecord::StaleObjectError
+            raise if retried
+
+            retried = true
+            issue.reload
+            retry
+          end
         end
       end
     end
@@ -2026,6 +2039,15 @@ class Issue < ActiveRecord::Base
     end
   end
 
+  def add_auto_watcher
+    if author&.active? &&
+        author&.allowed_to?(:add_issue_watchers, project) &&
+        author.pref.auto_watch_on?('issue_created') &&
+        self.watcher_user_ids.exclude?(author.id)
+      self.set_watcher(author, true)
+    end
+  end
+
   def send_notification
     if notify? && Setting.notified_events.include?('issue_added')
       Mailer.deliver_issue_add(self)
@@ -2037,6 +2059,7 @@ class Issue < ActiveRecord::Base
       tracker.disabled_core_fields.each do |attribute|
         send "#{attribute}=", nil
       end
+      self.priority_id ||= IssuePriority.default&.id || IssuePriority.active.first.id
       self.done_ratio ||= 0
     end
   end
@@ -2056,5 +2079,10 @@ class Issue < ActiveRecord::Base
     else
       Project
     end
+  end
+
+  def roles_for_workflow(user)
+    roles = user.admin ? Role.all.to_a : user.roles_for_project(project)
+    roles.select(&:consider_workflow?)
   end
 end

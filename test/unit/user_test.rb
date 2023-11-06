@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class UserTest < ActiveSupport::TestCase
   fixtures :users, :email_addresses, :members, :projects, :roles, :member_roles, :auth_sources,
@@ -61,8 +61,8 @@ class UserTest < ActiveSupport::TestCase
 
   def test_sorted_scope_should_sort_user_by_display_name
     # Use .active to ignore anonymous with localized display name
-    assert_equal User.active.map(&:name).map(&:downcase).sort,
-                 User.active.sorted.map(&:name).map(&:downcase)
+    assert_equal User.active.map {|u| u.name.downcase}.sort,
+                 User.active.sorted.map {|u| u.name.downcase}
   end
 
   def test_generate
@@ -129,7 +129,7 @@ class UserTest < ActiveSupport::TestCase
   def test_login_length_validation
     user = User.new(:firstname => "new", :lastname => "user", :mail => "newuser@somenet.foo")
     user.login = "x" * (User::LOGIN_LENGTH_LIMIT+1)
-    assert !user.valid?
+    assert user.invalid?
 
     user.login = "x" * (User::LOGIN_LENGTH_LIMIT)
     assert user.valid?
@@ -575,6 +575,12 @@ class UserTest < ActiveSupport::TestCase
     with_settings :user_format => :lastname do
       assert_equal 'Smith', @jsmith.reload.name
     end
+  end
+
+  def test_lastname_should_accept_255_characters
+    u = User.first
+    u.lastname = 'a' * 255
+    assert u.save
   end
 
   def test_today_should_return_the_day_according_to_user_time_zone
@@ -1094,8 +1100,8 @@ class UserTest < ActiveSupport::TestCase
   def test_random_password
     u = User.new
     u.random_password
-    assert !u.password.blank?
-    assert !u.password_confirmation.blank?
+    assert u.password.present?
+    assert u.password_confirmation.present?
   end
 
   def test_random_password_include_required_characters
@@ -1301,7 +1307,7 @@ class UserTest < ActiveSupport::TestCase
 
     user.reload
     # Salt added
-    assert !user.salt.blank?
+    assert user.salt.present?
     # Password still valid
     assert user.check_password?("unsalted")
     assert_equal user, User.try_to_login(user.login, "unsalted")

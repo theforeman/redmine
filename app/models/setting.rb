@@ -111,7 +111,7 @@ class Setting < ActiveRecord::Base
       v = YAML.safe_load(v, permitted_classes: Rails.configuration.active_record.yaml_column_permitted_classes)
       v = force_utf8_strings(v)
     end
-    v = v.to_sym if available_settings[name]['format'] == 'symbol' && !v.blank?
+    v = v.to_sym if available_settings[name]['format'] == 'symbol' && v.present?
     v
   end
 
@@ -187,7 +187,7 @@ class Setting < ActiveRecord::Base
     if settings.key?(:mail_from)
       begin
         mail_from = Mail::Address.new(settings[:mail_from])
-        raise unless EmailAddress::EMAIL_REGEXP.match?(mail_from.address)
+        raise unless URI::MailTo::EMAIL_REGEXP.match?(mail_from.address)
       rescue
         messages << [:mail_from, l('activerecord.errors.messages.invalid')]
       end
@@ -217,7 +217,7 @@ class Setting < ActiveRecord::Base
   # # => [{'keywords => 'fixes', 'status_id' => "3"}, {'keywords => 'closes', 'status_id' => "5", 'done_ratio' => "100"}]
   def self.commit_update_keywords_from_params(params)
     s = []
-    if params.is_a?(Hash) && params.key?(:keywords) && params.values.all? {|v| v.is_a? Array}
+    if params.is_a?(Hash) && params.key?(:keywords) && params.values.all?(Array)
       attributes = params.except(:keywords).keys
       params[:keywords].each_with_index do |keywords, i|
         next if keywords.blank?
@@ -320,7 +320,7 @@ class Setting < ActiveRecord::Base
   end
 
   def self.load_available_settings
-    YAML::load(File.open("#{Rails.root}/config/settings.yml")).each do |name, options|
+    YAML.load_file(Rails.root.join('config/settings.yml')).each do |name, options|
       define_setting name, options
     end
   end

@@ -255,13 +255,16 @@ module Redmine
             [text, url]
           end
           links = texts_and_urls.sort_by(&:first).map do |text, url|
-            css_class = (/^https?:\/\//.match?(url)) ? 'external' : nil
-            view.link_to_if uri_with_safe_scheme?(url), text, url, :class => css_class
+            view.link_to text, url
           end
-          links.join(', ').html_safe
+          sanitize_html links.join(', ')
         else
           casted
         end
+      end
+
+      def sanitize_html(html)
+        Redmine::WikiFormatting::HtmlSanitizer.call(html).html_safe
       end
 
       # Returns an URL generated with the custom field URL pattern
@@ -468,8 +471,7 @@ module Redmine
                 url = "http://" + url
               end
             end
-            css_class = (/^https?:\/\//.match?(url)) ? 'external' : nil
-            links << view.link_to(val.to_s, url, :class => css_class)
+            links << sanitize_html(view.link_to(val.to_s, url))
           else
             links << val.to_s
           end
@@ -888,7 +890,7 @@ module Redmine
 
       def possible_values_records(custom_field, object=nil)
         if object.is_a?(Array)
-          projects = object.map {|o| o.respond_to?(:project) ? o.project : nil}.compact.uniq
+          projects = object.filter_map {|o| o.respond_to?(:project) ? o.project : nil}.uniq
           projects.map {|project| possible_values_records(custom_field, project)}.reduce(:&) || []
         elsif object.respond_to?(:project) && object.project
           scope = object.project.users
@@ -954,7 +956,7 @@ module Redmine
 
       def possible_values_records(custom_field, object=nil, all_statuses=false)
         if object.is_a?(Array)
-          projects = object.map {|o| o.respond_to?(:project) ? o.project : nil}.compact.uniq
+          projects = object.filter_map {|o| o.respond_to?(:project) ? o.project : nil}.uniq
           projects.map {|project| possible_values_records(custom_field, project)}.reduce(:&) || []
         elsif object.respond_to?(:project) && object.project
           scope = object.project.shared_versions
@@ -993,7 +995,7 @@ module Redmine
           attachment_present = true
           value = value.except(:blank)
 
-          if value.values.any? && value.values.all? {|v| v.is_a?(Hash)}
+          if value.values.any? && value.values.all?(Hash)
             value = value.values.first
           end
 

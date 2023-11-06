@@ -21,7 +21,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 require 'redmine/scm/adapters/abstract_adapter'
-require 'find'
 
 module Redmine
   module Scm
@@ -36,19 +35,18 @@ module Redmine
 
         def initialize(url, root_url=nil, login=nil, password=nil,
                        path_encoding=nil)
-          @url = with_trailling_slash(url)
-          @path_encoding = path_encoding.blank? ? 'UTF-8' : path_encoding
+          super(with_trailing_slash(url), nil, nil, nil, path_encoding)
         end
 
         def path_encoding
           @path_encoding
         end
 
-        def format_path_ends(path, leading=true, trailling=true)
+        def format_path_ends(path, leading=true, trailing=true)
           path = leading ? with_leading_slash(path) :
             without_leading_slash(path)
-          trailling ? with_trailling_slash(path) :
-            without_trailling_slash(path)
+          trailing ? with_trailing_slash(path) :
+            without_trailing_slash(path)
         end
 
         def info

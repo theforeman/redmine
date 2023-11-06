@@ -180,7 +180,9 @@ function buildFilterRow(field, operator, values) {
 
   switch (filterOptions['type']) {
   case "list":
+  case "list_with_history":
   case "list_optional":
+  case "list_optional_with_history":
   case "list_status":
   case "list_subprojects":
     tr.find('td.values').append(
@@ -220,6 +222,7 @@ function buildFilterRow(field, operator, values) {
     break;
   case "string":
   case "text":
+  case "search":
     tr.find('td.values').append(
       '<span style="display:none;"><input type="text" name="v['+field+'][]" id="values_'+fieldId+'" size="30" class="value" /></span>'
     );

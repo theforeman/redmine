@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class TrackersControllerTest < Redmine::ControllerTest
   fixtures :trackers, :projects, :projects_trackers, :users, :issues, :custom_fields, :issue_statuses
@@ -107,7 +107,7 @@ class TrackersControllerTest < Redmine::ControllerTest
         assert_select "input[type=checkbox][name=?][value=#{project_id}][checked=checked]", 'tracker[project_ids][]'
       end
       # project not checked
-      (Project.all.pluck(:id) - project_ids).each do |project_id|
+      (Project.pluck(:id) - project_ids).each do |project_id|
         assert_select "input[type=checkbox][name=?][value=#{project_id}]", 'tracker[project_ids][]'
       end
       # workflow copy selected
@@ -208,6 +208,9 @@ class TrackersControllerTest < Redmine::ControllerTest
 
     assert_select 'input[name=?][value=category_id]', 'tracker[core_fields][]'
     assert_select 'input[name=?][value=category_id][checked=checked]', 'tracker[core_fields][]', 0
+
+    assert_select 'input[name=?][value=priority_id]', 'tracker[core_fields][]'
+    assert_select 'input[name=?][value=priority_id][checked=checked]', 'tracker[core_fields][]', 0
 
     assert_select 'input[name=?][value=""][type=hidden]', 'tracker[core_fields][]'
   end

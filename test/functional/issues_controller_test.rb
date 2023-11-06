@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class IssuesControllerTest < Redmine::ControllerTest
   fixtures :projects,
@@ -850,6 +850,18 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_equal Setting.issue_list_default_columns.size + 2, lines[0].split(',').size
   end
 
+  def test_index_csv_filename_without_query_name_param
+    get :index, :params => {:format => 'csv'}
+    assert_response :success
+    assert_match /issues.csv/, @response.headers['Content-Disposition']
+  end
+
+  def test_index_csv_filename_with_query_name_param
+    get :index, :params => {:query_name => 'My Query Name', :format => 'csv'}
+    assert_response :success
+    assert_match /my_query_name\.csv/, @response.headers['Content-Disposition']
+  end
+
   def test_index_csv_with_project
     get(
       :index,
@@ -1182,6 +1194,20 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_equal 'application/pdf', @response.media_type
   end
 
+  def test_index_pdf_filename_without_query
+    get :index, :params => {:format => 'pdf'}
+    assert_response :success
+    assert_match /issues.pdf/, @response.headers['Content-Disposition']
+  end
+
+  def test_index_pdf_filename_with_query
+    query = IssueQuery.create!(:name => 'My Query Name', :visibility => IssueQuery::VISIBILITY_PUBLIC)
+    get :index, :params => {:query_id => query.id, :format => 'pdf'}
+
+    assert_response :success
+    assert_match /my_query_name\.pdf/, @response.headers['Content-Disposition']
+  end
+
   def test_index_atom
     get(
       :index,
@@ -1233,7 +1259,7 @@ class IssuesControllerTest < Redmine::ControllerTest
     get(:index, :params => {:sort => 'assigned_to'})
     assert_response :success
 
-    assignees = issues_in_list.map(&:assigned_to).compact
+    assignees = issues_in_list.filter_map(&:assigned_to)
     assert_equal assignees.sort, assignees
     assert_select 'table.issues.sort-by-assigned-to.sort-asc'
   end
@@ -1242,7 +1268,7 @@ class IssuesControllerTest < Redmine::ControllerTest
     get(:index, :params => {:sort => 'assigned_to:desc'})
     assert_response :success
 
-    assignees = issues_in_list.map(&:assigned_to).compact
+    assignees = issues_in_list.filter_map(&:assigned_to)
     assert_equal assignees.sort.reverse, assignees
     assert_select 'table.issues.sort-by-assigned-to.sort-desc'
   end
@@ -2731,7 +2757,7 @@ class IssuesControllerTest < Redmine::ControllerTest
     end
     assert_select 'div.thumbnails' do
       assert_select 'a[href="/attachments/16"]' do
-        assert_select 'img[src="/attachments/thumbnail/16"]'
+        assert_select 'img[src="/attachments/thumbnail/16/200"]'
       end
     end
   end
@@ -2891,6 +2917,16 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_select "#change-#{not_visible.id}", 0
   end
 
+  def test_show_should_mark_notes_as_edited_only_for_edited_notes
+    get :show, :params => {:id => 1}
+    assert_response :success
+
+    journal = Journal.find(1)
+    journal_title = l(:label_time_by_author, :time => format_time(journal.updated_on), :author => journal.updated_by)
+    assert_select "#change-1 h4 span.update-info[title=?]", journal_title, :text => '· Edited'
+    assert_select "#change-2 h4 span.update-info", 0
+  end
+
   def test_show_atom
     with_settings :text_formatting => 'textile' do
       get(
@@ -2912,7 +2948,7 @@ class IssuesControllerTest < Redmine::ControllerTest
 
   def test_show_export_to_pdf
     issue = Issue.find(3)
-    assert issue.relations.select{|r| r.other_issue(issue).visible?}.present?
+    assert issue.relations.any? {|r| r.other_issue(issue).visible?}
     get(
       :show,
       :params => {
@@ -3844,6 +3880,49 @@ class IssuesControllerTest < Redmine::ControllerTest
     end
 
     assert_select 'div#trackers_description', 0
+  end
+
+  def test_get_new_should_show_issue_status_description
+    @request.session[:user_id] = 2
+    get :new, :params => {
+      :project_id => 1,
+      :issue => {
+        :status_id => 2
+      }
+    }
+    assert_response :success
+
+    assert_select 'form#issue-form' do
+      assert_select 'a[title=?]', 'View all issue statuses description', :text => 'View all issue statuses description'
+      assert_select 'select[name=?][title=?]', 'issue[status_id]', 'Description for Assigned issue status'
+    end
+
+    assert_select 'div#issue_statuses_description' do
+      assert_select 'h3', :text => 'Issue statuses description', :count => 1
+      assert_select 'dt', 2
+      assert_select 'dt', :text => 'New', :count => 1
+      assert_select 'dd', :text => 'Description for New issue status', :count => 1
+    end
+  end
+
+  def test_get_new_should_not_show_issue_status_description
+    IssueStatus.update_all(:description => '')
+
+    @request.session[:user_id] = 2
+    get :new, :params => {
+      :project_id => 1,
+      :issue => {
+        :status_id => 2
+      }
+    }
+    assert_response :success
+
+    assert_select 'form#issue-form' do
+      assert_select 'a[title=?]', 'View all issue statuses description', 0
+      assert_select 'select[name=?][title=?]', 'issue[status_id]', ''
+    end
+
+    assert_select 'div#issue_statuses_description', 0
   end
 
   def test_get_new_should_show_create_and_follow_button_when_issue_is_subtask_and_back_url_is_present

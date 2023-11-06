@@ -26,11 +26,7 @@ module TimelogHelper
   def activity_collection_for_select_options(time_entry=nil, project=nil)
     project ||= time_entry.try(:project)
     project ||= @project
-    if project.nil?
-      activities = TimeEntryActivity.shared.active
-    else
-      activities = project.activities
-    end
+    activities = TimeEntryActivity.available_activities(project)
 
     collection = []
     if time_entry && time_entry.activity && !time_entry.activity.active?
@@ -50,6 +46,14 @@ module TimelogHelper
       collection << time_entry.user
     end
     principals_options_for_select(collection, time_entry.user_id.to_s)
+  end
+
+  def default_activity(time_entry)
+    if @project
+      time_entry.activity_id
+    else
+      TimeEntryActivity.default_activity_id(User.current, time_entry.project)
+    end
   end
 
   def select_hours(data, criteria, value)

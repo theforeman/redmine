@@ -34,49 +34,59 @@ class UsersController < ApplicationController
   helper :principal_memberships
   helper :activities
   include ActivitiesHelper
+  helper :queries
+  include QueriesHelper
+  helper :user_queries
+  include UserQueriesHelper
 
   require_sudo_mode :create, :update, :destroy
 
   def index
-    sort_init 'login', 'asc'
-    sort_update %w(login firstname lastname admin created_on last_login_on)
+    use_session = !request.format.csv?
+    retrieve_query(UserQuery, use_session)
 
-    case params[:format]
-    when 'xml', 'json'
-      @offset, @limit = api_offset_and_limit
+    # API backwards compatibility: handle legacy filter parameters
+    unless request.format.html?
+      if status_id = params[:status].presence
+        @query.add_filter 'status', '=', [status_id]
+      end
+      if name = params[:name].presence
+        @query.add_filter 'name', '~', [name]
+      end
+      if group_id = params[:group_id].presence
+        @query.add_filter 'is_member_of_group', '=', [group_id]
+      end
+    end
+
+    if @query.valid?
+      scope = @query.results_scope
+
+      @user_count = scope.count
+
+      respond_to do |format|
+        format.html do
+          @limit = per_page_option
+          @user_pages = Paginator.new @user_count, @limit, params['page']
+          @offset ||= @user_pages.offset
+          @users = scope.limit(@limit).offset(@offset).to_a
+          render :layout => !request.xhr?
+        end
+        format.csv do
+          # Export all entries
+          @entries = scope.to_a
+          send_data(query_to_csv(@entries, @query, params), :type => 'text/csv; header=present', :filename => "#{filename_for_export(@query, 'users')}.csv")
+        end
+        format.api do
+          @offset, @limit = api_offset_and_limit
+          @users = scope.limit(@limit).offset(@offset).to_a
+        end
+      end
     else
-      @limit = per_page_option
-    end
-
-    @status = params[:status] || 1
-
-    scope = User.logged.status(@status).preload(:email_address)
-    scope = scope.like(params[:name]) if params[:name].present?
-    scope = scope.in_group(params[:group_id]) if params[:group_id].present?
-
-    if params[:twofa].present?
-      case params[:twofa].to_i
-      when 1
-        scope = scope.where.not(twofa_scheme: nil)
-      when 0
-        scope = scope.where(twofa_scheme: nil)
+      respond_to do |format|
+        format.html {render :layout => !request.xhr?}
+        format.csv {head :unprocessable_entity}
+        format.api {render_validation_errors(@query)}
       end
-    end
-
-    @user_count = scope.count
-    @user_pages = Paginator.new @user_count, @limit, params['page']
-    @offset ||= @user_pages.offset
-    @users =  scope.order(sort_clause).limit(@limit).offset(@offset).to_a
-
-    respond_to do |format|
-      format.html do
-        @groups = Group.givable.sort
-        render :layout => !request.xhr?
-      end
-      format.csv do
-        send_data(users_to_csv(scope.order(sort_clause)), :type => 'text/csv; header=present', :filename => 'users.csv')
-      end
-      format.api
     end
   end
 
@@ -208,13 +218,30 @@ class UsersController < ApplicationController
     if api_request? || params[:lock] || params[:confirm] == @user.login
       if params[:lock]
         @user.update_attribute :status, User::STATUS_LOCKED
+        flash[:notice] = l(:notice_successful_update)
       else
         @user.destroy
+        flash[:notice] = l(:notice_successful_delete)
       end
       respond_to do |format|
         format.html {redirect_back_or_default(users_path)}
         format.api  {render_api_ok}
       end
+    end
+  end
+
+  def bulk_destroy
+    @users = User.logged.where(id: params[:ids]).where.not(id: User.current)
+    (render_404; return) unless @users.any?
+
+    if params[:lock]
+      @users.update_all status: User::STATUS_LOCKED
+      flash[:notice] = l(:notice_successful_update)
+      redirect_to users_path
+    elsif params[:confirm] == I18n.t(:general_text_Yes)
+      @users.destroy_all
+      flash[:notice] = l(:notice_successful_delete)
+      redirect_to users_path
     end
   end
 

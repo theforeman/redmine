@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class IssueImportTest < ActiveSupport::TestCase
   fixtures :projects, :enabled_modules,
@@ -110,7 +110,7 @@ class IssueImportTest < ActiveSupport::TestCase
     import.save!
 
     issues = new_records(Issue, 3) {import.run}
-    assert_equal ['New', 'New', 'Assigned'], issues.map(&:status).map(&:name)
+    assert_equal ['New', 'New', 'Assigned'], issues.map {|x| x.status.name}
   end
 
   def test_parent_should_be_set
@@ -316,7 +316,7 @@ class IssueImportTest < ActiveSupport::TestCase
 
   def test_list_custom_field_should_be_set
     field = CustomField.find(1)
-    field.tracker_ids = Tracker.all.ids
+    field.tracker_ids = Tracker.ids
     field.save!
     import = generate_import_with_mapping
     import.mapping["cf_1"] = '8'
@@ -330,7 +330,7 @@ class IssueImportTest < ActiveSupport::TestCase
 
   def test_multiple_list_custom_field_should_be_set
     field = CustomField.find(1)
-    field.tracker_ids = Tracker.all.ids
+    field.tracker_ids = Tracker.ids
     field.multiple = true
     field.save!
     import = generate_import_with_mapping

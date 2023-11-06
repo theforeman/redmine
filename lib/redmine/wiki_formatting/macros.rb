@@ -50,7 +50,7 @@ module Redmine
               send(method_name, obj, args)
             end
           rescue => e
-            %|<div class="flash error">#{t(:error_can_not_execute_macro_html, :name => name, :error => e.to_s)}</div>|.html_safe
+            %|<div class="flash error">#{::I18n.t(:error_can_not_execute_macro_html, :name => name, :error => e.to_s)}</div>|.html_safe
           end
         end
 
@@ -84,7 +84,7 @@ module Redmine
         #     end
         #   end
         def register(&block)
-          class_eval(&block) if block_given?
+          class_eval(&block) if block
         end
 
         # Defines a new macro with the given name, options and block.
@@ -154,7 +154,7 @@ module Redmine
           unless /\A\w+\z/.match?(name.to_s)
             raise "Invalid macro name: #{name} (only 0-9, A-Z, a-z and _ characters are accepted)"
           end
-          unless block_given?
+          unless block
             raise "Can not create a macro without a block!"
           end
 

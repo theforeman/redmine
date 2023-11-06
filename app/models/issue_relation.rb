@@ -91,7 +91,7 @@ class IssueRelation < ActiveRecord::Base
 
     attrs = attrs.deep_dup
     if issue_id = attrs.delete('issue_to_id')
-      if issue_id.to_s.strip.match(/\A#?(\d+)\z/)
+      if issue_id.to_s.strip =~ /\A#?(\d+)\z/
         issue_id = $1.to_i
         self.issue_to = Issue.visible(user).find_by_id(issue_id)
       end
@@ -175,7 +175,7 @@ class IssueRelation < ActiveRecord::Base
   def handle_issue_order
     reverse_if_needed
 
-    if TYPE_PRECEDES == relation_type
+    if relation_type == TYPE_PRECEDES
       self.delay ||= 0
     else
       self.delay = nil
@@ -191,13 +191,15 @@ class IssueRelation < ActiveRecord::Base
   end
 
   def successor_soonest_start
-    if (TYPE_PRECEDES == self.relation_type) && delay && issue_from &&
+    if (self.relation_type == TYPE_PRECEDES) && delay && issue_from &&
            (issue_from.start_date || issue_from.due_date)
       add_working_days((issue_from.due_date || issue_from.start_date), (1 + delay))
     end
   end
 
   def <=>(relation)
+    return nil unless relation.is_a?(IssueRelation)
+
     r = TYPES[self.relation_type][:order] <=> TYPES[relation.relation_type][:order]
     r == 0 ? id <=> relation.id : r
   end

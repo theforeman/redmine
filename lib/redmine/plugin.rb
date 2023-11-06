@@ -187,6 +187,8 @@ module Redmine
     end
 
     def <=>(plugin)
+      return nil unless plugin.is_a?(Plugin)
+
       self.id.to_s <=> plugin.id.to_s
     end
 
@@ -416,7 +418,7 @@ module Redmine
 
     # Returns +true+ if the plugin can be configured.
     def configurable?
-      settings && settings.is_a?(Hash) && !settings[:partial].blank?
+      settings && settings.is_a?(Hash) && settings[:partial].present?
     end
 
     # The directory containing this plugin's migrations (<tt>plugin/db/migrate</tt>)
@@ -484,6 +486,10 @@ module Redmine
 
       def open
         Migrator.new(:up, migrations, schema_migration)
+      end
+
+      def current_version
+        Migrator.current_version
       end
     end
 

@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class JournalTest < ActiveSupport::TestCase
   fixtures :projects, :issues, :issue_statuses, :journals, :journal_details,
@@ -139,6 +139,21 @@ class JournalTest < ActiveSupport::TestCase
 
     assert_no_difference 'Watcher.count' do
       assert_equal true, journal.save
+    end
+  end
+
+  def test_create_should_not_add_anonymous_as_watcher
+    Role.anonymous.add_permission!(:add_issue_watchers)
+
+    user = User.anonymous
+    assert user.pref.auto_watch_on?('issue_contributed_to')
+
+    journal = Journal.new(:journalized => Issue.first, :notes => 'notes', :user => user)
+
+    assert_no_difference 'Watcher.count' do
+      assert journal.save
+      assert journal.valid?
+      assert journal.journalized.valid?
     end
   end
 
@@ -264,6 +279,6 @@ class JournalTest < ActiveSupport::TestCase
 
     # User "dlopper" has "Developer" role on project "eCookbook"
     # Role "Developer" does not have the "View private notes" permission
-    assert_equal [1, 2], journal.notified_mentions.map(&:id)
+    assert_equal [1, 2], journal.notified_mentions.map(&:id).sort
   end
 end

@@ -151,9 +151,11 @@ class Principal < ActiveRecord::Base
   end
 
   def <=>(principal)
-    if principal.nil?
-      -1
-    elsif self.class.name == principal.class.name
+    # avoid an error when sorting members without roles (#10053)
+    return -1 if principal.nil?
+    return nil unless principal.is_a?(Principal)
+
+    if self.class.name == principal.class.name
       self.to_s.casecmp(principal.to_s)
     else
       # groups after users
@@ -179,7 +181,7 @@ class Principal < ActiveRecord::Base
     principal ||= principals.detect {|a| keyword.casecmp(a.login.to_s) == 0}
     principal ||= principals.detect {|a| keyword.casecmp(a.mail.to_s) == 0}
 
-    if principal.nil? && / /.match?(keyword)
+    if principal.nil? && keyword.include?(' ')
       firstname, lastname = *(keyword.split) # "First Last Throwaway"
       principal ||=
         principals.detect do |a|

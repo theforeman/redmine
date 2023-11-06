@@ -156,6 +156,7 @@ pt-BR:
         must_contain_lowercase: "must contain lowercase letters (a-z)"
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
+        domain_not_allowed: "contains a domain not allowed (%{domain})"
 
   actionview_instancetag_blank_option: Selecione
 
@@ -176,7 +177,6 @@ pt-BR:
   notice_account_password_updated: Senha alterada com sucesso.
   notice_account_wrong_password: Senha inválida.
   notice_account_register_done: Conta criada com sucesso. Para ativar sua conta, clique no link que lhe foi enviado por e-mail.
-  notice_account_unknown_email: Usuário desconhecido.
   notice_can_t_change_password: Esta conta utiliza autenticação externa. Não é possível alterar a senha.
   notice_account_lost_email_sent: Um e-mail com instruções para escolher uma nova senha foi enviado para você.
   notice_account_activated: Sua conta foi ativada. Você pode acessá-la agora.
@@ -404,7 +404,6 @@ pt-BR:
   label_help: Ajuda
   label_reported_issues: Tarefas reportadas
   label_assigned_to_me_issues: Minhas tarefas
-  label_last_login: Última conexão
   label_registered_on: Registrado em
   label_activity: Atividade
   label_new: Novo
@@ -528,10 +527,6 @@ pt-BR:
   label_latest_revision_plural: Últimas revisões
   label_view_revisions: Ver revisões
   label_max_size: Tamanho máximo
-  label_sort_highest: Mover para o início
-  label_sort_higher: Mover para cima
-  label_sort_lower: Mover para baixo
-  label_sort_lowest: Mover para o fim
   label_roadmap: Planejamento
   label_roadmap_due_in: "Previsto para %{value}"
   label_roadmap_overdue: "%{value} atrasado"
@@ -908,7 +903,7 @@ pt-BR:
   error_unable_to_connect: Não foi possível conectar (%{value})
   error_can_not_remove_role: Este papel está em uso e não pode ser excluído.
   error_can_not_delete_tracker: Este tipo de tarefa está atribuído a alguma(s) tarefa(s) e não pode ser excluído.
-  field_principal: Principal
+  field_principal: User or Group
   notice_failed_to_save_members: "Falha ao salvar membro(s): %{errors}."
   text_zoom_out: Afastar zoom
   text_zoom_in: Aproximar zoom
@@ -1272,7 +1267,7 @@ pt-BR:
   label_trackers_description: Descrição dos tipos de tarefa
   label_open_trackers_description: Ver todas as descrições dos tipos de tarefas
   label_preferred_body_part_text: Texto
-  label_preferred_body_part_html: HTML (experimental)
+  label_preferred_body_part_html: HTML
   field_parent_issue_subject: Assunto da tarefa pai
   permission_edit_own_issues: Editar as próprias tarefas
   text_select_apply_tracker: Selecione o tipo de tarefa
@@ -1285,7 +1280,6 @@ pt-BR:
   text_gs_available: Suporte ao ImageMagick PDF disponível (opcional)
   field_recently_used_projects: Número de projetos usados recentemente no acesso rápido
   label_optgroup_bookmarks: Marcadores
-  label_optgroup_others: Outros projetos
   label_optgroup_recents: Recentes
   button_project_bookmark: Adicionar marcador
   button_project_bookmark_delete: Remover marcador
@@ -1452,3 +1446,48 @@ pt-BR:
     authentication at their next login.
   label_auto_watch_on: Auto watch
   label_auto_watch_on_issue_contributed_to: Issues I contributed to
+  text_project_close_confirmation: Are you sure you want to close the '%{value}' project
+    to make it read-only?
+  text_project_reopen_confirmation: Are you sure you want to reopen the '%{value}' project?
+  text_project_archive_confirmation: Are you sure you want to archive the '%{value}'
+    project?
+  mail_destroy_project_failed: Project %{value} could not be deleted.
+  mail_destroy_project_successful: Project %{value} was deleted successfully.
+  mail_destroy_project_with_subprojects_successful: Project %{value} and its subprojects
+    were deleted successfully.
+  project_status_scheduled_for_deletion: scheduled for deletion
+  text_projects_bulk_destroy_confirmation: Are you sure you want to delete the selected
+    projects and related data?
+  text_projects_bulk_destroy_head: |
+    You are about to permanently delete the following projects, including possible subprojects and any related data.
+    Please review the information below and confirm that this is indeed what you want to do.
+    This action cannot be undone.
+  text_projects_bulk_destroy_confirm: To confirm, please enter "%{yes}" in the box below.
+  text_subprojects_bulk_destroy: 'including its subproject(s): %{value}'
+  field_current_password: Current password
+  sudo_mode_new_info_html: "<strong>What's happening?</strong> You need to reconfirm
+    your password before taking any administrative actions, this ensures your account
+    stays protected."
+  label_edited: Edited
+  label_time_by_author: "%{time} by %{author}"
+  field_default_time_entry_activity: Default spent time activity
+  field_is_member_of_group: Member of group
+  text_users_bulk_destroy_head: You are about to delete the following users and remove
+    all references to them. This cannot be undone. Often, locking users instead of deleting
+    them is the better solution.
+  text_users_bulk_destroy_confirm: To confirm, please enter "%{yes}" below.
+  permission_select_project_publicity: Set project public or private
+  label_auto_watch_on_issue_created: Issues I created
+  field_any_searchable: Any searchable text
+  label_contains_any_of: contains any of
+  button_apply_issues_filter: Apply issues filter
+  label_view_previous_annotation: View annotation prior to this change
+  label_has_been: has been
+  label_has_never_been: has never been
+  label_changed_from: changed from
+  label_issue_statuses_description: Issue statuses description
+  label_open_issue_statuses_description: View all issue statuses description
+  text_select_apply_issue_status: Select issue status
+  field_name_or_email_or_login: Name, email or login
+  text_default_active_job_queue_changed: Default queue adapter which is well suited
+    only for dev/test changed

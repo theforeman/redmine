@@ -25,6 +25,7 @@ module Redmine
       class Formatter < RedCloth3
         include ActionView::Helpers::TagHelper
         include Redmine::WikiFormatting::LinksHelper
+        include Redmine::WikiFormatting::SectionHelper
 
         alias :inline_auto_link :auto_link!
         alias :inline_auto_mailto :auto_mailto!
@@ -45,22 +46,6 @@ module Redmine
           super(*RULES).to_s
         end
 
-        def get_section(index)
-          section = extract_sections(index)[1]
-          hash = Digest::MD5.hexdigest(section)
-          return section, hash
-        end
-
-        def update_section(index, update, hash=nil)
-          t = extract_sections(index)
-          if hash.present? && hash != Digest::MD5.hexdigest(t[1])
-            raise Redmine::WikiFormatting::StaleSectionError
-          end
-
-          t[1] = update unless t[1].blank?
-          t.reject(&:blank?).join "\n\n"
-        end
-
         def extract_sections(index)
           @pre_list = []
           text = self.dup
@@ -72,7 +57,7 @@ module Redmine
           l = 1
           started = false
           ended = false
-          text.scan(/(((?:.*?)(\A|\r?\n\s*\r?\n))(h(\d+)(#{A}#{C})\.(?::(\S+))?[ \t](.*?)$)|.*)/m).each do |all, content, lf, heading, level|
+          text.scan(/(((?:.*?)(\A|\r?\n\s*\r?\n))(h(\d+)(#{A}#{C})\.(?::(\S+))?[ \t](.*?)$)|.*)/mo).each do |all, content, lf, heading, level|
             if heading.nil?
               if ended
                 after << all
@@ -124,13 +109,13 @@ module Redmine
             text.gsub!(/<redpre#(\d+)>/) do
               content = @pre_list[$1.to_i]
               # This regex must match any data produced by RedCloth3#rip_offtags
-              if content.match(/<code\s+class=(?:"([^"]+)"|'([^']+)')>\s?(.*)/m)
+              if content =~ /<code\s+class=(?:"([^"]+)"|'([^']+)')>\s?(.*)/m
                 language = $1 || $2
                 text = $3
                 # original language for extension development
                 langattr = " data-language=\"#{CGI.escapeHTML language}\"" if language.present?
                 if Redmine::SyntaxHighlighting.language_supported?(language)
-                  text.gsub!(/x%x%/, '&')
+                  text.gsub!("x%x%", '&')
                   content = "<code class=\"#{CGI.escapeHTML language} syntaxhl\"#{langattr}>" +
                     Redmine::SyntaxHighlighting.highlight_by_language(text, language)
                 else

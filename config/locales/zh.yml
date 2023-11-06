@@ -140,6 +140,7 @@ zh:
         must_contain_lowercase: "必须包含小写字母 (a-z)"
         must_contain_digits: "必须包含数字 (0-9)"
         must_contain_special_chars: "必须包含特殊字符 (!, $, %, ...)"
+        domain_not_allowed: "contains a domain not allowed (%{domain})"
 
   actionview_instancetag_blank_option: 请选择
 
@@ -160,7 +161,6 @@ zh:
   notice_account_password_updated: 密码更新成功
   notice_account_wrong_password: 密码错误
   notice_account_register_done: 帐号创建成功，请使用注册确认邮件中的链接来激活您的帐号。
-  notice_account_unknown_email: 未知用户
   notice_can_t_change_password: 该帐号使用了外部认证，因此无法更改密码。
   notice_account_lost_email_sent: 系统已将引导您设置新密码的邮件发送给您。
   notice_account_activated: 您的帐号已被激活。您现在可以登录了。
@@ -496,7 +496,6 @@ zh:
   label_help: 帮助
   label_reported_issues: 已报告的问题
   label_assigned_to_me_issues: 指派给我的问题
-  label_last_login: 最后登录
   label_registered_on: 注册于
   label_activity: 活动
   label_user_activity: "%{value} 的活动"
@@ -631,10 +630,6 @@ zh:
   label_view_revisions: 查看修订
   label_view_all_revisions: 查看所有修订
   label_max_size: 最大尺寸
-  label_sort_highest: 置顶
-  label_sort_higher: 上移
-  label_sort_lower: 下移
-  label_sort_lowest: 置底
   label_roadmap: 路线图
   label_roadmap_due_in: "截止日期到  %{value}"
   label_roadmap_overdue: "%{value} 延期"
@@ -1246,7 +1241,7 @@ zh:
   label_trackers_description: 工作描述
   label_open_trackers_description: 查看全部跟踪标签描述
   label_preferred_body_part_text: Text
-  label_preferred_body_part_html: HTML (实验功能)
+  label_preferred_body_part_html: HTML
   field_parent_issue_subject: 父任务主题
   permission_edit_own_issues: 更新自己的问题
   text_select_apply_tracker: 选择跟踪标签
@@ -1258,7 +1253,6 @@ zh:
   text_gs_available: ImageMagick PDF 支持 (可选)
   field_recently_used_projects: 跳转框中最近使用的项目数量
   label_optgroup_bookmarks: 书签
-  label_optgroup_others: 其他项目
   label_optgroup_recents: 最近使用
   button_project_bookmark: 添加书签
   button_project_bookmark_delete: 移除书签
@@ -1402,3 +1396,48 @@ zh:
     authentication at their next login.
   label_auto_watch_on: Auto watch
   label_auto_watch_on_issue_contributed_to: Issues I contributed to
+  text_project_close_confirmation: Are you sure you want to close the '%{value}' project
+    to make it read-only?
+  text_project_reopen_confirmation: Are you sure you want to reopen the '%{value}' project?
+  text_project_archive_confirmation: Are you sure you want to archive the '%{value}'
+    project?
+  mail_destroy_project_failed: Project %{value} could not be deleted.
+  mail_destroy_project_successful: Project %{value} was deleted successfully.
+  mail_destroy_project_with_subprojects_successful: Project %{value} and its subprojects
+    were deleted successfully.
+  project_status_scheduled_for_deletion: scheduled for deletion
+  text_projects_bulk_destroy_confirmation: Are you sure you want to delete the selected
+    projects and related data?
+  text_projects_bulk_destroy_head: |
+    You are about to permanently delete the following projects, including possible subprojects and any related data.
+    Please review the information below and confirm that this is indeed what you want to do.
+    This action cannot be undone.
+  text_projects_bulk_destroy_confirm: To confirm, please enter "%{yes}" in the box below.
+  text_subprojects_bulk_destroy: 'including its subproject(s): %{value}'
+  field_current_password: Current password
+  sudo_mode_new_info_html: "<strong>What's happening?</strong> You need to reconfirm
+    your password before taking any administrative actions, this ensures your account
+    stays protected."
+  label_edited: Edited
+  label_time_by_author: "%{time} by %{author}"
+  field_default_time_entry_activity: Default spent time activity
+  field_is_member_of_group: Member of group
+  text_users_bulk_destroy_head: You are about to delete the following users and remove
+    all references to them. This cannot be undone. Often, locking users instead of deleting
+    them is the better solution.
+  text_users_bulk_destroy_confirm: To confirm, please enter "%{yes}" below.
+  permission_select_project_publicity: Set project public or private
+  label_auto_watch_on_issue_created: Issues I created
+  field_any_searchable: Any searchable text
+  label_contains_any_of: contains any of
+  button_apply_issues_filter: Apply issues filter
+  label_view_previous_annotation: View annotation prior to this change
+  label_has_been: has been
+  label_has_never_been: has never been
+  label_changed_from: changed from
+  label_issue_statuses_description: Issue statuses description
+  label_open_issue_statuses_description: View all issue statuses description
+  text_select_apply_issue_status: Select issue status
+  field_name_or_email_or_login: Name, email or login
+  text_default_active_job_queue_changed: Default queue adapter which is well suited
+    only for dev/test changed

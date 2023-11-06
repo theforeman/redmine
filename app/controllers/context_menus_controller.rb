@@ -74,7 +74,7 @@ class ContextMenusController < ApplicationController
       @time_entry = @time_entries.first
     end
 
-    @projects = @time_entries.collect(&:project).compact.uniq
+    @projects = @time_entries.filter_map(&:project).uniq
     @project = @projects.first if @projects.size == 1
     @activities = @projects.map(&:activities).reduce(:&)
 
@@ -94,5 +94,28 @@ class ContextMenusController < ApplicationController
     end
 
     render :layout => false
+  end
+
+  def projects
+    @projects = Project.where(id: params[:ids]).to_a
+    if @projects.empty?
+      render_404
+      return
+    end
+
+    if @projects.size == 1
+      @project = @projects.first
+    end
+    render layout: false
+  end
+
+  def users
+    @users = User.where(id: params[:ids]).to_a
+
+    (render_404; return) unless @users.present?
+    if @users.size == 1
+      @user = @users.first
+    end
+    render layout: false
   end
 end
