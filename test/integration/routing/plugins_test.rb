@@ -65,6 +65,7 @@ class RoutingPluginsTest < Redmine::RoutingTest
 
     Redmine::Plugin.clear
     Redmine::PluginLoader.directory = @original_plugin_dir
+    Redmine::Plugin.directory = Rails.root.join('plugins')
     Redmine::PluginLoader.load
     RedmineApp::Application.instance.routes_reloader.reload!
   end
