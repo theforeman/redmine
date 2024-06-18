@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -104,5 +104,17 @@ class QueriesHelperTest < Redmine::HelperTest
       assert_include "Oui", csv
       assert_include "Non", csv
     end
+  end
+
+  def test_filters_options_for_select_should_group_custom_field_relations
+    i_cf = IssueCustomField.generate!(field_format: 'user', name: 'User', is_for_all: true, trackers: Tracker.all, is_filter: true)
+    u_cf = UserCustomField.find(4)
+    u_cf.is_filter = true
+    u_cf.save
+
+    options = filters_options_for_select(IssueQuery.new)
+
+    assert_select_in options, 'option[value=?]', "cf_#{i_cf.id}.cf_#{u_cf.id}", text: "User's Phone number"
+    assert_select_in options, 'optgroup[label=?]', 'User', 1
   end
 end

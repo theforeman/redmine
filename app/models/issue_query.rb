@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -521,7 +521,9 @@ class IssueQuery < Query
 
   def sql_for_watcher_id_field(field, operator, value)
     db_table = Watcher.table_name
-    me, others = value.partition {|id| ['0', User.current.id.to_s].include?(id)}
+    me_ids = [0, User.current.id]
+    me_ids = me_ids.concat(User.current.groups.pluck(:id))
+    me, others = value.partition {|id| me_ids.include?(id.to_i)}
     sql =
       if others.any?
         "SELECT #{Issue.table_name}.id FROM #{Issue.table_name} " +
@@ -566,11 +568,12 @@ class IssueQuery < Query
     when "*", "!*" # Member / Not member
       sw = operator == "!*" ? 'NOT' : ''
       nl = operator == "!*" ? "#{Issue.table_name}.assigned_to_id IS NULL OR" : ''
+
       subquery =
-        "SELECT DISTINCT #{Member.table_name}.user_id" +
+        "SELECT 1" +
         " FROM #{Member.table_name}" +
-        " WHERE #{Member.table_name}.project_id = #{Issue.table_name}.project_id"
-      "(#{nl} #{Issue.table_name}.assigned_to_id #{sw} IN (#{subquery}))"
+        " WHERE #{Issue.table_name}.project_id = #{Member.table_name}.project_id AND #{Member.table_name}.user_id = #{Issue.table_name}.assigned_to_id"
+      "(#{nl} #{sw} EXISTS (#{subquery}))"
     when "=", "!"
       role_cond =
         if value.any?
@@ -581,10 +584,10 @@ class IssueQuery < Query
       sw = operator == "!" ? 'NOT' : ''
       nl = operator == "!" ? "#{Issue.table_name}.assigned_to_id IS NULL OR" : ''
       subquery =
-        "SELECT DISTINCT #{Member.table_name}.user_id, #{Member.table_name}.project_id" +
-        " FROM #{Member.table_name}, #{MemberRole.table_name}" +
-        " WHERE #{Member.table_name}.id = #{MemberRole.table_name}.member_id AND #{role_cond}"
-      "(#{nl} (#{Issue.table_name}.assigned_to_id, #{Issue.table_name}.project_id) #{sw} IN (#{subquery}))"
+        "SELECT 1" +
+        " FROM #{Member.table_name} inner join #{MemberRole.table_name} on members.id = member_roles.member_id" +
+        " WHERE #{Issue.table_name}.project_id = #{Member.table_name}.project_id AND #{Member.table_name}.user_id = #{Issue.table_name}.assigned_to_id AND #{role_cond}"
+      "(#{nl} #{sw} EXISTS (#{subquery}))"
     end
   end
 

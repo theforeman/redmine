@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -201,6 +201,11 @@ class ActiveSupport::TestCase
 
   def mysql?
     Redmine::Database.mysql?
+  end
+
+  def mysql8?
+    version = Redmine::Database.mysql_version.sub(/^(\d+\.\d+\.\d+).*/, '\1')
+    Gem::Version.new(version) >= Gem::Version.new('8.0.0')
   end
 
   def postgresql?

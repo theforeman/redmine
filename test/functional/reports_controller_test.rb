@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -107,6 +107,8 @@ class ReportsControllerTest < Redmine::ControllerTest
     WorkflowTransition.create(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 4)
     WorkflowTransition.create(:role_id => 1, :tracker_id => 1, :old_status_id => 2, :new_status_id => 5)
     WorkflowTransition.create(:role_id => 1, :tracker_id => 2, :old_status_id => 1, :new_status_id => 6)
+    WorkflowTransition.create(:role_id => 1, :tracker_id => 2, :old_status_id => 3, :new_status_id => 3)
+
     with_settings :display_subprojects_issues => '0' do
       get(:issue_report_details, :params => {:id => 1, :detail => 'tracker'})
     end

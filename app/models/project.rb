@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -492,6 +492,7 @@ class Project < ActiveRecord::Base
   def rolled_up_statuses
     issue_status_ids = WorkflowTransition.
       where(:tracker_id => rolled_up_trackers.map(&:id)).
+      where('old_status_id <> new_status_id').
       distinct.
       pluck(:old_status_id, :new_status_id).
       flatten.

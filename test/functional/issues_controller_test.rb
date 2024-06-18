@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -1187,6 +1187,29 @@ class IssuesControllerTest < Redmine::ControllerTest
       :params => {
         :project_id => 1,
         :query_id => 9,
+        :format => 'pdf'
+      }
+    )
+    assert_response :success
+    assert_equal 'application/pdf', @response.media_type
+  end
+
+  def test_index_pdf_with_query_grouped_by_full_width_text_custom_field
+    field = IssueCustomField.
+      create!(
+        :name => 'Long text', :field_format => 'text',
+        :full_width_layout => '1',
+        :tracker_ids => [1, 3], :is_for_all => true
+      )
+    issue = Issue.find(1)
+    issue.custom_field_values = {field.id => 'This is a long text'}
+    issue.save!
+
+    get(
+      :index,
+      :params => {
+        :set_filter => 1,
+        :c => ['subject', 'description', "cf_#{field.id}"],
         :format => 'pdf'
       }
     )
@@ -4754,6 +4777,24 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_select 'input[name=?][value="2"]:not(checked)', 'issue[watcher_user_ids][]'
     assert_select 'input[name=?][value="3"][checked=checked]', 'issue[watcher_user_ids][]'
     assert_select 'input[name=?][value="8"][checked=checked]', 'issue[watcher_user_ids][]'
+  end
+
+  def test_post_create_with_failure_should_not_dereference_group_watchers
+    @request.session[:user_id] = 1
+    post(
+      :create,
+      :params => {
+        :project_id => 5,
+        :issue => {
+          :tracker_id => 1,
+          :watcher_user_ids => ['11']
+        }
+      }
+    )
+    assert_response :success
+
+    assert_select 'input[name=?][value="8"][checked=checked]', 'issue[watcher_user_ids][]', 0
+    assert_select 'input[name=?][value="11"][checked=checked]', 'issue[watcher_user_ids][]', 1
   end
 
   def test_post_create_should_ignore_non_safe_attributes

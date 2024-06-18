@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -40,7 +40,7 @@ class UserQuery < Query
 
   def initialize_available_filters
     add_available_filter "status",
-      type: :list, values: ->{ user_statuses_values }
+      type: :list_optional, values: ->{ user_statuses_values }
     add_available_filter "auth_source_id",
       type: :list_optional, values: ->{ auth_sources_values }
     add_available_filter "is_member_of_group",
