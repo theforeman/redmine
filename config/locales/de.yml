@@ -152,6 +152,7 @@ de:
         must_contain_lowercase: "muss Kleinbuchstaben (a-z) enthalten"
         must_contain_digits: "muss Zahlen (0-9) enthalten"
         must_contain_special_chars: "muss Sonderzeichen (!, $, %, ...) enthalten"
+        domain_not_allowed: "contains a domain not allowed (%{domain})"
 
   actionview_instancetag_blank_option: Bitte auswählen
 
@@ -279,6 +280,7 @@ de:
   field_active: Aktiv
   field_activity: Aktivität
   field_admin: Administrator
+  field_any_searchable: Durchsuchbarer Text
   field_assignable: Tickets können dieser Rolle zugewiesen werden
   field_assigned_to: Zugewiesen an
   field_assigned_to_role: Zuständigkeitsrolle
@@ -330,6 +332,7 @@ de:
   field_is_filter: Als Filter benutzen
   field_is_for_all: Für alle Projekte
   field_is_in_roadmap: In der Roadmap anzeigen
+  field_is_member_of_group: Mitglied in Gruppe
   field_is_private: Privat
   field_is_public: Öffentlich
   field_is_required: Erforderlich
@@ -359,7 +362,7 @@ de:
   field_path_to_repository: Pfad zum Repository
   field_port: Port
   field_possible_values: Mögliche Werte
-  field_principal: Auftraggeber
+  field_principal: Benutzer oder Gruppe
   field_priority: Priorität
   field_private_notes: Privater Kommentar
   field_project: Projekt
@@ -609,7 +612,6 @@ de:
   label_jump_to_a_project: Zu einem Projekt springen...
   label_language_based: Sprachabhängig
   label_last_changes: "%{count} letzte Änderungen"
-  label_last_login: Letzte Anmeldung
   label_last_month: voriger Monat
   label_last_n_days: "die letzten %{count} Tage"
   label_last_n_weeks: letzte %{count} Wochen
@@ -749,10 +751,6 @@ de:
   label_show_completed_versions: Abgeschlossene Versionen anzeigen
   label_sort: Sortierung
   label_sort_by: "Sortiert nach %{value}"
-  label_sort_higher: Eins höher
-  label_sort_highest: An den Anfang
-  label_sort_lower: Eins tiefer
-  label_sort_lowest: Ans Ende
   label_spent_time: Aufgewendete Zeit
   label_statistics: Statistiken
   label_status_transitions: Statusänderungen
@@ -877,7 +875,6 @@ de:
   notice_account_password_updated: Passwort wurde erfolgreich aktualisiert.
   notice_account_pending: "Ihr Konto wurde erstellt und wartet jetzt auf die Genehmigung des Administrators."
   notice_account_register_done: Konto wurde erfolgreich angelegt. Eine E-Mail mit Hinweisen zur Kontoaktivierung wurde an %{email} gesendet.
-  notice_account_unknown_email: Unbekannter Benutzer.
   notice_account_updated: Konto wurde erfolgreich aktualisiert.
   notice_account_wrong_password: Falsches Passwort.
   notice_api_access_key_reseted: Ihr API-Zugriffsschlüssel wurde zurückgesetzt.
@@ -955,6 +952,7 @@ de:
   permission_rename_wiki_pages: Wiki-Seiten umbenennen
   permission_save_queries: Filter speichern
   permission_select_project_modules: Projektmodule auswählen
+  permission_select_project_publicity: Projekt als privat oder öffentlich markieren
   permission_set_issues_private: Tickets als privat oder öffentlich markieren
   permission_set_notes_private: Kommentar als privat markieren
   permission_set_own_issues_private: Eigene Tickets als privat oder öffentlich markieren
@@ -1109,6 +1107,9 @@ de:
   text_plugin_assets_writable: Verzeichnis für Plugin-Assets beschreibbar
   text_project_closed: Dieses Projekt ist geschlossen und kann nicht bearbeitet werden.
   text_project_destroy_confirmation: Sind Sie sicher, dass Sie das Projekt löschen wollen?
+  text_project_close_confirmation: Sind Sie sicher, dass Sie das Projekt '%{value}' schließen wollen?
+  text_project_reopen_confirmation: Sind Sie sicher, dass Sie das Projekt '%{value}' wieder öffnen wollen?
+  text_project_archive_confirmation: Sind Sie sicher, dass Sie das Projekt '%{value}' archivieren wollen?
   text_project_identifier_info: 'Kleinbuchstaben (a-z), Ziffern, Binde- und Unterstriche erlaubt.<br />Einmal gespeichert, kann die Kennung nicht mehr geändert werden.'
   text_reassign_time_entries: 'Gebuchte Aufwände diesem Ticket zuweisen:'
   text_regexp_info: z. B. ^[A-Z0-9]+$
@@ -1270,7 +1271,7 @@ de:
   label_trackers_description: Beschreibung des Trackers
   label_open_trackers_description: Beschreibung aller Tracker anzeigen
   label_preferred_body_part_text: Text
-  label_preferred_body_part_html: HTML (experimentell)
+  label_preferred_body_part_html: HTML
   field_parent_issue_subject: Thema des übergeordneten Tickets
 
   permission_edit_own_issues: Eigene Tickets bearbeiten
@@ -1283,7 +1284,6 @@ de:
   label_import_notifications: Versende E-Mail-Benachrichtigungen während des Imports
   field_recently_used_projects: Anzahl kürzlich verwendeter Projekte in der Projekt-Jump-Box
   label_optgroup_bookmarks: Lesezeichen
-  label_optgroup_others: Andere Projekte
   label_optgroup_recents: Kürzlich verwendet
   button_project_bookmark: Lesezeichen hinzufügen
   button_project_bookmark_delete: Lesezeichen entfernen
@@ -1326,6 +1326,7 @@ de:
   field_passwd_changed_on: Passwort zuletzt geändert
   label_import_users: Benutzer importieren
   label_days_to_html: "%{days} Tage bis %{date}"
+  sudo_mode_new_info_html: <strong>Warum das ganze?</strong> Zu Ihrem Schutz bitten wir Sie Ihr Kennwort zu bestätigen, bevor Sie sicherheitsrelevante Einstellungen ändern.
   setting_twofa: Zwei-Faktor-Authentifizierung
   twofa__totp__name: Authentifizierungs-App
   twofa__totp__text_pairing_info_html: 'Bitte scannen Sie diesen QR-Code oder verwenden Sie den Klartext-Schlüssel in einer TOTP-kompatiblen Authentifizierungs-App (z.B. <a href="https://support.google.com/accounts/answer/1066447?hl=de">Google Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo Mobile</a>). Anschließend geben Sie bitte den in der App generierten Code unten ein.'
@@ -1415,3 +1416,37 @@ de:
     der Zwei-Faktor-Authentifizierung beim nächsten Login.
   label_auto_watch_on: Automatisch beobachten
   label_auto_watch_on_issue_contributed_to: Tickets, zu denen ich beigetragen habe
+  mail_destroy_project_failed: Project %{value} could not be deleted.
+  mail_destroy_project_successful: Project %{value} was deleted successfully.
+  mail_destroy_project_with_subprojects_successful: Project %{value} and its subprojects
+    were deleted successfully.
+  project_status_scheduled_for_deletion: scheduled for deletion
+  text_projects_bulk_destroy_confirmation: Are you sure you want to delete the selected
+    projects and related data?
+  text_projects_bulk_destroy_head: |
+    You are about to permanently delete the following projects, including possible subprojects and any related data.
+    Please review the information below and confirm that this is indeed what you want to do.
+    This action cannot be undone.
+  text_projects_bulk_destroy_confirm: To confirm, please enter "%{yes}" in the box below.
+  text_subprojects_bulk_destroy: 'including its subproject(s): %{value}'
+  field_current_password: Current password
+  label_edited: Edited
+  label_time_by_author: "%{time} by %{author}"
+  field_default_time_entry_activity: Default spent time activity
+  text_users_bulk_destroy_head: You are about to delete the following users and remove
+    all references to them. This cannot be undone. Often, locking users instead of deleting
+    them is the better solution.
+  text_users_bulk_destroy_confirm: To confirm, please enter "%{yes}" below.
+  label_auto_watch_on_issue_created: Issues I created
+  label_contains_any_of: contains any of
+  button_apply_issues_filter: Apply issues filter
+  label_view_previous_annotation: View annotation prior to this change
+  label_has_been: has been
+  label_has_never_been: has never been
+  label_changed_from: changed from
+  label_issue_statuses_description: Issue statuses description
+  label_open_issue_statuses_description: View all issue statuses description
+  text_select_apply_issue_status: Select issue status
+  field_name_or_email_or_login: Name, email or login
+  text_default_active_job_queue_changed: Default queue adapter which is well suited
+    only for dev/test changed

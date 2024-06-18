@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,6 +43,8 @@ class IssueCategory < ActiveRecord::Base
   end
 
   def <=>(category)
+    return nil unless category.is_a?(IssueCategory)
+
     name <=> category.name
   end
 

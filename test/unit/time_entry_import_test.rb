@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class TimeEntryImportTest < ActiveSupport::TestCase
   fixtures :projects, :enabled_modules,
@@ -163,6 +163,28 @@ class TimeEntryImportTest < ActiveSupport::TestCase
     # user_id value from CSV should be ignored
     assert_equal 2, third.user_id
     assert_equal 2, fourth.user_id
+  end
+
+  def test_imports_timelogs_for_issues_in_other_project
+    import = generate_import
+    import.settings = {
+      'separator' => ';', 'wrapper' => '"', 'encoding' => 'UTF-8',
+      'mapping' => {
+        'project_id' => '3',
+        'activity'   => 'value:10',
+        'issue_id'   => '1',
+        'spent_on'   => '2',
+        'hours'      => '3',
+        'comments'   => '4',
+        'user'       => '7'
+      }
+    }
+    import.save!
+    first, second, third, fourth = new_records(TimeEntry, 4) {import.run}
+    assert_equal 3, first.project_id
+    assert_equal 3, second.project_id
+    assert_equal 1, third.project_id
+    assert_equal 1, fourth.project_id
   end
 
   def test_imports_custom_field_with_user_format

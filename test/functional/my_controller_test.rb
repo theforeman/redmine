@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,14 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class MyControllerTest < Redmine::ControllerTest
   fixtures :users, :email_addresses, :user_preferences,
            :roles, :projects, :members, :member_roles,
            :issues, :issue_statuses, :trackers, :enumerations,
            :custom_fields, :auth_sources, :queries, :enabled_modules,
-           :journals, :projects_trackers
+           :journals, :projects_trackers, :issue_categories
 
   def setup
     @request.session[:user_id] = 2
@@ -444,24 +444,22 @@ class MyControllerTest < Redmine::ControllerTest
 
     assert_select 'form[data-cm-url=?]', '/issues/context_menu'
 
-    assert_select 'table.cal' do
-      assert_select 'tr' do
-        assert_select 'td' do
+    assert_select 'ul.cal' do
+      assert_select 'li' do
+        assert_select(
+          'div.issue.hascontextmenu.tooltip.starting.ending',
+          :text => /eCookbook.*#{subject}/m
+        ) do
           assert_select(
-            'div.issue.hascontextmenu.tooltip.starting.ending',
-            :text => /eCookbook.*#{subject}/m
-          ) do
-            assert_select(
-              'a.issue[href=?]', "/issues/#{issue.id}",
-              :text => "Bug ##{issue.id}"
-            )
-            assert_select(
-              'input[name=?][type=?][value=?]',
-              'ids[]',
-              'checkbox',
-              issue.id.to_s
-            )
-          end
+            'a.issue[href=?]', "/issues/#{issue.id}",
+            :text => "Bug ##{issue.id}"
+          )
+          assert_select(
+            'input[name=?][type=?][value=?]',
+            'ids[]',
+            'checkbox',
+            issue.id.to_s
+          )
         end
       end
     end

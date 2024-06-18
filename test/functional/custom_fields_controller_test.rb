@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class CustomFieldsControllerTest < Redmine::ControllerTest
   fixtures :custom_fields, :custom_values,
@@ -361,7 +361,7 @@ class CustomFieldsControllerTest < Redmine::ControllerTest
         assert_select "input[type=checkbox][name=?][value=#{tracker_id}][checked=checked]", 'custom_field[tracker_ids][]'
       end
       # tracker not checked
-      (Tracker.all.pluck(:id) - tracker_ids).each do |tracker_id|
+      (Tracker.pluck(:id) - tracker_ids).each do |tracker_id|
         assert_select "input[type=checkbox][name=?][value=#{tracker_id}]", 'custom_field[tracker_ids][]'
       end
       # project checked
@@ -369,7 +369,7 @@ class CustomFieldsControllerTest < Redmine::ControllerTest
         assert_select "input[type=checkbox][name=?][value=#{project_id}][checked=checked]", 'custom_field[project_ids][]'
       end
       # project not checked
-      (Project.all.pluck(:id) - project_ids).each do |project_id|
+      (Project.pluck(:id) - project_ids).each do |project_id|
         assert_select "input[type=checkbox][name=?][value=#{project_id}]", 'custom_field[project_ids][]'
       end
     end
@@ -597,7 +597,7 @@ class CustomFieldsControllerTest < Redmine::ControllerTest
     files =
       Dir.glob(File.join(Rails.root, 'app/models/*_custom_field.rb')).
         map {|f| File.basename(f).sub(/\.rb$/, '')}
-    classes = files.map(&:classify).map(&:constantize)
+    classes = files.map {|x| x.classify.constantize}
     assert classes.size > 0
     classes
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -48,7 +48,7 @@ module WatchersHelper
   def watchers_list(object)
     remove_allowed = User.current.allowed_to?("delete_#{object.class.name.underscore}_watchers".to_sym, object.project)
     content = ''.html_safe
-    lis = object.watcher_users.collect do |user|
+    lis = object.watcher_users.sorted.collect do |user|
       s = ''.html_safe
       s << avatar(user, :size => "16").to_s
       s << link_to_principal(user, class: user.class.to_s.downcase)
@@ -74,7 +74,7 @@ module WatchersHelper
 
   def watchers_checkboxes(object, users, checked=nil)
     users.map do |user|
-      c = checked.nil? ? object.watched_by?(user) : checked
+      c = checked.nil? ? object.watcher_user_ids.include?(user.id) : checked
       tag = check_box_tag 'issue[watcher_user_ids][]', user.id, c, :id => nil
       content_tag 'label', "#{tag} #{h(user)}".html_safe,
                   :id => "issue_watcher_user_ids_#{user.id}",

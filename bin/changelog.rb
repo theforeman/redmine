@@ -98,11 +98,11 @@ module Redmine
                  '&c%5B%5D=category&group_by='
     VERSIONS_URL = 'https://www.redmine.org/versions/' + @v_id
 
-    PAGINATION_ITEMS_SPAN_SELECTOR = 'div#content p.pagination > span.items'
+    PAGINATION_ITEMS_SPAN_SELECTOR = 'div#content span.pagination span.items'
     ISSUE_TR_SELECTOR = 'div#content table.list.issues > tbody > tr'
     VERSION_DETAILS_SELECTOR = 'div#content'
-    VERSION_NAME_SELECTOR = 'div#content > h2'
-    RELEASE_DATE_SELECTOR = 'div#content > div#roadmap > p'
+    VERSION_NAME_SELECTOR = 'div#roadmap > h2'
+    RELEASE_DATE_SELECTOR = 'div#roadmap > div.version-overview p'
 
     PAGINATION_ITEMS_SPAN_REGEX = %r{(?:[(])([\d]+)(?:-)([\d]+)(?:[\/])([\d]+)(?:[)])}
     RELEASE_DATE_REGEX_INCOMPLETE = %r{\((\d{4}-\d{2}-\d{2})\)}
@@ -145,7 +145,7 @@ module Redmine
 
       def retrieve_pagination_items_span_content
         begin
-          Nokogiri::HTML(open(ISSUES_URL)).css(PAGINATION_ITEMS_SPAN_SELECTOR).text
+          Nokogiri::HTML(URI.open(ISSUES_URL)).css(PAGINATION_ITEMS_SPAN_SELECTOR).text
         rescue OpenURI::HTTPError
           puts CONNECTION_ERROR_MSG
           exit
@@ -176,7 +176,7 @@ module Redmine
 
       def retrieve_issues_list_page(page_number)
         begin
-          Nokogiri::HTML(open(ISSUES_URL + '&page=' + page_number.to_s))
+          Nokogiri::HTML(URI.open(ISSUES_URL + '&page=' + page_number.to_s))
         rescue OpenURI::HTTPError
           puts CONNECTION_ERROR_MSG
           exit
@@ -222,7 +222,7 @@ module Redmine
 
       def retrieve_version_details
         begin
-          Nokogiri::HTML(open(VERSIONS_URL)).css(VERSION_DETAILS_SELECTOR)
+          Nokogiri::HTML(URI.open(VERSIONS_URL)).css(VERSION_DETAILS_SELECTOR)
         rescue OpenURI::HTTPError
           puts CONNECTION_ERROR_MSG
           exit

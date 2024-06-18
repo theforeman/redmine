@@ -213,6 +213,7 @@ ru:
         must_contain_lowercase: "должен содержать строчные латинские буквы (a-z)"
         must_contain_digits: "должен содержать цифры (0-9)"
         must_contain_special_chars: "должен содержать специальные символы (!, $, %, ...)"
+        domain_not_allowed: "содержит запрещенный домен (%{domain})"
 
   support:
     array:
@@ -258,7 +259,7 @@ ru:
   button_rollback: Вернуться к данной версии
   button_save: Сохранить
   button_sort: Сортировать
-  button_submit: Принять
+  button_submit: Отправить
   button_test: Проверить
   button_unarchive: Разархивировать
   button_uncheck_all: Очистить
@@ -545,7 +546,6 @@ ru:
   label_jump_to_a_project: Перейти к проекту...
   label_language_based: На основе языка
   label_last_changes: "менее %{count} изменений"
-  label_last_login: Последнее подключение
   label_last_month: прошлый месяц
   label_last_n_days: "последние %{count} дней"
   label_last_week: прошлая неделя
@@ -658,10 +658,6 @@ ru:
   label_show_completed_versions: Показывать завершённые версии
   label_sort: Сортировать
   label_sort_by: "Сортировать по %{value}"
-  label_sort_higher: Вверх
-  label_sort_highest: В начало
-  label_sort_lower: Вниз
-  label_sort_lowest: В конец
   label_spent_time: Трудозатраты
   label_statistics: Статистика
   label_stay_logged_in: Оставаться в системе
@@ -748,7 +744,6 @@ ru:
   notice_account_password_updated: Пароль успешно обновлён.
   notice_account_pending: "Ваша учётная запись создана и ожидает подтверждения администратора."
   notice_account_register_done: Учётная запись успешно создана. Для активации Вашей учётной записи пройдите по ссылке, которая выслана Вам по электронной почте.
-  notice_account_unknown_email: Неизвестный пользователь.
   notice_account_updated: Учётная запись успешно обновлена.
   notice_account_wrong_password: Неверный пароль
   notice_can_t_change_password: Для данной учётной записи используется источник внешней аутентификации. Невозможно изменить пароль.
@@ -997,7 +992,7 @@ ru:
   label_close_versions: Закрыть завершённые версии
   label_board_sticky: Прикреплена
   label_board_locked: Заблокирована
-  field_principal: Имя
+  field_principal: Пользователь или группа
   text_zoom_out: Отдалить
   text_zoom_in: Приблизить
   notice_unable_delete_time_entry: Невозможно удалить запись журнала.
@@ -1027,7 +1022,7 @@ ru:
   label_bulk_edit_selected_time_entries: Массовое изменение выбранных записей трудозатрат
   text_time_entries_destroy_confirmation: Вы уверены что хотите удалить выбранные трудозатраты?
   label_role_anonymous: Аноним
-  label_role_non_member: Не участник
+  label_role_non_member: Не участник проекта
   label_issue_note_added: Примечание добавлено
   label_issue_status_updated: Статус обновлён
   label_issue_priority_updated: Приоритет обновлён
@@ -1345,7 +1340,7 @@ ru:
   label_next_week: следующая неделя
   label_next_month: следующий месяц
   text_role_no_workflow: Эта роль не имеет заданных последовательностей действий
-  text_status_no_workflow: Ни один трекер не использует этот стутус в последовательностях действий
+  text_status_no_workflow: Ни один трекер не использует этот статус в последовательностях действий
   setting_mail_handler_preferred_body_part: Предпочитаемая часть multipart (HTML) писем
   setting_show_status_changes_in_mail_subject: Включать изменения статуса задачи в уведомления по email
   label_inherited_from_parent_project: Наследуется из родительского проекта
@@ -1353,7 +1348,7 @@ ru:
   label_trackers_description: Описание трекеров
   label_open_trackers_description: Показать описания трекеров
   label_preferred_body_part_text: Текст
-  label_preferred_body_part_html: HTML (экспериментально)
+  label_preferred_body_part_html: HTML
   field_parent_issue_subject: Тема родительской задачи
   permission_edit_own_issues: Редактировать свои задачи
   text_select_apply_tracker: Выбор этого трекера
@@ -1366,7 +1361,6 @@ ru:
   text_gs_available: Доступно использование ImageMagick PDF (опционально)
   field_recently_used_projects: Число последних проектов в выпадающем списке
   label_optgroup_bookmarks: Закладки
-  label_optgroup_others: Другие проекты
   label_optgroup_recents: Последние
   button_project_bookmark: Добавить закладку
   button_project_bookmark_delete: Удалить закладку
@@ -1502,7 +1496,7 @@ ru:
     for_all_projects: Для всех проектов
     for_current_project: Для текущего проекта
     for_all_users: Для всех пользователей
-    for_this_user: For this user
+    for_this_user: Для этого пользователя
   text_allowed_queries_to_select: Выбор производится из публичных запросов (видимых для всех пользователей)
   text_all_migrations_have_been_run: Миграция база данных полностью выполнена
   button_save_object: Записать %{object_name}
@@ -1513,11 +1507,52 @@ ru:
   label_bulk_edit: Массовое редактирование
   button_create_and_follow: Создать и перейти
   label_subtask: Подзадача
-  label_default_query: Запрос по умолчанию
-  field_default_project_query: Проекты по умолчанию
+  label_default_query: Базовый запрос
+  field_default_project_query: Базовый запрос проекта
   label_required_administrators: обязательна для администраторов
   twofa_hint_required_administrators_html: Настройка <strong>%{label}</strong> ведёт себя
     аналогично необязательной двухфакторной аутентификации, однако администраторам
     потребуется включить двухфакторную аутентификацию при следующем входе.
   label_auto_watch_on: Следить автоматически
   label_auto_watch_on_issue_contributed_to: За задачами, в которых я принимаю участие
+  text_project_close_confirmation: Закрыть проект '%{value}' и сделать его доступным только для чтения?
+  text_project_reopen_confirmation: Открыть проект '%{value}' заново?
+  text_project_archive_confirmation: Переместить проект '%{value}' в архив?
+  mail_destroy_project_failed: Проект %{value} не может быть удален.
+  mail_destroy_project_successful: Проект %{value} успешно удален.
+  mail_destroy_project_with_subprojects_successful: Проект %{value} и его под-проекты успешно удалены.
+  project_status_scheduled_for_deletion: запланировано удаление
+  text_projects_bulk_destroy_confirmation: Удалить выделенный проект и все связанные с ним данные?
+  text_projects_bulk_destroy_head: |
+    Операция <strong>НЕВОССТАНОВИМО</strong> удалит проекты и все под-проекты, включая все относящиеся к ним данные.
+    Пожалуйста просмотрите информацию ниже и подтвердите удаление.
+    <strong>ВНИМАНИЕ</strong>: Это действие не может быть потом отменено.
+  text_projects_bulk_destroy_confirm: Для подтверждения введите "%{yes}" в поле ниже.
+  text_subprojects_bulk_destroy: 'включая под-проект(ы): %{value}'
+  field_current_password: Текущий пароль
+  sudo_mode_new_info_html: "<strong>Что случилось?</strong> Вам необходимо подтвердить Ваш пароль
+    перед тем, как совершать какие-либо административные действия.
+    Это предназначено для защиты вашей учетной записи."
+  label_edited: Изменено
+  label_time_by_author: "%{time} %{author}-ом"
+  field_default_time_entry_activity: Действие использованного времени по умолчанию
+  field_is_member_of_group: Член группы
+  text_users_bulk_destroy_head: Следующие пользователи и все ссылки на них будут удалены.
+    Это действие <strong>не может быть</strong> отменено.
+    Как правило, блокировка пользоваетелей - это лучшее решение, вместо полного удаления их
+    учетных записей.
+  text_users_bulk_destroy_confirm: Для подтверждения введите "%{yes}" ниже.
+  permission_select_project_publicity: Установить публичность или приватность проекта
+  label_auto_watch_on_issue_created: Задачи созданные мной
+  field_any_searchable: Любой доступный для поиска текст
+  label_contains_any_of: содержит любой из
+  button_apply_issues_filter: Применить фильтр задач
+  label_view_previous_annotation: Посмотреть аннотацию до этого изменения
+  label_has_been: был
+  label_has_never_been: никогда не был
+  label_changed_from: изменено с
+  label_issue_statuses_description: Описание статусов задач
+  label_open_issue_statuses_description: Посмотреть описание всех статусов задач
+  text_select_apply_issue_status: Выберите статус задачи
+  field_name_or_email_or_login: Имя, email или логин
+  text_default_active_job_queue_changed: Изменен адаптер очереди по умолчанию, который хорошо подходит только для разработки/тестирования

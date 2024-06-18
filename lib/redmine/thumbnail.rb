@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@ module Redmine
       ('gswin64c' if Redmine::Platform.mswin?) ||
       'gs'
     ).freeze
-    ALLOWED_TYPES = %w(image/bmp image/gif image/jpeg image/png application/pdf)
+    ALLOWED_TYPES = %w(image/bmp image/gif image/jpeg image/png image/webp application/pdf)
 
     # Generates a thumbnail for the source image to target
     def self.generate(source, target, size, is_pdf = false)
@@ -43,9 +43,7 @@ module Redmine
         return nil if is_pdf && mime_type != "application/pdf"
 
         directory = File.dirname(target)
-        unless File.exist?(directory)
-          FileUtils.mkdir_p directory
-        end
+        FileUtils.mkdir_p directory
         size_option = "#{size}x#{size}>"
 
         if is_pdf

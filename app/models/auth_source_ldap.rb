@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -245,7 +245,7 @@ class AuthSourceLdap < AuthSource
   # Singleton class method is public
   class << self
     def get_attr(entry, attr_name)
-      if !attr_name.blank?
+      if attr_name.present?
         value = entry[attr_name].is_a?(Array) ? entry[attr_name].first : entry[attr_name]
         (+value.to_s).force_encoding('UTF-8')
       end

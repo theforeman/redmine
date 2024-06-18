@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class ApplicationHelperTest < Redmine::HelperTest
   include ERB::Util
@@ -184,6 +184,8 @@ class ApplicationHelperTest < Redmine::HelperTest
          'Inline image: <img src="/attachments/download/3/logo.gif" title="This is a logo" alt="This is a logo" loading="lazy" />',
       'Inline image: !logo.GIF!' =>
          'Inline image: <img src="/attachments/download/3/logo.gif" title="This is a logo" alt="This is a logo" loading="lazy" />',
+      'Inline WebP image: !logo.webp!' =>
+         'Inline WebP image: <img src="/attachments/download/24/logo.webp" title="WebP image" alt="WebP image" loading="lazy" />',
       'No match: !ogo.gif!' => 'No match: <img src="ogo.gif" alt="" />',
       'No match: !ogo.GIF!' => 'No match: <img src="ogo.GIF" alt="" />',
       # link image
@@ -1412,7 +1414,7 @@ class ApplicationHelperTest < Redmine::HelperTest
       </code></pre>
     RAW
     expected = <<~EXPECTED
-      <pre><code class="ECMA_script syntaxhl" data-language=\"ECMA_script\"><span class="cm">/* Hello */</span><span class="nb">document</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="dl">"</span><span class="s2">Hello World!</span><span class="dl">"</span><span class="p">);</span></code></pre>
+      <pre><code class="ECMA_script syntaxhl" data-language="ECMA_script"><span class="cm">/* Hello */</span><span class="nb">document</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="dl">"</span><span class="s2">Hello World!</span><span class="dl">"</span><span class="p">);</span></code></pre>
     EXPECTED
     with_settings :text_formatting => 'textile' do
       assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')
@@ -1426,7 +1428,7 @@ class ApplicationHelperTest < Redmine::HelperTest
       </code></pre>
     RAW
     expected = <<~EXPECTED
-      <pre><code class=\"ruby syntaxhl\" data-language=\"ruby\"><span class=\"n\">x</span> <span class=\"o\">=</span> <span class=\"n\">a</span> <span class=\"o\">&amp;</span> <span class=\"n\">b</span></code></pre>
+      <pre><code class="ruby syntaxhl" data-language="ruby"><span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">&amp;</span> <span class="n">b</span></code></pre>
     EXPECTED
     with_settings :text_formatting => 'textile' do
       assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')
@@ -1897,7 +1899,7 @@ class ApplicationHelperTest < Redmine::HelperTest
     assert_select_in(
       thumbnail_tag(a),
       'a[href=?][title=?] img[src=?][loading="lazy"]',
-      "/attachments/3", "logo.gif", "/attachments/thumbnail/3")
+      "/attachments/3", "logo.gif", "/attachments/thumbnail/3/200")
   end
 
   def test_link_to_project
@@ -2212,6 +2214,50 @@ class ApplicationHelperTest < Redmine::HelperTest
     end
   end
 
+  def test_time_tag
+    user = User.find(1)
+    user.pref.update(time_zone: 'UTC')
+    User.current = user
+
+    assert_nil time_tag(nil)
+    with_locale 'en' do
+      travel_to Time.zone.parse('2022-12-30T01:00:00Z') do
+        assert_equal "<abbr title=\"12/28/2022 01:00 AM\">2 days</abbr>", time_tag(2.days.ago)
+
+        @project = Project.find(1)
+        assert_equal "<a title=\"12/28/2022 01:00 AM\" href=\"/projects/ecookbook/activity?from=2022-12-28\">2 days</a>", time_tag(2.days.ago)
+      end
+    end
+  end
+
+  # TODO: Remove this test when Redcarpet-based Markdown formatter is removed
+  def test_markdown_formatter
+    [
+      ['markdown', 'markdown'],
+      ['common_mark', 'common_mark'],
+      ['textile', 'common_mark'],
+      ['', 'common_mark']
+    ].each do |text_formatting, expected|
+      with_settings text_formatting: text_formatting do
+        assert_equal expected, markdown_formatter
+      end
+    end
+  end
+
+  def test_export_csv_separator_select_tag
+    with_locale 'en' do
+      result = export_csv_separator_select_tag
+      assert_equal ',', l(:general_csv_separator)
+      assert_select_in result, 'option[value=?][selected=selected]', ',', text: 'Comma'
+      assert_select_in result, 'option[value=?]', ';', text: 'Semicolon'
+    end
+    with_locale 'fr' do
+      result = export_csv_separator_select_tag
+      assert_equal ';', l(:general_csv_separator)
+      assert_select_in result, 'option[value=?][selected=selected]', ';'
+    end
+  end
+
   private
 
   def wiki_links_with_special_characters
@@ -2225,7 +2271,7 @@ class ApplicationHelperTest < Redmine::HelperTest
                   "/projects/ecookbook/wiki/A_%22quoted%22_name",
                   :class => "wiki-page new"),
       '[[le français, c\'est super]]' =>
-          link_to("le français, c\'est super",
+          link_to("le français, c'est super",
                   "/projects/ecookbook/wiki/Le_fran%C3%A7ais_c'est_super",
                   :class => "wiki-page new"),
       '[[broken < less]]' =>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -187,6 +187,8 @@ module Redmine
     end
 
     def <=>(plugin)
+      return nil unless plugin.is_a?(Plugin)
+
       self.id.to_s <=> plugin.id.to_s
     end
 
@@ -414,9 +416,21 @@ module Redmine
       Redmine::WikiFormatting.register(name, *args)
     end
 
+    # Register plugin models that use acts_as_attachable.
+    #
+    # Example:
+    #   attachment_object_type SomeAttachableModel
+    #
+    # This is necessary for the core attachments controller routes and attachments/_form to work.
+    def attachment_object_type(*args)
+      args.each do |klass|
+        Redmine::Acts::Attachable::ObjectTypeConstraint.register_object_type(klass.name.underscore.pluralize)
+      end
+    end
+
     # Returns +true+ if the plugin can be configured.
     def configurable?
-      settings && settings.is_a?(Hash) && !settings[:partial].blank?
+      settings && settings.is_a?(Hash) && settings[:partial].present?
     end
 
     # The directory containing this plugin's migrations (<tt>plugin/db/migrate</tt>)
@@ -484,6 +498,10 @@ module Redmine
 
       def open
         Migrator.new(:up, migrations, schema_migration)
+      end
+
+      def current_version
+        Migrator.current_version
       end
     end
 

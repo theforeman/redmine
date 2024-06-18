@@ -2,7 +2,7 @@
 
 #
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -120,7 +120,7 @@ module Redmine
         end
 
         def get_sever_url(url)
-          if !empty_string(url) and (url[0, 1] == '/')
+          if !empty_string(url) and url.start_with?('/')
             Setting.host_name.split('/')[0] + url
           else
             url
@@ -149,7 +149,7 @@ module Redmine
         def self.attach(attachments, filename, encoding)
           filename_utf8 = Redmine::CodesetUtil.to_utf8(filename, encoding)
           atta = nil
-          if /^[^\/"]+\.(gif|jpg|jpe|jpeg|png)$/i.match?(filename_utf8)
+          if /^[^\/"]+\.(gif|jpg|jpe|jpeg|png|webp)$/i.match?(filename_utf8)
             atta = Attachment.latest_attach(attachments, filename_utf8)
           end
           if atta && atta.readable? && atta.visible?

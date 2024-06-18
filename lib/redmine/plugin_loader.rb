@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -88,7 +88,7 @@ module Redmine
 
     # Absolute path to the plublic directory where plugins assets are copied
     cattr_accessor :public_directory
-    self.public_directory = Rails.root.join('public/plugin_assets')
+    self.public_directory = Rails.public_path.join('plugin_assets')
 
     def self.create_assets_reloader
       plugin_assets_dirs = {}

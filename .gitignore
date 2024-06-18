@@ -6,6 +6,7 @@
 /.bash_history
 /.rvmrc
 /.ruby-version
+/.byebug_history
 /config/additional_environment.rb
 /config/database.yml
 /config/email.yml

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -273,7 +273,7 @@ class WikiPage < ActiveRecord::Base
   protected
 
   def validate_parent_title
-    errors.add(:parent_title, :invalid) if !@parent_title.blank? && parent.nil?
+    errors.add(:parent_title, :invalid) if @parent_title.present? && parent.nil?
     errors.add(:parent_title, :circular_dependency) if parent && (parent == self || parent.ancestors.include?(self))
     if parent_id_changed? && parent && (parent.wiki_id != wiki_id)
       errors.add(:parent_title, :not_same_project)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,17 +24,17 @@ module QueriesHelper
 
   def filters_options_for_select(query)
     ungrouped = []
-    grouped = {}
+    grouped = {label_string: [], label_date: [], label_time_tracking: [], label_attachment: []}
     query.available_filters.map do |field, field_options|
-      if field_options[:type] == :relation
-        group = :label_relations
-      elsif field_options[:type] == :tree
-        group = query.is_a?(IssueQuery) ? :label_relations : nil
-      elsif /^cf_\d+\./.match?(field)
+      if /^cf_\d+\./.match?(field)
         group = (field_options[:through] || field_options[:field]).try(:name)
       elsif field =~ /^(.+)\./
         # association filters
         group = "field_#{$1}".to_sym
+      elsif field_options[:type] == :relation
+        group = :label_relations
+      elsif field_options[:type] == :tree
+        group = query.is_a?(IssueQuery) ? :label_relations : nil
       elsif %w(member_of_group assigned_to_role).include?(field)
         group = :field_assigned_to
       elsif field_options[:type] == :date_past || field_options[:type] == :date
@@ -43,6 +43,8 @@ module QueriesHelper
         group = :label_time_tracking
       elsif %w(attachment attachment_description).include?(field)
         group = :label_attachment
+      elsif [:string, :text, :search].include?(field_options[:type])
+        group = :label_string
       end
       if group
         (grouped[group] ||= []) << [field_options[:name], field]
@@ -50,6 +52,8 @@ module QueriesHelper
         ungrouped << [field_options[:name], field]
       end
     end
+    # Remove empty groups
+    grouped.delete_if {|k, v| v.empty?}
     # Don't group dates if there's only one (eg. time entries filters)
     if grouped[:label_date].try(:size) == 1
       ungrouped << grouped.delete(:label_date).first
@@ -233,7 +237,7 @@ module QueriesHelper
     value = column.value_object(item)
     content =
       if value.is_a?(Array)
-        values = value.collect {|v| column_value(column, item, v)}.compact
+        values = value.filter_map {|v| column_value(column, item, v)}
         safe_join(values, ', ')
       else
         column_value(column, item, value)
@@ -252,7 +256,7 @@ module QueriesHelper
         link_to value, issue_path(item)
       when :subject
         link_to value, issue_path(item)
-      when :parent
+      when :parent, :'issue.parent'
         value ? (value.visible? ? link_to_issue(value, :subject => false) : "##{value.id}") : ''
       when :description
         item.description? ? content_tag('div', textilizable(item, :description), :class => "wiki") : ''
@@ -286,7 +290,7 @@ module QueriesHelper
   def csv_content(column, item)
     value = column.value_object(item)
     if value.is_a?(Array)
-      value.collect {|v| csv_value(column, item, v)}.compact.join(', ')
+      value.filter_map {|v| csv_value(column, item, v)}.join(', ')
     else
       csv_value(column, item, value)
     end
@@ -319,7 +323,7 @@ module QueriesHelper
   def query_to_csv(items, query, options={})
     columns = query.columns
 
-    Redmine::Export::CSV.generate(:encoding => params[:encoding]) do |csv|
+    Redmine::Export::CSV.generate(encoding: params[:encoding], field_separator: params[:field_separator]) do |csv|
       # csv header fields
       csv << columns.map {|c| c.caption.to_s}
       # csv lines
@@ -327,6 +331,14 @@ module QueriesHelper
         csv << columns.map {|c| csv_content(c, item)}
       end
     end
+  end
+
+  def filename_for_export(query, default_name)
+    query_name = params[:query_name].presence || query.name
+    query_name = default_name if query_name == '_' || query_name.blank?
+
+    # Convert file names using the same rules as Wiki titles
+    filename_for_content_disposition(Wiki.titleize(query_name).downcase)
   end
 
   # Retrieve query from session or build a new query
@@ -462,6 +474,8 @@ module QueriesHelper
     url_params =
       if controller_name == 'issues'
         {:controller => 'issues', :action => 'index', :project_id => @project}
+      elsif controller_name == 'admin' && action_name == 'projects'
+        {:admin_projects => '1'}
       else
         {}
       end

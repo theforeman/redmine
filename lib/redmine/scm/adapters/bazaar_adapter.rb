@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -56,10 +56,7 @@ module Redmine
         end
 
         def initialize(url, root_url=nil, login=nil, password=nil, path_encoding=nil)
-          @url = url
-          @root_url = url
-          @path_encoding = 'UTF-8'
-          # do not call *super* for non ASCII repository path
+          super(url, url, nil, nil, 'UTF-8')
         end
 
         def bzr_path_encodig=(encoding)

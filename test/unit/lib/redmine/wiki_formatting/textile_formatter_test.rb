@@ -2,7 +2,7 @@
 
 #
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../../../../test_helper', __FILE__)
+require_relative '../../../../test_helper'
 require 'digest/md5'
 
 class Redmine::WikiFormatting::TextileFormatterTest < ActionView::TestCase
@@ -512,12 +512,12 @@ class Redmine::WikiFormatting::TextileFormatterTest < ActionView::TestCase
     <<~STR.chomp,
       h2. Heading 2
 
-      <pre><code class=\"ruby\">
+      <pre><code class="ruby">
         def foo
         end
       </code></pre>
 
-      <pre><code><pre><code class=\"ruby\">
+      <pre><code><pre><code class="ruby">
         Place your code here.
       </code></pre>
       </code></pre>
@@ -693,7 +693,7 @@ class Redmine::WikiFormatting::TextileFormatterTest < ActionView::TestCase
       fn1. This is the foot note
     STR
     expected = <<~EXPECTED
-      <p>This is some text<sup><a href=\"#fn1\">1</a></sup>.</p>
+      <p>This is some text<sup><a href="#fn1">1</a></sup>.</p>
       <p id="fn1" class="footnote"><sup>1</sup> This is the foot note</p>
     EXPECTED
     assert_equal expected.gsub(%r{[\r\n\t]}, ''), to_html(text).gsub(%r{[\r\n\t]}, '')
@@ -768,6 +768,23 @@ class Redmine::WikiFormatting::TextileFormatterTest < ActionView::TestCase
         %{bq.:http://x/"onmouseover="alert(document.domain) Hover me} =>
           %{<blockquote cite="http://x/&quot;onmouseover=&quot;alert(document.domain)">\n\t\t<p>Hover me</p>\n\t</blockquote>}
       }, false)
+  end
+
+  def test_should_allow_multiple_footnotes
+    text = <<~STR
+      Some demo[1][2] And a sentence.[1]
+
+      fn1. One
+
+      fn2. Two
+    STR
+
+    expected = <<~EXPECTED
+      <p>Some demo<sup><a href="#fn1">1</a></sup><sup><a href="#fn2">2</a></sup> And a sentence.[1]</p>
+      <p id="fn1" class="footnote"><sup>1</sup> One</p>
+      <p id="fn2" class="footnote"><sup>2</sup> Two</p>
+    EXPECTED
+    assert_equal expected.gsub(%r{[\r\n\t]}, ''), to_html(text).gsub(%r{[\r\n\t]}, '')
   end
 
   private

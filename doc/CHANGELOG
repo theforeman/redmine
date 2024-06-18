@@ -1,8 +1,398 @@
 == Redmine changelog
 
 Redmine - project management software
-Copyright (C) 2006-2023  Jean-Philippe Lang
+Copyright (C) 2006-  Jean-Philippe Lang
 https://www.redmine.org/
+
+== 2024-06-12 v5.1.3
+
+=== [Code cleanup/refactoring]
+
+* Defect #40389: Missing fixture: add :groups_users fixture to Redmine::ApiTest::UsersTest
+
+=== [Gems support]
+
+* Defect #40603: Mocha 2.2.0 causes test failure: "unexpected invocation"
+* Patch #40802: Support builder 3.3.0
+
+=== [Issues]
+
+* Defect #40410: Watcher groups on new issue form get dereferenced on validation error
+* Defect #40412: Issue list filter "Watched by: me" only shows issues watched via group for projects with the view_issue_watchers permission
+* Feature #40556: Focus on the textarea after clicking the Edit Journal button
+
+=== [Issues workflow]
+
+* Patch #40693: Ignore status in roleld_up_status if workflow only defines identity transition
+
+=== [Performance]
+
+* Defect #40610: Slow display of projects list when including project description column
+
+=== [Rails support]
+
+* Patch #40818: Update Rails to 6.1.7.8
+
+=== [Translations]
+
+* Patch #40682: Czech translation update for 5.1-stable
+
+== 2024-03-04 v5.1.2
+
+=== [Activity view]
+
+* Defect #39995: Project Activities and Roadmap views disclose presence of private sub projects
+
+=== [Administration]
+
+* Defect #40166: Internationalize "Check all / Uncheck all" tooltip in project list for admins
+
+=== [Code cleanup/refactoring]
+
+* Defect #39864: Backport fix of random failing integration test for plugin routes
+* Defect #40239: Add missing fixtures in Redmine::ApiTest::IssuesTest
+* Patch #39894: Explicitly render a 404 on non-JS requests to watchers#new
+* Patch #39999: Explicitly render a 404 on non-JS requests to messages#quote
+* Patch #40043: Remove year ranges from all copyright headers
+
+=== [Database]
+
+* Patch #39865: Extend mysql8? test helper to handle complex version strings
+
+=== [Filters]
+
+* Defect #39991: Fix "any" operator for text filters to exclude empty text values
+
+=== [Issues]
+
+* Defect #39932: Incorrect position of "Edited" mark in issue notes with h4 headings
+
+=== [Plugin API]
+
+* Defect #39862: Attachments functionality for (custom) plugins broken since fix for CVE-2022-44030
+* Feature #39948: Add Redmine::Plugin proxy method for Redmine::Acts::Attachable::ObjectTypeConstraint.register_object_type
+
+=== [REST API]
+
+* Defect #40099: User api filtering by status=* broke on upgrade from 5.0 to 5.1
+
+=== [Rails support]
+
+* Patch #40319: Update Rails to 6.1.7.7
+
+=== [SEO]
+
+* Defect #40208: An ActionController::RespondToMismatchError occurred in welcome#robots
+
+=== [Security]
+
+* Defect #39875: Mitigate CVE-2023-23913 (rails-ujs)
+
+=== [Text formatting]
+
+* Defect #39755: CommonMark Markdown help page does not reflect user's language setting
+* Defect #40193: Performance issue with email address auto-linking in the default ("none") formatter
+* Feature #39884: Allow multiple footnotes per single word
+
+=== [Translations]
+
+* Defect #39801: Fix typo in Russian translation of text_status_no_workflow
+* Patch #39751: Additional translation for Tamil language
+* Patch #39781: Persian translation update for 5.1-stable
+* Patch #39782: Russian translation update for 5.1-stable
+* Patch #40240: Catalan translation update for 5.1-stable
+
+=== [UI]
+
+* Defect #39780: User select element on activity sidebar views cutoff when displaying long user names
+* Defect #39802: Fix click event handling in mobile view after closing flyout menu
+* Defect #40237: Error in autocomplete (`ActionController::BadRequest (Invalid query parameters: invalid %-encoding (%)`)
+
+== 2023-11-27 v5.1.1
+
+=== [Database]
+
+* Defect #39437: MySQL / MariaDB issue nested set deadlocks and consistency
+* Defect #39443: Invalid statement query error on MSSQL when role filter is used in issues query
+* Patch #39737: Support MySQL 8
+
+=== [Email notifications]
+
+* Defect #39553: Mention notification is not sent (MENTION_PATTERN / LINKS_RE inconsistency)
+
+=== [Filters]
+
+* Defect #39714: Query grouping filter not working for custom field relations
+
+=== [Gems support]
+
+* Defect #39576: `rake yard` does not work with Ruby >= 3.2
+
+=== [Issues]
+
+* Defect #39521: Mention autocomplete not displaying for users without "Edit issues" permission
+
+=== [PDF export]
+
+* Defect #39534: Error (undefined method) in issue list PDF export
+
+=== [Text formatting]
+
+* Defect #38852: ## issue syntax is not kept when selecting an issue from the inline autocomplete
+
+=== [Translations]
+
+* Patch #39513: Bulgarian translation update for 5.1-stable
+* Patch #39551: Simplified Chinese translation update for 5.1-stable
+
+== 2023-10-31 v5.1.0
+
+=== [Accounts / authentication]
+
+* Defect #6254: Remove "Unknown user" notification on password request with non-existent email address
+* Defect #36969: EmailAddress regex matches invalid email addresses
+* Feature #33660: Information text on sudo password entry
+* Feature #35450: Better validation error message when the domain of email is not allowed
+* Feature #37679: Raise the maximum length of the last name to 255 characters
+
+=== [Administration]
+
+* Defect #37692: Plugins page does not have a table header
+* Feature #33422: Re-implement admin project list using ProjectQuery system
+* Feature #36691: Background job and dedicated status for project deletion
+* Feature #36695: Add check in Redmine information page if default queue adapter is used in production
+* Feature #36891: Ask more specific confirmation questions when closing/reopening/archiving projects
+* Feature #37674: Upgrade Admin/Users list to use the query system
+
+=== [Attachments]
+
+* Feature #38168: WebP images support
+* Patch #37597: Don't create two thumbnails of different resolutions for a single image
+
+=== [Calendar]
+
+* Feature #27346: Use the new pagination style for the calendars view
+* Feature #33682: Display calendar in vertical list layout on mobile screens
+
+=== [Code cleanup/refactoring]
+
+* Defect #15667: Fix shadowing variable in ApplicationHelper#textilizable
+* Defect #20042: A test fail when running it with PostgreSQL
+* Defect #37389: Add missing fixture to JournalObserverTest
+* Defect #37586: Typo in method names
+* Defect #37587: Unnecessary requirement in /lib/redmine/scm/adapters/filesystem_adapter.rb
+* Defect #38145: Unreachable branch in ApplicationHelper#format_object due to the use of the deprecated Fixnum class
+* Defect #38250: config/settings.yml not closed in Setting.load_available_settings
+* Defect #39180: Fix an intermittent test failure in JournalTest
+* Feature #37119: Drop redcarpet dependency for common_mark formatter
+* Patch #36844: Cleanup orphaned query and role ids from habtm join table queries_roles
+* Patch #37448: Add missing fixture users to RoleTest
+* Patch #37451: Add missing fixture versions to IssuesPdfHelperTest
+* Patch #37466: Add missing fixture issue_categories to VersionTest
+* Patch #37469: Add missing fixture versions to RepositoryTest
+* Patch #37470: Add missing fixture versions to MailHandlerControllerTest
+* Patch #37477: Add missing fixture issue_categories to MyControllerTest
+* Patch #37482: Replace JQuery `.focus()` method with HTML `autofocus` attribute
+* Patch #37507: Normalize HTML in app/views/settings/_users.html.erb
+* Patch #37591: Use start_with? or end_with? to check the first or last character of a string
+* Patch #37599: Remove extra call of Attachment#thumbnailable? in AttachmentsController#thumbnail
+* Patch #37614: Cleanup app/models/repository/git.rb
+* Patch #37657: Rename Repository#supports_all_revisions? to Repository#supports_history?
+* Patch #37668: Fix bad I18n `t` call in macro error handler
+* Patch #37682: Add the `# frozen_string_literal: true` magic comment to config/initializers/secret_token.rb
+* Patch #37851: Add missing fixture to test/integration/issue_test.rb
+* Patch #37974: Database migration to remove unused "mention_users" permission
+* Patch #38054: Remove unused i18n keys label_sort_highest, label_sort_higher, label_sort_lower, and label_sort_lowest
+* Patch #38091: Fix redundant 'private' modifier in repositories_git_controller_test.rb
+* Patch #38093: Use require_relative instead of generating the full path for a file
+* Patch #38139: Add guard clause to time_tag method to handle nil time
+* Patch #38228: Remove X-UA-Compatible meta tag for Internet Explorer
+* Patch #38478: Remove unused i18n key label_last_login
+* Patch #38496: Add missing fixtures to SearchControllerTest
+* Patch #38646: Remove unused locale entry: label_optgroup_others
+* Patch #38772: <=> should return nil when invoked with an incomparable object
+* Patch #39021: Add ".byebug_history" to svn:ignore, .gitignore, and .hgignore
+* Patch #39066: Remove set_language_if_valid from MyController
+* Patch #39109: Improving Test Reliability with Capybara Assertions
+* Patch #39184: Cleanup debug code in app/models/mail_handler.rb
+* Patch #39207: Replace `YAML.load` with `YAML.load_file` in locales.rake and improve error reporting for invalid YAML files
+
+=== [Custom fields]
+
+* Patch #37750: Use existing html pipeline based sanitization for links in custom fields
+
+=== [Email notifications]
+
+* Feature #2746: Send out issue priority in the email notification header
+* Feature #34302: Show parent issues in notification email
+* Feature #38238: Auto watch issues on issue creation
+
+=== [Email receiving]
+
+* Feature #38263: Try importing journal replies as issue reply where applicable
+* Feature #38273: Improve errors in MailHandler: add MissingContainer and LockedTopic exception
+* Feature #38274: Receive e-mail replies to news and news comments
+* Patch #38408: Remove experimental flag from "Preferred part of multipart (HTML) emails" setting
+
+=== [Filters]
+
+* Feature #38435: "contains any of" operator for text filters to perform OR search of multiple terms
+* Feature #38456: OR search with multiple terms for "starts with" and "ends with" filter operators
+
+=== [Gems support]
+
+* Patch #36919: Update RuboCop to 1.57
+* Patch #37236: Update Rouge to 4.2
+* Patch #37247: Update RuboCop Performance to 1.19
+* Patch #37248: Update RuboCop Rails to 2.22
+* Patch #37401: Update I18n to 1.14
+* Patch #37525: Update Pg to 1.5
+* Patch #37558: Update webdrivers to 5.0
+* Patch #37656: Update sqlite3 gem to 1.5
+* Patch #37993: Update Mail gem to 2.8
+* Patch #38121: Update MiniMagick to 4.12
+* Patch #38122: Remove Bundler from requirements
+* Patch #38124: Update csv, net-imap, net-pop, and net-smtp gems to the same versions shipped with Ruby 3.2.0
+* Patch #38137: Update SimpleCov to 0.22
+* Patch #38181: Update Nokogiri to 1.15.2
+* Patch #38187: Update SQLite3 gem to 1.6
+* Patch #38220: Update Redcarpet to 3.6
+* Patch #39211: Update roadie-rails to 3.1
+
+=== [I18n]
+
+* Defect #38509: Untranslated string "OK" in the repository browser
+* Feature #37878: Allow using ideographic space (U+3000) as a separator for search terms
+* Patch #38529: Limit available locales to those defined by Redmine itself
+
+=== [Importers]
+
+* Feature #36823: Allow to import time entries for issues in different projects
+
+=== [Issues]
+
+* Defect #38458: Display order of watchers in the sidebar is indeterminate
+* Defect #38493: The related issues count on the issue view is not updated after deleting one of the related issues
+* Defect #39186: Missing synchronization between watchers and watcher_users for unsaved objects
+* Feature #2568: Description for issue statuses
+* Feature #16207: Use query name as the file name when exporting queries
+* Feature #31505: Mark edited journal notes as "Edited"
+* Feature #37362: CSV export of issues report
+* Feature #37532: Add CSS class for relation type to related issues list
+* Feature #37621: Add field separator option to CSV export dialog
+* Feature #38416: Ability to disable the priority field
+* Patch #38820: Retry in case of stale issue during Issue.update_versions
+
+=== [Issues filter]
+
+* Feature #38301: Multiple issue ids in "Related to" filter
+* Feature #38402: "Any searchable text" filter for issues
+* Feature #38527: New issues filter operators "has been", "has never been", and "changed from"
+
+=== [Issues workflow]
+
+* Defect #37635: Respect Role#consider_workflow? when checking for allowed status transitions
+* Patch #37636: Ignore statuses if workflow only defines identity transition
+
+=== [News]
+
+* Feature #2631: Add breadcrumbs to news pages
+
+=== [PDF export]
+
+* Feature #38368: WebP images support in PDF output
+
+=== [Performance]
+
+* Patch #29171: Add an index to improve the performance of issue queries involving custom fields
+* Patch #37057: Query optimization for attachments activity
+* Patch #37528: Don't load changesets when IssuesController#show processes API requests without "include=changesets"
+* Patch #37687: Retrieve attachments with a single query when rendering a journal
+* Patch #38146: Fix all performance-related RuboCop offenses
+* Patch #38198: Improve MySQL query plan for Project#project_condition
+* Patch #38319: Optimize IssueQuery#sql_for_assigned_to_role_field for PostgreSQL performance
+* Patch #38474: Preload default_status when listing trackers
+
+=== [Permissions and roles]
+
+* Feature #37807: Allow access to /robots.txt even if logins are required
+* Feature #38048: Introduce permission to set a project public
+
+=== [Plugin API]
+
+* Defect #31116: Database migrations don't run correctly for plugins when specifying the `VERSION` env variable
+* Defect #38707: Fix order of loading plugins' config/routes.rb
+* Feature #38730: Generate snake-case file name by redmine_plugin_migration
+
+=== [REST API]
+
+* Defect #38668: Unable to retrieve custom fields set as "For all projects" via Projects API
+* Feature #37617: Add description field to custom fields API
+* Feature #39113: Add missing Homepage attribute in Projects API response
+
+=== [Rails support]
+
+* Feature #38216: Add template filenames as comments to HTML output in development mode
+
+=== [Roadmap]
+
+* Feature #36679: Export a version as changelog text
+
+=== [Ruby support]
+
+* Feature #37159: Drop Ruby 2.5 support
+* Feature #38099: Add Ruby 3.2 support
+* Feature #38134: Drop Ruby 2.6 support
+
+=== [SCM]
+
+* Feature #35432: Git: View annotation prior to the change
+
+=== [Search engine]
+
+* Feature #38459: Support "My bookmarks" in the search
+* Feature #38481: Further narrow search results with issues filter
+
+=== [Text formatting]
+
+* Feature #34863: Change default text formatter for new installations from textile to common_mark
+* Patch #36807: Remove CommonMark experimental flag and mark as deprecated the RedCarpet Markdown
+
+=== [Third-party libraries]
+
+* Feature #39400: Migrate Stylelint to 15.11.0
+* Patch #37538: Update Chart.js to 3.9.1
+* Patch #38162: Update jQuery UI Datepicker i18n files to 1.13.2
+
+=== [Time tracking]
+
+* Feature #10314: Make the only enabled activity in a project the default one for time entry
+* Feature #27821: "Issue's subject" filter for spent time
+* Feature #29286: Add default spent time activity per role
+* Feature #37623: Add Parent task filter and column to Spent time
+
+=== [Translations]
+
+* Defect #38477: Fix the English and Japanese translations of field_last_login_on
+* Defect #38871: Fix mistranslation of label_board_sticky in Spanish translation
+* Feature #34924: Add Tamil language support
+* Feature #36938: Update translations of field_principal to User or Group
+* Patch #32435: Change Russian translation for "Submit"
+
+=== [UI]
+
+* Feature #1069: Open Help in a separate tab
+* Feature #36908: Improve wording on password change form
+* Feature #38231: Limit the year to 4 digits in date input
+* Patch #38449: Align buttons in modal dialogs to the left instead of right
+
+=== [UI - Responsive]
+
+* Patch #38360: Do not apply table-layout:fixed in potentially wide tables of detailed issue reports
+
+=== [Wiki]
+
+* Defect #34634: Deletion of project wiki leaves the project wiki inaccessible (404) until module reactivation
 
 == 2023-09-30 v5.0.6
 
@@ -3014,639 +3404,6 @@ https://www.redmine.org/
 === [Translations]
 
 * Patch #26264: Simplified Chinese translation for 3.3-stable
-
-=== [UI]
-
-* Defect #25760: Clicking custom field label should not check the first option
-
-=== [UI - Responsive]
-
-* Defect #25064: Issue description edit link corrupted in low resolution
-* Patch #25745: Optimize Gantt Charts for mobile screens
-
-== 2018-06-10 v3.4.6
-
-=== [Issues]
-
-* Defect #27863: If version is closed or locked  subtasks don't get copied
-* Defect #28765: Copying an issue fails if the issue is watched by a locked user
-* Patch #28649: Log automatic rescheduling of following issues to journal
-
-=== [Permissions and roles]
-
-* Defect #28693: Irrelevant permission is required to access some tabs in project settings page
-
-=== [Project settings]
-
-* Defect #27122: Filter for version name should be case-insensitive
-
-=== [SCM]
-
-* Defect #28725: Mercurial 4.6 compatibility
-
-=== [Text formatting]
-
-* Defect #28469: Syntax highlighter does not work if language name is single-quoted
-
-=== [Translations]
-
-* Patch #28881: Fix Japanese mistranslation for label_comment_added
-
-=== [UI]
-
-* Defect #22023: Issue id input should get focus after adding related issue
-
-=== [UI - Responsive]
-
-* Defect #28523: Display horizontal scroll bar of plugins table when overflow occurs on small screen
-
-=== [Wiki]
-
-* Patch #27090: Show the number of attachments on wiki pages
-
-== 2018-04-07 v3.4.5
-
-=== [Custom fields]
-
-* Defect #28393: Sort issue custom fields by position in tracker UI
-
-=== [Email notifications]
-
-* Defect #28302: Security notification when changing password on password forgotten is empty
-
-=== [Gantt]
-
-* Defect #28204: Too large avatar breaks gantt when assignee is a group
-
-=== [Issues]
-
-* Defect #27862: Preformatted text overflows in preview
-* Patch #28168: Allow context-menu edit of % done and priority of parent issues if the fields are not derived
-
-=== [Issues filter]
-
-* Defect #28180: Role-base cross-project issue query visibility calculated incorrectly
-
-=== [Plugin API]
-
-* Patch #27963: Remove 'unloadable' from bundled sample plugin
-
-=== [Security]
-
-* Defect #26857: Fix for CVE-2015-9251 in JQuery 1.11.1
-
-=== [Text formatting]
-
-* Defect #27884: RTL wiki class broken in Redmine 3.2.6
-* Defect #28331: h4, h5 and h6 headings on wiki pages should have a paragraph mark
-* Patch #28119: Enable lax_spacing for markdown formatting in order to allow markdown blocks not surrounded by empty lines
-
-=== [Time tracking]
-
-* Defect #28110: Don't allow reassigning reported hours to the project if issue is a required field for time logs
-
-=== [Translations]
-
-* Defect #28109: Incorrect interpolation in Swedish locale
-* Defect #28113: Fix typo in German label_font_default
-* Defect #28192: Fix typo in German label_font_monospace
-* Patch #27994: Galician translation update (jstoolbar-gl.js)
-* Patch #28102: Fix typo in Lithuanian label_version_sharing_tree
-
-=== [UI]
-
-* Defect #28079: The green tick is positioned after the label in the new member modals
-* Defect #28208: Anonymous icon is wrongly displayed when assignee is a group
-* Defect #28259: attachments_fields id to class change not properly reflected in all CSS
-
-=== [Wiki]
-
-* Defect #25299: Markdown pre-block could derive incorrect wiki sections
-
-== 2018-01-08 v3.4.4
-
-=== [Accounts / authentication]
-
-* Defect #22532: Strip whitespace from login on login page
-* Defect #27754: Strip whitespace from email addresses on lost password page
-
-=== [Administration]
-
-* Defect #27586: "Uncheck all" icon at the upper left corner in workflow status transitions page is not working
-
-=== [Calendar]
-
-* Defect #27153: Custom query breaks calendar view with error 500
-* Patch #27139: Fix for project link background in calendar tooltips
-
-=== [Custom fields]
-
-* Defect #26705: Unable to download file if custom field is not defined as visible to any users
-
-=== [Email receiving]
-
-* Patch #27885: Empty email attachments are imported to Redmine, creating broken DB records
-
-=== [Gantt]
-
-* Defect #26410: Gravatar icon is misaligned in gantt
-
-=== [Gems support]
-
-* Defect #27206: cannot install public_suffix if ruby < 2.1
-* Defect #27505: Cannot install nokogiri 1.7 on Windows Ruby 2.4
-
-=== [Issues]
-
-* Defect #26880: Cannot clear all watchers when copying an issue
-* Defect #27110: Changing the tracker to a tracker with the tracker field set to read-only won't work
-* Defect #27881: No validation errors when entering an invalid "Estimate hours" value
-* Patch #27663: Same relates relation can be created twice
-* Patch #27695: Fix ActiveRecord::RecordNotUnique errors when trying to add certain issue relations
-
-=== [Issues list]
-
-* Defect #27533: Cannot change the priority of the parent issue in issue query context menu when parent priority is independent of children
-
-=== [Plugin API]
-
-* Defect #20513: Unloadable plugin convention breaks with Rails 4.2.3
-
-=== [SCM]
-
-* Defect #27333: Switching SCM fails after validation error in "New repository" page
-
-=== [Security]
-
-* Defect #27516: Remote command execution through mercurial adapter
-
-=== [Translations]
-
-* Patch #27502: Lithuanian translation for 3.4-stable
-* Patch #27620: Brazilian translation update
-* Patch #27642: Spanish translation update (jstoolbar-es.js)
-* Patch #27649: Spanish/Panama translation update (jstoolbar-es-pa.js)
-* Patch #27767: Czech translation for 3.4-stable
-
-=== [UI]
-
-* Defect #19578: Issues reports table header overlaping
-* Defect #26699: Anonymous user should have their icon
-
-== 2017-10-15 v3.4.3
-
-=== [Administration]
-
-* Defect #26564: Enumerations sorting does not work
-
-=== [Custom fields]
-
-* Defect #26468: Using custom fields of type "File" leads to unsolvable error if filetype is not allowed
-
-=== [Issues]
-
-* Defect #26627: Editing issues no longer sends notifications to previous assignee
-
-=== [Issues list]
-
-* Defect #26471: Issue Query: inconsistency between spent_hours sum and sum of shown spent_hours values
-
-=== [PDF export]
-
-* Defect #25702: Exporting wiki page with specific table to PDF causes 500
-
-=== [Roadmap]
-
-* Patch #26492: % is not valid without a format specifier
-
-=== [SCM]
-
-* Defect #26403: The second and subsequent lines of commit messages are not displayed in repository browser
-* Defect #26645: git 2.14 compatibility
-
-=== [Text formatting]
-
-* Patch #26682: URL-escape the ! character in generated markup for dropped uploads
-
-=== [Time tracking]
-
-* Defect #26520: Blank "Issue" field on the "Log time" from the "Spent time - Details" page for an issue
-* Defect #26667: Filtering time entries after issue's target version doesn't work as expected in some cases
-* Defect #26780: Translation for label_week in time report is not working
-
-=== [Translations]
-
-* Patch #26703: German translations in 3.4-stable
-* Patch #27034: Patch for updated Chinese translation
-
-=== [UI]
-
-* Defect #26568: Multiple Selection List Filter View - items are cut off from view
-* Patch #26395: Jump to project autocomplete: focus selected project
-* Patch #26689: Add title to author's and assignee's icon
-
-=== [Wiki]
-
-* Defect #26599: Corrupted file name when exporting a wiki page with Non-ASCII title using Microsoft's browsers
-
-=== [Security]
-
-* Defect #27186: XSS vulnerabilities
-
-== 2017-07-16 v3.4.2
-
-=== [Administration]
-
-* Defect #26393: Error when unchecking all settings on some plugins configurations
-
-=== [Attachments]
-
-* Defect #26379: Fix thumbnail rendering for images with height >> width
-
-=== [Time tracking]
-
-* Defect #26387: Error displaying time entries filtered by Activity
-
-=== [UI]
-
-* Defect #26445: Text formatting not applied to commit messages even if enabled in settings
-* Patch #26424: Avatar Spacing in Headlines
-
-== 2017-07-09 v3.4.1
-
-=== [Issues list]
-
-* Defect #26364: Sort is not reflected when export CSV of issues list
-
-=== [Projects]
-
-* Defect #26376: Wrong issue counts and spent time on project overview
-
-=== [Translations]
-
-* Patch #26344: Bulgarian translation
-* Patch #26365: Traditional Chinese translation
-
-=== [UI]
-
-* Defect #26325: Wrong CSS syntax
-* Defect #26350: Don't display file download button while on repository directory entries
-
-== 2017-07-02 v3.4.0
-
-=== [Accounts / authentication]
-
-* Defect #13741: Not landing on home page on login after visiting lost password page
-* Feature #10840: Allow "Stay logged in" from multiple browsers
-* Feature #25253: Password reset should count as a password change for User#must_change_passwd
-* Feature #26190: Add setting to hide optional user custom fields on registration form
-* Patch #25483: Forbid to edit/update/delete the anonymous user
-
-=== [Activity view]
-
-* Patch #18399: Missing "next" pagination link when looking at yesterday's activity
-
-=== [Administration]
-
-* Defect #7577: "Send account information to the user" only works when password is set
-* Defect #25289: Adding a principal to 2 projects with member inheritance leads to an error
-* Feature #12598: Add tooltip on Workflow matrix for helping in big ones
-* Feature #16484: Add default timezone for new users
-* Feature #24780: Add tooltip on Permissions report matrix
-* Feature #24790:  Add tooltip on trackers summary matrix
-
-=== [Attachments]
-
-* Defect #24308: Allow Journal to return empty Array instead nil in Journal#attachments
-* Feature #13072: Delete multiple attachments with one action
-* Patch #22941: Allow thumbnails on documents, messages and wiki pages
-* Patch #24186: Restrict the length attachment filenames on disk
-* Patch #25215: Re-use existing identical disk files for new attachments
-* Patch #25240: Use SHA256 for attachment digest computation
-* Patch #25295: Use path instead of URL of image in preview
-
-=== [Code cleanup/refactoring]
-
-* Defect #24928: Wrong text in log/delete.me
-* Defect #25563: Remove is_binary_data? from String
-* Feature #15361: Use css pseudo-classes instead of cycle("odd", "even")
-* Patch #24313: Use the regular "icon icon-*" classes for all elements with icons
-* Patch #24382: More readable regex for parse_redmine_links
-* Patch #24523: Source: ignore .idea
-* Patch #24578: Remove unused CSS class ".icon-details"
-* Patch #24643: Rename "issue" to "item" in query helpers
-* Patch #24713: Remove iteration in ApplicationHelper#syntax_highlight_lines
-* Patch #24832: Remove instance variable which is unused after r9603
-* Patch #24899: Remove unused "description_date_*" from locale files
-* Patch #24900: Remove unused "label_planning" from locale files
-* Patch #24901: Remove unused "label_more" from locale files
-* Patch #26149: Remove duplicate method shell_quote
-
-=== [Core Plugins]
-
-* Feature #24167: Rebuild a single nested set with nested_set plugin
-
-=== [Custom fields]
-
-* Feature #6719: File format for custom fields (specific file uploads)
-* Feature #16549: Set multiple values in emails for list custom fields
-* Feature #23265: Group versions by status in version custom field filter
-* Patch #21705: Option for long text custom fields to be displayed using full width
-* Patch #24801:  Flash messages on CustomFields destroy
-
-=== [Database]
-
-* Defect #23347: MySQL: You can't specify target table for update in FROM clause
-* Defect #25416: "My account" broken with MySQL 8.0 (keyword admin should be escaped)
-
-=== [Documentation]
-
-* Defect #21375: Working external URL prefixes (protocols and 'www' host part) not documented in wiki syntax
-* Feature #25616: Change format of the changelog (both on redmine.org and in the shipped changelog file)
-* Patch #24800: Remove internal style sheet duplication and obsoleted meta tag from wiki_syntax_* documentation.
-* Patch #26188: Documentation (detailed syntax help & code) additions/improvements
-
-=== [Email notifications]
-
-* Feature #25842: Add table border to email notifications
-* Patch #23978: Make the email notifications for adding/updating issues more readable/clear
-
-=== [Email receiving]
-
-* Defect #25256: Mail parts with empty content should be ignored
-* Feature #5864: Regex Text on Receiver Email
-* Patch #17718: Body delimiters to truncate emails do not take uncommon whitespace into account
-
-=== [Forums]
-
-* Patch #24535: Flash messages on Board destroy
-
-=== [Gantt]
-
-* Patch #25876: Gantt chart shows % done even if the field is disabled for the tracker
-
-=== [Gems support]
-
-* Feature #23932: Update TinyTds to recent version (1.0.5)
-* Feature #25781: Markdown: Upgrade redcarpet gem to 3.4
-
-=== [Hook requests]
-
-* Patch #23545: Add before_render hook to WikiController#show
-
-=== [I18n]
-
-* Defect #24616: Should not replace all invalid utf8 characters (e.g in mail)
-* Patch #24938: Update tr.yml for general_first_day_of_week
-* Patch #25014: redmine/i18n.rb - languages_lookup class variable is rebuilt every time
-
-=== [Importers]
-
-* Feature #22701: Allow forward reference to parent when importing issues
-
-=== [Issues]
-
-* Defect #5385: Status filter should show statuses related to project trackers only
-* Defect #15226: Searching for issues with "updated = none" always returns zero results
-* Defect #16260: Add Subtask does not work correctly from tasks with Parent Task field disabled
-* Defect #17632: Users can't see private notes created by themselves if "Mark notes as private" is set but "View private notes" is not
-* Defect #17762: When copying an issue and changing the project, the list of watchers is not updated
-* Defect #20127: The description column in the issues table is too short (MySQL)
-* Defect #21579: The cancel operation in the issue edit mode doesn't work
-* Defect #23511: Progress of parent task should be calculated using total estimated hours of children
-* Defect #23755: Bulk edit form not show fields based on target tracker and status
-* Feature #482: Default assignee on each project
-* Feature #3425: View progress bar of related issues
-* Feature #10460: Option to copy watchers when copying issues
-* Feature #10989: Prevent parent issue from being closed if a child issue is open
-* Feature #12706: Ability to change the private flag when editing a note
-* Feature #20279: Allow to filter issues with "Any" or "None" target version defined when viewing all issues
-* Feature #21623: Journalize values that are cleared after project or tracker change
-* Feature #22600: Add warning when loosing data from custom fields when bulk editing issues
-* Feature #23610: Reset status when copying issues
-* Feature #24015: Do not hide estimated_hours label when value is nil
-* Feature #25052: Allow to disable description field in tracker setting
-* Patch #23888: Show an error message when changing an issue's project fails due to errors in child issues
-* Patch #24692: Issue destroy : Reassign time issue autocomplete
-* Patch #24877: Filter parent task issues in auto complete by open/closed status depending on the subtask status
-* Patch #25055: Filter out current issue from the related issues autocomplete
-
-=== [Issues filter]
-
-* Defect #24769: User custom field filter lists only "Me" on cross project issue list
-* Defect #24907: Issue queries: "Default columns" option conflicts with "Show description"
-* Defect #25077: Issue description filter's 'none' operator does not match issues with blank descriptions
-* Feature #2783: Filter issues by attachments
-* Feature #10412: Target version filter shoud group versions by status
-* Feature #15773: Filtering out specific subprojects (using 'is not' operator)
-* Feature #17720: Filter issues by "Updated by" and "Last updated by"
-* Feature #21249: Ability to filter issues by attributes of a version custom field (e.g. release date)
-* Feature #23215: Add the possibility to filter issues after Target Version's Status and Due Date
-
-=== [Issues list]
-
-* Feature #1474: Show last comment/notes in the issue list
-* Feature #6375: Last updated by colum in issue list
-* Feature #25515: View attachments on the issue list
-* Patch #24649: Make Spent time clickable in issue lists
-
-=== [Issues workflow]
-
-* Defect #14696: Limited status when copying an issue
-* Patch #24281: Workflow editing shows statuses of irrelevant roles
-
-=== [My page]
-
-* Feature #1565: Custom query on My page
-* Feature #7769: Sortable columns in issue lists on "My page"
-* Feature #8761: My page - Spent time section only display 7 days, make it a parameter
-* Feature #23459: Columns selection on the issues lists on "My page"
-* Feature #25297: In place editing of "My page" layout
-
-=== [Performance]
-
-* Defect #24433: The changeset display is slow when changeset_issues has very many records
-* Feature #23743: Add index to workflows.tracker_id
-* Feature #23987: Add an index on issues.parent_id
-* Patch #21608: Project#allowed_to_condition performance
-* Patch #22850: Speedup remove_inherited_roles
-* Patch #23519: Don't preload projects and roles on Principal#memberships association
-* Patch #24587: Improve custom fields list performance
-* Patch #24787: Don't preload all filter values when displaying issues/time entries
-* Patch #24839: Minor performance improvement - Replace count by exists?
-* Patch #24865: Load associations of query results more efficiently
-* Patch #25022: Add an index on attachments.disk_filename
-
-=== [Permissions and roles]
-
-* Feature #4866: New permission: view forum
-* Feature #7068: New permission: view news
-
-=== [Project settings]
-
-* Defect #23470: Disable "Select project modules" permission does not apply to the new project form
-* Feature #22608:  Enable filtering versions on Project -> Settings -> Versions
-* Feature #24011: Add option to set a new version as default directly from New Version page
-
-=== [REST API]
-
-* Defect #23921: REST API Issue PUT responds 200 OK even when it can't set assigned_to_id
-* Feature #7506: Include allowed activities list in "project" API response
-* Feature #12181: Add attachment information to issues.xml in REST API
-* Feature #23566: REST API should return attachment's id in addition to token
-* Patch #19116: Files REST API
-* Patch #22356: Add support for updating attachments over REST API
-* Patch #22795: Render custom field values of enumerations in API requests
-
-=== [Roadmap]
-
-* Defect #23377: Don't show "status" field when creating a new version
-* Feature #23137: Completed versions on Roadmap: Sort it so that recently created versions are on top
-
-=== [Ruby support]
-
-* Feature #25048: Ruby 2.4 support
-
-=== [SCM]
-
-* Defect #14626: Repositories' extra_info column is too short with MySQL
-
-=== [SCM extra]
-
-* Defect #23865: Typo: s/projet/project/ in Redmine.pm comments
-
-=== [Search engine]
-
-* Feature #9909: Search in project and its subprojects by default
-
-=== [Text formatting]
-
-* Defect #26310: "attachment:filename" should generate a link to preview instead of download
-* Feature #4179: Link to user in wiki syntax
-* Feature #22758: Make text formatting of commit messages optional
-* Feature #24922: Support high resolution images in formatted content
-* Patch #26157: Render all possible inline textile images
-
-=== [Themes]
-
-* Defect #25118: ThemesTest#test_without_theme_js may fail if third-party theme is installed
-
-=== [Time tracking]
-
-* Defect #13653: Keep displaying spent time page when switching project via dropdown menu
-* Defect #23912: No validation error when date value is invalid in time entries filter
-* Defect #24041: Issue subject is not updated when you select another issue in the new "Log time" page
-* Feature #588: Move timelog between projects
-* Feature #13558: Add version filter in spent time report
-* Feature #14790: Ability to save spent time query filters
-* Feature #16843: Enable grouping on time entries list
-* Feature #23401: Add tracker and status columns/filters to detailed timelog
-* Feature #24157: Make project custom fields available in timelogs columns
-* Feature #24577: Settings to make the issue and/or comment fields mandatory for time logs
-* Patch #24189: Time entry form - limit issue autocomplete to already selected project
-
-=== [Translations]
-
-* Defect #25470: Fix Japanese mistranslation for field_base_dn
-* Defect #25687: Bad translation in french for indentation
-* Patch #23108: Change Japanese translation for text_git_repository_note
-* Patch #23250: Fixes issues with Catalan translation
-* Patch #23359: Change Japanese translation for label_commits_per_author
-* Patch #23388: German translation change
-* Patch #23419: Change Japanese translation for label_display_used_statuses_only
-* Patch #23659: Change Japanese translation for label_enumerations
-* Patch #23806: Fix Japanese translation inconsistency of label_tracker_new and label_custom_field_new
-* Patch #24174: Change Japanese translation for "format"
-* Patch #24177: Change translation for label_user_mail_option_only_(assigned|owner)
-* Patch #24268: Wrong German translation of logging time error message
-* Patch #24407: Dutch (NL) translation enhancements and complete review (major update)
-* Patch #24494: Spanish Panama "label_issue_new" translation change
-* Patch #24518: Spanish translation change (adding accent mark and caps)
-* Patch #24572: Spanish label_search_open_issues_only: translation change
-* Patch #24750: Change Japanese translation for setting_text_formatting and setting_cache_formatted_text
-* Patch #24891: Change Japanese translation for "items"
-* Patch #25019: Localization for Ukrainian language - completed
-* Patch #25204: Portuguese translation file
-* Patch #25392: Change Russian translation for field_due_date and label_relation_new
-* Patch #25609: Change Japanese translation for field_attr_*
-* Patch #25628: Better wording for issue update conflict resolution in German
-* Patch #26180: Change Russian translation for "Estimated time"
-
-=== [UI]
-
-* Defect #23575: Issue subjects are truncated at 60 characters on activity page
-* Defect #23840: Reduce the maximum height of the issue description field
-* Defect #23979: Elements are not aligned properly in issues table for some cases
-* Defect #24617: Browser js/css cache remains after upgrade
-* Feature #5920: Unify and improve cross-project views layout
-* Feature #9850: Differentiate shared versions in version-format custom field drop-downs by prepending its project name
-* Feature #10250: Renaming "duplicates" and "duplicated by" to something less confusing
-* Feature #23310: Improved "jump to project" drop-down
-* Feature #23311: New "Spent time" menu tab when spent time module is enabled on project
-* Feature #23653: User preference for monospaced / variable-width font in textareas
-* Feature #23996: Introduce a setting to change the display format of timespans to HH:MM
-* Feature #24720: Move all 'new item' links in project settings to above the item tables
-* Feature #24927: Render high resolution Gravatars and Thumbnails
-* Feature #25988: Preview files by default instead of downloading them
-* Feature #25999: View repository content by default (instead of the history)
-* Feature #26035: More visually consistent download links
-* Feature #26071: Generate markup for uploaded image dropped into wiki-edit textarea
-* Feature #26189: For 3 comments or more on news items and forum messages, show reply link at top of comments as well
-* Patch #23146: Show revision details using the same structure and look from the journals details
-* Patch #23192: Add the new pagination style in the activity page
-* Patch #23639: Add "Log time" to global button menu (+)
-* Patch #23998: Added link to author in Repository
-* Patch #24776: UI inconsistencies on /enumerations/index view
-* Patch #24833: Always show "Jump to project" drop-down
-* Patch #25320: Remove initial indentation of blockquotes for better readability
-* Patch #25775: Show assignee's icon in addition to author's icon
-
-=== [Wiki]
-
-* Feature #12183: Hide attachments by default on wiki pages
-* Feature #23179: Add heading to table of contents macro
-
-== 2017-07-02 v3.3.4
-
-=== [Accounts / authentication]
-
-* Patch #25653: Fix NoMethodError on HEAD requests to AccountController#register
-
-=== [Code cleanup/refactoring]
-
-* Defect #26055: Three issues with Redmine::SyntaxHighlighting::CodeRay.language_supported?
-
-=== [Gems support]
-
-* Defect #25829: mysql2 0.3 gem doesn't properly close connections
-
-=== [Importers]
-
-* Patch #25861: CSV Importer - handle UndefinedConversionErrors
-
-=== [Issues]
-
-* Defect #26072: Set default assignee before validation
-
-=== [Issues filter]
-
-* Defect #25212: User profile should link to issues assigned to user or his groups
-
-=== [Issues permissions]
-
-* Defect #25791: Bypass Tracker role-based permissions when copying issues
-
-=== [Security]
-
-* Defect #26183: Use Nokogiri 1.7.2
-
-=== [Text formatting]
-
-* Defect #25634: Highlight language aliases are no more supported
-
-=== [Translations]
-
-* Patch #26264:  Simplified Chinese translation for 3.3-stable
 
 === [UI]
 

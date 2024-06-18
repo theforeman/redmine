@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
 
 if ENV["COVERAGE"]
   require 'simplecov'
-  require File.expand_path(File.dirname(__FILE__) + "/coverage/html_formatter")
+  require_relative 'coverage/html_formatter'
   SimpleCov.formatter = Redmine::Coverage::HtmlFormatter
   SimpleCov.start 'rails'
 end
@@ -27,10 +27,10 @@ end
 $redmine_test_ldap_server = ENV['REDMINE_TEST_LDAP_SERVER'] || '127.0.0.1'
 
 ENV["RAILS_ENV"] = "test"
-require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
+require_relative '../config/environment'
 require 'rails/test_help'
 
-require File.expand_path(File.dirname(__FILE__) + '/object_helpers')
+require_relative 'object_helpers'
 include ObjectHelpers
 
 require 'net/ldap'
@@ -126,7 +126,7 @@ class ActiveSupport::TestCase
     return @test_ldap.bind
   rescue => e
     # LDAP is not listening
-    return nil
+    return false
   end
 
   def self.convert_installed?
@@ -201,6 +201,11 @@ class ActiveSupport::TestCase
 
   def mysql?
     Redmine::Database.mysql?
+  end
+
+  def mysql8?
+    version = Redmine::Database.mysql_version.sub(/^(\d+\.\d+\.\d+).*/, '\1')
+    Gem::Version.new(version) >= Gem::Version.new('8.0.0')
   end
 
   def postgresql?
@@ -340,7 +345,7 @@ module Redmine
   class ControllerTest < ActionController::TestCase
     # Returns the issues that are displayed in the list in the same order
     def issues_in_list
-      ids = css_select('tr.issue td.id').map(&:text).map(&:to_i)
+      ids = css_select('tr.issue td.id').map {|e| e.text.to_i}
       Issue.where(:id => ids).sort_by {|issue| ids.index(issue.id)}
     end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class ProjectTest < ActiveSupport::TestCase
   fixtures :projects, :trackers, :issue_statuses, :issues,
@@ -66,13 +66,13 @@ class ProjectTest < ActiveSupport::TestCase
     end
 
     with_settings :sequential_project_identifiers => '1' do
-      assert !Project.new.identifier.blank?
+      assert Project.new.identifier.present?
       assert Project.new(:identifier => '').identifier.blank?
     end
 
     with_settings :sequential_project_identifiers => '0' do
       assert Project.new.identifier.blank?
-      assert !Project.new(:identifier => 'test').blank?
+      assert Project.new(:identifier => 'test').present?
     end
 
     with_settings :default_projects_modules => ['issue_tracking', 'repository'] do
@@ -534,6 +534,8 @@ class ProjectTest < ActiveSupport::TestCase
     WorkflowTransition.create(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 4)
     WorkflowTransition.create(:role_id => 1, :tracker_id => 1, :old_status_id => 2, :new_status_id => 3)
     WorkflowTransition.create(:role_id => 1, :tracker_id => 2, :old_status_id => 1, :new_status_id => 3)
+    WorkflowTransition.create(:role_id => 1, :tracker_id => 1, :old_status_id => 5, :new_status_id => 5)
+    WorkflowTransition.create(:role_id => 1, :tracker_id => 2, :old_status_id => 5, :new_status_id => 5)
 
     assert_kind_of IssueStatus, project.rolled_up_statuses.first
     assert_equal IssueStatus.find(1), project.rolled_up_statuses.first

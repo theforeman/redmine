@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -48,6 +48,7 @@ class Attachment < ActiveRecord::Base
     :scope =>
       proc do
         select("#{Attachment.table_name}.*").
+          where(container_type: ['Version', 'Project']).
           joins(
             "LEFT JOIN #{Version.table_name} " \
               "ON #{Attachment.table_name}.container_type='Version' " \
@@ -219,7 +220,7 @@ class Attachment < ActiveRecord::Base
   end
 
   def image?
-    !!(self.filename =~ /\.(bmp|gif|jpg|jpe|jpeg|png)$/i)
+    !!(self.filename =~ /\.(bmp|gif|jpg|jpe|jpeg|png|webp)$/i)
   end
 
   def thumbnailable?
@@ -524,9 +525,7 @@ class Attachment < ActiveRecord::Base
 
   # Physically deletes the file from the file system
   def delete_from_disk!
-    if disk_filename.present? && File.exist?(diskfile)
-      File.delete(diskfile)
-    end
+    FileUtils.rm_f(diskfile) if disk_filename.present?
     Dir[thumbnail_path("*")].each do |thumb|
       File.delete(thumb)
     end

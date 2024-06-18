@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,8 +21,7 @@ module JournalsHelper
 
   # Returns the attachments of a journal that are displayed as thumbnails
   def journal_thumbnail_attachments(journal)
-    ids = journal.details.select {|d| d.property == 'attachment' && d.value.present?}.map(&:prop_key)
-    ids.any? ? Attachment.where(:id => ids).select(&:thumbnailable?).sort_by{|a| ids.index(a.id.to_s)} : []
+    journal.attachments.select(&:thumbnailable?)
   end
 
   # Returns the action links for an issue journal
@@ -78,5 +77,11 @@ module JournalsHelper
     content = journal.private_notes? ? l(:field_is_private) : ''
     css_classes = journal.private_notes? ? 'badge badge-private private' : ''
     content_tag('span', content.html_safe, :id => "journal-#{journal.id}-private_notes", :class => css_classes)
+  end
+
+  def render_journal_update_info(journal)
+    return if journal.created_on == journal.updated_on
+
+    content_tag('span', "· #{l(:label_edited)}", :title => l(:label_time_by_author, :time => format_time(journal.updated_on), :author => journal.updated_by), :class => 'update-info')
   end
 end

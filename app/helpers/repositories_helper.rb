@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -52,7 +52,7 @@ module RepositoriesHelper
   end
 
   def render_changeset_changes
-    changes = @changeset.filechanges.limit(1000).reorder('path').collect do |change|
+    changes = @changeset.filechanges.limit(1000).reorder('path').filter_map do |change|
       case change.action
       when 'A'
         # Detects moved/copied files
@@ -66,7 +66,7 @@ module RepositoriesHelper
       else
         change
       end
-    end.compact
+    end
 
     tree = {}
     changes.each do |change|

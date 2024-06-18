@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -60,6 +60,8 @@ class Role < ActiveRecord::Base
     where("#{compare} builtin = 0")
   end)
 
+  belongs_to :default_time_entry_activity, :class_name => 'TimeEntryActivity'
+
   before_destroy :check_deletable
   has_many :workflow_rules, :dependent => :delete_all
   has_and_belongs_to_many :custom_fields, :join_table => "#{table_name_prefix}custom_fields_roles#{table_name_suffix}", :foreign_key => "role_id"
@@ -104,7 +106,8 @@ class Role < ActiveRecord::Base
     'managed_role_ids',
     'permissions',
     'permissions_all_trackers',
-    'permissions_tracker_ids'
+    'permissions_tracker_ids',
+    'default_time_entry_activity_id'
   )
 
   # Copies attributes from another role, arg can be an id or a Role
@@ -119,7 +122,7 @@ class Role < ActiveRecord::Base
   end
 
   def permissions=(perms)
-    perms = perms.collect {|p| p.to_sym unless p.blank?}.compact.uniq if perms
+    perms = perms.filter_map {|p| p.to_sym unless p.blank?}.uniq if perms
     write_attribute(:permissions, perms)
   end
 
@@ -152,14 +155,14 @@ class Role < ActiveRecord::Base
   end
 
   def <=>(role)
-    if role
-      if builtin == role.builtin
-        position <=> role.position
-      else
-        builtin <=> role.builtin
-      end
+    # returns -1 for nil since r2726
+    return -1 if role.nil?
+    return nil unless role.is_a?(Role)
+
+    if builtin == role.builtin
+      position <=> role.position
     else
-      -1
+      builtin <=> role.builtin
     end
   end
 

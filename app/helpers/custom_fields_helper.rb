@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -155,7 +155,7 @@ module CustomFieldsHelper
   def custom_field_value_tag(value)
     attr_value = show_value(value)
 
-    if !attr_value.blank? && value.custom_field.full_text_formatting?
+    if attr_value.present? && value.custom_field.full_text_formatting?
       content_tag('div', attr_value, :class => 'wiki')
     else
       attr_value

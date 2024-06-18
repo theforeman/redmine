@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -286,11 +286,7 @@ module Redmine
 
         if options[:parent]
           subtree = self.find(options[:parent])
-          if subtree
-            target_root = subtree
-          else
-            target_root = @menu_items.root
-          end
+          target_root = subtree || @menu_items.root
 
         else
           target_root = @menu_items.root

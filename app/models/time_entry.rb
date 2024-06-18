@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -107,9 +107,7 @@ class TimeEntry < ActiveRecord::Base
   def initialize(attributes=nil, *args)
     super
     if new_record? && self.activity.nil?
-      if default_activity = TimeEntryActivity.default(self.project)
-        self.activity_id = default_activity.id
-      end
+      self.activity_id = TimeEntryActivity.default_activity_id(User.current, self.project)
       self.hours = nil if hours == 0
     end
   end

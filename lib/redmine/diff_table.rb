@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@ module Redmine
     # Initialize with a Diff file and the type of Diff View
     # The type view must be inline or sbs (side_by_side)
     def initialize(type="inline", style=nil)
+      super()
       @parsing = false
       @added = 0
       @removed = 0
@@ -118,7 +119,7 @@ module Redmine
     end
 
     def parse_line(line, type="inline")
-      if line[0, 1] == "+"
+      if line.start_with?('+')
         diff = diff_for_added_line
         diff.line_right = line[1..-1]
         diff.nb_line_right = @line_num_r
@@ -126,7 +127,7 @@ module Redmine
         @line_num_r += 1
         @added += 1
         true
-      elsif line[0, 1] == "-"
+      elsif line.start_with?('-')
         diff = Diff.new
         diff.line_left = line[1..-1]
         diff.nb_line_left = @line_num_l
@@ -137,7 +138,7 @@ module Redmine
         true
       else
         write_offsets
-        if /\s/.match?(line[0, 1])
+        if line.start_with?(/\s/)
           diff = Diff.new
           diff.line_right = line[1..-1]
           diff.nb_line_right = @line_num_r

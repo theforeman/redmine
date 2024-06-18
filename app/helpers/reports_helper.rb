@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,5 +43,23 @@ module ReportsHelper
   def aggregate_path(project, field, row, options={})
     parameters = {:set_filter => 1, :subproject_id => '!*', field => (row.id || '!*')}.merge(options)
     project_issues_path(row.is_a?(Project) ? row : project, parameters)
+  end
+
+  def issue_report_details_to_csv(field_name, statuses, rows, data)
+    Redmine::Export::CSV.generate(:encoding => params[:encoding]) do |csv|
+      # csv headers
+      headers = [''] + statuses.map(&:name) + [l(:label_open_issues_plural), l(:label_closed_issues_plural), l(:label_total)]
+      csv << headers
+
+      # csv lines
+      rows.each do |row|
+        csv <<
+          [row.name] +
+          statuses.map{|s| aggregate(data, { field_name => row.id, 'status_id' => s.id })} +
+          [aggregate(data, { field_name => row.id, 'closed' => 0 })] +
+          [aggregate(data, { field_name => row.id, 'closed' => 1 })] +
+          [aggregate(data, { field_name => row.id })]
+      end
+    end
   end
 end

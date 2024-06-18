@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,10 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../../test_helper', __FILE__)
+require_relative '../../test_helper'
 
 class Redmine::ApiTest::UsersTest < Redmine::ApiTest::Base
-  fixtures :users, :email_addresses, :members, :member_roles, :roles, :projects
+  fixtures :users, :groups_users, :email_addresses, :members, :member_roles, :roles, :projects
 
   test "GET /users.xml should return users" do
     users = User.active.order('login')
@@ -80,6 +80,67 @@ class Redmine::ApiTest::UsersTest < Redmine::ApiTest::Base
         assert_nil user_json['twofa_scheme']
       end
     end
+  end
+
+  test "GET /users.json with legacy filter params" do
+    get '/users.json', headers: credentials('admin'), params: { status: 3 }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    users = User.where(status: 3)
+    assert_equal users.size, json['users'].size
+
+    get '/users.json', headers: credentials('admin'), params: { status: '*' }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    users = User.logged
+    assert_equal users.size, json['users'].size
+
+    get '/users.json', headers: credentials('admin'), params: { status: ''}
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    users = User.logged
+    assert_equal users.size, json['users'].size
+
+    get '/users.json', headers: credentials('admin'), params: { name: 'jsmith' }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    assert_equal 1, json['users'].size
+    assert_equal 2, json['users'][0]['id']
+
+    get '/users.json', headers: credentials('admin'), params: { group_id: '10' }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    assert_equal 1, json['users'].size
+    assert_equal 8, json['users'][0]['id']
+
+    # there should be an implicit filter for status = 1
+    User.where(id: [2, 8]).update_all status: 3
+
+    get '/users.json', headers: credentials('admin'), params: { name: 'jsmith' }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    assert_equal 0, json['users'].size
+
+    get '/users.json', headers: credentials('admin'), params: { group_id: '10' }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    assert_equal 0, json['users'].size
+  end
+
+  test "GET /users.json with short filters" do
+    get '/users.json', headers: credentials('admin'), params: { status: "1|3" }
+    assert_response :success
+    json = ActiveSupport::JSON.decode(response.body)
+    assert json.key?('users')
+    users = User.where(status: [1, 3])
+    assert_equal users.size, json['users'].size
   end
 
   test "GET /users/:id.xml should return the user" do

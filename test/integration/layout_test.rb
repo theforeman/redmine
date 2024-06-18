@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require File.expand_path('../../test_helper', __FILE__)
+require_relative '../test_helper'
 
 class LayoutTest < Redmine::IntegrationTest
   fixtures :projects, :trackers, :issue_statuses, :issues,
@@ -126,5 +126,12 @@ class LayoutTest < Redmine::IntegrationTest
   def test_search_field_inside_project_should_link_to_project_search
     get '/projects/ecookbook'
     assert_select 'div#quick-search form[action="/projects/ecookbook/search"]'
+  end
+
+  def test_help_and_powered_by_redmine_link_should_open_separate_tab
+    get '/'
+    assert_select '#top-menu a.help[target="_blank"][rel="noopener"]'
+    # "Powered by Redmine" link
+    assert_select '#footer a[target="_blank"][rel="noopener"]'
   end
 end

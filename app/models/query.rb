@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -126,10 +126,13 @@ end
 
 class QueryCustomFieldColumn < QueryColumn
   def initialize(custom_field, options={})
-    self.name = "cf_#{custom_field.id}".to_sym
-    self.sortable = custom_field.order_statement || false
-    self.totalable = options.key?(:totalable) ? !!options[:totalable] : custom_field.totalable?
-    @inline = custom_field.full_width_layout? ? false : true
+    name = "cf_#{custom_field.id}".to_sym
+    super(
+      name,
+      :sortable => custom_field.order_statement || false,
+      :totalable =>  options.key?(:totalable) ? !!options[:totalable] : custom_field.totalable?,
+      :inline => custom_field.full_width_layout? ? false : true
+    )
     @cf = custom_field
   end
 
@@ -150,7 +153,8 @@ class QueryCustomFieldColumn < QueryColumn
   end
 
   def value_object(object)
-    if custom_field.visible_by?(object.project, User.current)
+    project = object.project if object.respond_to?(:project)
+    if custom_field.visible_by?(project, User.current)
       cv = object.custom_values.select {|v| v.custom_field_id == @cf.id}
       cv.size > 1 ? cv.sort_by {|e| e.value.to_s} : cv.first
     else
@@ -302,6 +306,7 @@ class Query < ActiveRecord::Base
     "t-"  => :label_ago,
     "~"   => :label_contains,
     "!~"  => :label_not_contains,
+    "*~"  => :label_contains_any_of,
     "^"   => :label_starts_with,
     "$"   => :label_ends_with,
     "=p"  => :label_any_issues_in_project,
@@ -309,18 +314,24 @@ class Query < ActiveRecord::Base
     "!p"  => :label_no_issues_in_project,
     "*o"  => :label_any_open_issues,
     "!o"  => :label_no_open_issues,
+    "ev"  => :label_has_been,       # "ev" stands for "ever"
+    "!ev" => :label_has_never_been,
+    "cf"  => :label_changed_from
   }
 
   class_attribute :operators_by_filter_type
   self.operators_by_filter_type = {
     :list => [ "=", "!" ],
-    :list_status => [ "o", "=", "!", "c", "*" ],
+    :list_with_history =>  [ "=", "!", "ev", "!ev", "cf" ],
+    :list_status => [ "o", "=", "!", "ev", "!ev", "cf", "c", "*" ],
     :list_optional => [ "=", "!", "!*", "*" ],
+    :list_optional_with_history => [ "=", "!", "ev", "!ev", "cf", "!*", "*" ],
     :list_subprojects => [ "*", "!*", "=", "!" ],
     :date => [ "=", ">=", "<=", "><", "<t+", ">t+", "><t+", "t+", "nd", "t", "ld", "nw", "w", "lw", "l2w", "nm", "m", "lm", "y", ">t-", "<t-", "><t-", "t-", "!*", "*" ],
     :date_past => [ "=", ">=", "<=", "><", ">t-", "<t-", "><t-", "t-", "t", "ld", "w", "lw", "l2w", "m", "lm", "y", "!*", "*" ],
-    :string => [ "~", "=", "!~", "!", "^", "$", "!*", "*" ],
-    :text => [  "~", "!~", "^", "$", "!*", "*" ],
+    :string => [ "~", "*~", "=", "!~", "!", "^", "$", "!*", "*" ],
+    :text => [  "~", "*~", "!~", "^", "$", "!*", "*" ],
+    :search => [ "~", "*~", "!~" ],
     :integer => [ "=", ">=", "<=", "><", "!*", "*" ],
     :float => [ "=", ">=", "<=", "><", "!*", "*" ],
     :relation => ["=", "!", "=p", "=!p", "!p", "*o", "!o", "!*", "*"],
@@ -501,7 +512,7 @@ class Query < ActiveRecord::Base
 
       add_filter_error(field, :blank) unless
           # filter requires one or more values
-          (values_for(field) and !values_for(field).first.blank?) or
+          (values_for(field) and values_for(field).first.present?) or
           # filter doesn't require any value
           ["o", "c", "!*", "*", "nd", "t", "ld", "nw", "w", "lw", "l2w", "nm", "m", "lm", "y", "*o", "!o"].include? operator_for(field)
     end if filters
@@ -541,7 +552,7 @@ class Query < ActiveRecord::Base
       if has_filter?(field) || !filter.remote
         options[:values] = filter.values
         if options[:values] && values_for(field)
-          missing = Array(values_for(field)).select(&:present?) - options[:values].map{|v| v[1]}
+          missing = Array(values_for(field)).select(&:present?) - options[:values].pluck(1)
           if missing.any? && respond_to?(method = "find_#{field}_filter_values")
             options[:values] += send(method, missing)
           end
@@ -786,9 +797,9 @@ class Query < ActiveRecord::Base
     return [] if available_columns.empty?
 
     # preserve the column_names order
-    cols = (has_default_columns? ? default_columns_names : column_names).collect do |name|
+    cols = (has_default_columns? ? default_columns_names : column_names).filter_map do |name|
       available_columns.find {|col| col.name == name}
-    end.compact
+    end
     available_columns.select(&:frozen?) | cols
   end
 
@@ -826,7 +837,7 @@ class Query < ActiveRecord::Base
 
   def column_names=(names)
     if names
-      names = names.select {|n| n.is_a?(Symbol) || !n.blank?}
+      names = names.select {|n| n.is_a?(Symbol) || n.present?}
       names = names.collect {|n| n.is_a?(Symbol) ? n : n.to_sym}
       if names.delete(:all_inline)
         names = available_inline_columns.map(&:name) | names
@@ -845,7 +856,7 @@ class Query < ActiveRecord::Base
   end
 
   def has_custom_field_column?
-    columns.any? {|column| column.is_a? QueryCustomFieldColumn}
+    columns.any?(QueryCustomFieldColumn)
   end
 
   def has_default_columns?
@@ -985,7 +996,7 @@ class Query < ActiveRecord::Base
 
       if field == 'project_id' || (self.type == 'ProjectQuery' && %w[id parent_id].include?(field))
         if v.delete('mine')
-          v += User.current.memberships.map(&:project_id).map(&:to_s)
+          v += User.current.memberships.map {|m| m.project_id.to_s}
         end
         if v.delete('bookmarks')
           v += User.current.bookmarked_project_ids
@@ -1265,7 +1276,7 @@ class Query < ActiveRecord::Base
       sql += " OR #{db_table}.#{db_field} = ''" if is_custom_filter || [:text, :string].include?(type_for(field))
     when "*"
       sql = "#{db_table}.#{db_field} IS NOT NULL"
-      sql += " AND #{db_table}.#{db_field} <> ''" if is_custom_filter
+      sql += " AND #{db_table}.#{db_field} <> ''" if is_custom_filter || [:text, :string].include?(type_for(field))
     when ">="
       if [:date, :date_past].include?(type_for(field))
         sql = date_clause(db_table, db_field, parse_date(value.first), nil, is_custom_filter)
@@ -1426,10 +1437,37 @@ class Query < ActiveRecord::Base
       sql = sql_contains("#{db_table}.#{db_field}", value.first)
     when "!~"
       sql = sql_contains("#{db_table}.#{db_field}", value.first, :match => false)
+    when "*~"
+      sql = sql_contains("#{db_table}.#{db_field}", value.first, :all_words => false)
     when "^"
       sql = sql_contains("#{db_table}.#{db_field}", value.first, :starts_with => true)
     when "$"
       sql = sql_contains("#{db_table}.#{db_field}", value.first, :ends_with => true)
+    when "ev", "!ev", "cf"
+      # has been,  has never been, changed from
+      if queried_class == Issue && value.present?
+        neg = (operator.start_with?('!') ? 'NOT' : '')
+        subquery =
+          "SELECT 1 FROM #{Journal.table_name}" +
+          " INNER JOIN #{JournalDetail.table_name} ON #{Journal.table_name}.id = #{JournalDetail.table_name}.journal_id" +
+          " WHERE (#{Journal.visible_notes_condition(User.current, :skip_pre_condition => true)}" +
+          " AND #{Journal.table_name}.journalized_type = 'Issue'" +
+          " AND #{Journal.table_name}.journalized_id = #{db_table}.id" +
+          " AND #{JournalDetail.table_name}.property = 'attr'" +
+          " AND #{JournalDetail.table_name}.prop_key = '#{db_field}'" +
+          " AND " +
+          queried_class.send(:sanitize_sql_for_conditions, ["#{JournalDetail.table_name}.old_value IN (?)", value.map(&:to_s)]) +
+          ")"
+        sql_ev =
+          if %w[ev !ev].include?(operator)
+            " OR " + queried_class.send(:sanitize_sql_for_conditions, ["#{db_table}.#{db_field} IN (?)", value.map(&:to_s)])
+          else
+            ''
+          end
+        sql = "#{neg} (EXISTS (#{subquery})#{sql_ev})"
+      else
+        sql = '1=0'
+      end
     else
       raise QueryError, "Unknown query operator #{operator}"
     end
@@ -1438,32 +1476,41 @@ class Query < ActiveRecord::Base
   end
 
   # Returns a SQL LIKE statement with wildcards
+  #
+  # valid options:
+  # * :match - use NOT LIKE if false
+  # * :starts_with - use LIKE 'value%' if true
+  # * :ends_with - use LIKE '%value' if true
+  # * :all_words - use OR instead of AND if false
+  #   (ignored if :starts_with or :ends_with is true)
   def sql_contains(db_field, value, options={})
     options = {} unless options.is_a?(Hash)
     options.symbolize_keys!
-    prefix = suffix = nil
-    prefix = '%' if options[:ends_with]
-    suffix = '%' if options[:starts_with]
-    if prefix || suffix
-      value = queried_class.sanitize_sql_like value
-      queried_class.sanitize_sql_for_conditions(
-        [Redmine::Database.like(db_field, '?', :match => options[:match]), "#{prefix}#{value}#{suffix}"]
-      )
-    else
-      queried_class.sanitize_sql_for_conditions(
-        ::Query.tokenized_like_conditions(db_field, value, **options)
-      )
-    end
+    queried_class.sanitize_sql_for_conditions(
+      ::Query.tokenized_like_conditions(db_field, value, **options)
+    )
   end
 
   # rubocop:disable Lint/IneffectiveAccessModifier
   def self.tokenized_like_conditions(db_field, value, **options)
     tokens = Redmine::Search::Tokenizer.new(value).tokens
     tokens = [value] unless tokens.present?
+
+    if options[:starts_with]
+      prefix, suffix = nil, '%'
+      logical_opr = ' OR '
+    elsif options[:ends_with]
+      prefix, suffix = '%', nil
+      logical_opr = ' OR '
+    else
+      prefix = suffix = '%'
+      logical_opr = options[:all_words] == false ? ' OR ' : ' AND '
+    end
+
     sql, values = tokens.map do |token|
-      [Redmine::Database.like(db_field, '?', options), "%#{sanitize_sql_like token}%"]
+      [Redmine::Database.like(db_field, '?', options), "#{prefix}#{sanitize_sql_like token}#{suffix}"]
     end.transpose
-    [sql.join(" AND "), *values]
+    [sql.join(logical_opr), *values]
   end
   # rubocop:enable Lint/IneffectiveAccessModifier
 

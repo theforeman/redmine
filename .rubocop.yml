@@ -1,7 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
   TargetRailsVersion: 6.1
 
   NewCops: enable
@@ -33,12 +33,10 @@ Layout/CaseIndentation:
     - 'config/initializers/10-patches.rb'
 
 Layout/ClosingParenthesisIndentation:
-  Enabled: true
   Exclude:
     - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
 
 Layout/EmptyLinesAroundAccessModifier:
-  Enabled: true
   Exclude:
     - 'config/initializers/10-patches.rb'
 
@@ -46,13 +44,11 @@ Layout/EmptyLineBetweenDefs:
   AllowAdjacentOneLineDefs: true
 
 Layout/FirstHashElementIndentation:
-  Enabled: true
   Exclude:
     - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
 
 Layout/LineLength:
-  Enabled: true
-  IgnoredPatterns: ['\A\s+test \".+\" do\z', '\A\s*\#']
+  AllowedPatterns: ['\A\s+test \".+\" do\z', '\A\s*\#']
   Exclude:
     - 'db/migrate/0*.rb'
     - 'db/migrate/1*.rb'
@@ -61,7 +57,6 @@ Layout/LineLength:
     - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
 
 Layout/RescueEnsureAlignment:
-  Enabled: true
   Exclude:
     - 'db/migrate/085_add_role_tracker_old_status_index_to_workflows.rb'
 
@@ -69,7 +64,6 @@ Layout/SpaceAroundEqualsInParameterDefault:
   Enabled: false
 
 Layout/SpaceBeforeSemicolon:
-  Enabled: true
   Exclude:
     - 'config/initializers/10-patches.rb'
 
@@ -79,20 +73,24 @@ Layout/SpaceBeforeBlockBraces:
   #   str = path.to_s.split(%r{[/\\]}).select{|p| !p.blank?}.join("/")
   Enabled: false
 
+Layout/SpaceBeforeFirstArg:
+  Enabled: false
+
 Layout/SpaceInsideBlockBraces:
   Enabled: false
 
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
-Lint/RaiseException:
-  Enabled: true
-
-Lint/StructNewOverride:
-  Enabled: true
+Lint/MissingSuper:
+  Exclude:
+    - 'lib/redmine/views/builders/structure.rb'
 
 Lint/SuppressedException:
   AllowComments: true
+
+Layout/LineContinuationLeadingSpace:
+  Enabled: false
 
 Layout/TrailingWhitespace:
   AllowInHeredoc: true
@@ -113,6 +111,24 @@ Naming/BinaryOperatorParameterName:
 Naming/PredicateName:
   Enabled: false
 
+Performance/CollectionLiteralInLoop:
+  MinSize: 4
+
+Rails/ActionControllerFlashBeforeRender:
+  # False positive in actions where `redirect_to_referer_or` is used
+  Enabled: false
+
+Rails/ActionControllerTestCase:
+  Enabled: false
+
+Rails/ActionOrder:
+  Enabled: false
+
+Rails/ActiveSupportOnLoad:
+  Exclude:
+    # TODO: Need to check the impact on plugins. Disable for now.
+    - 'lib/redmine/preparation.rb'
+
 Rails/BulkChangeTable:
   Exclude:
     - 'db/migrate/20120714122200_add_workflows_rule_fields.rb'
@@ -121,13 +137,44 @@ Rails/BulkChangeTable:
 Rails/CompactBlank:
   Enabled: false
 
+Rails/Delegate:
+  Enabled: false
+
 Rails/EnvironmentVariableAccess:
   Enabled: false
 
 Rails/FilePath:
   Enabled: false
 
+Rails/FindEach:
+  Enabled: false
+
 Rails/HelperInstanceVariable:
+  Enabled: false
+
+Rails/Pluck:
+  Exclude:
+  # `pluck` is not available in Gemfile
+  - 'Gemfile'
+
+Rails/RootPathnameMethods:
+  Enabled: false
+
+Rails/SquishedSQLHeredocs:
+  Enabled: false
+
+Rails/ThreeStateBooleanColumn:
+  Exclude:
+    - 'db/migrate/009_add_hide_mail_pref.rb'
+    - 'db/migrate/059_add_roles_assignable.rb'
+    - 'db/migrate/082_add_messages_locked.rb'
+    - 'db/migrate/086_add_custom_fields_searchable.rb'
+    - 'db/migrate/102_add_custom_fields_editable.rb'
+    - 'db/migrate/20120115143100_add_repositories_is_default.rb'
+    - 'db/migrate/20120127174243_add_custom_fields_multiple.rb'
+    - 'db/migrate/20210704125704_add_twofa_required_to_groups.rb'
+
+Rails/WhereExists:
   Enabled: false
 
 Style/AsciiComments:
@@ -137,17 +184,18 @@ Style/AsciiComments:
     - 'app/models/repository/git.rb'
 
 Style/BlockComments:
-  Enabled: true
   Exclude:
     - 'lib/redmine/string_array_diff/diff.rb'
     - 'lib/redmine/string_array_diff/diffable.rb'
 
 Style/BlockDelimiters:
-  Enabled: true
   Exclude:
     - 'db/migrate/007_create_journals.rb'
     - 'lib/redmine/string_array_diff/diff.rb'
     - 'lib/redmine/string_array_diff/diffable.rb'
+
+Style/FetchEnvVar:
+  Enabled: false
 
 Style/EmptyElse:
   EnforcedStyle: empty
@@ -159,7 +207,6 @@ Style/FormatStringToken:
   Enabled: false
 
 Style/FrozenStringLiteralComment:
-  Enabled: true
   EnforcedStyle: always
   Exclude:
     - 'db/**/*.rb'
@@ -171,23 +218,16 @@ Style/FrozenStringLiteralComment:
 Style/GlobalStdStream:
   Enabled: false
 
-Style/HashEachMethods:
-  Enabled: true
-
 Style/HashSyntax:
-  Enabled: true
   EnforcedStyle: no_mixed_keys
-
-Style/HashTransformKeys:
-  Enabled: true
-
-Style/HashTransformValues:
-  Enabled: true
 
 Style/IdenticalConditionalBranches:
   Exclude:
     - 'config/initializers/10-patches.rb'
     - 'lib/redmine/wiki_formatting/textile/redcloth3.rb'
+
+Style/InverseMethods:
+  Enabled: false
 
 Style/NegatedIfElseCondition:
   Enabled: false
@@ -195,8 +235,30 @@ Style/NegatedIfElseCondition:
 Style/RaiseArgs:
   Enabled: false
 
+Style/RedundantConstantBase:
+  Exclude:
+    - 'config/environments/production.rb'
+
+Style/Semicolon:
+  Enabled: false
+
+Style/SlicingWithRange:
+  Enabled: false
+
+Style/SoleNestedConditional:
+  Enabled: false
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/TernaryParentheses:
+  Enabled: false
+
 Style/TrailingCommaInArrayLiteral:
   Enabled: false
 
 Style/TrailingCommaInHashLiteral:
+  Enabled: false
+
+Style/YodaExpression:
   Enabled: false

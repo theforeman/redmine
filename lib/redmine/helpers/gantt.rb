@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Redmine - project management software
-# Copyright (C) 2006-2023  Jean-Philippe Lang
+# Copyright (C) 2006-  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -117,7 +117,7 @@ module Redmine
         return @number_of_rows if @number_of_rows
 
         rows = projects.inject(0) {|total, p| total += number_of_rows_on_project(p)}
-        rows > @max_rows ? @max_rows : rows
+        [rows, @max_rows].min
       end
 
       # Returns the number of rows that will be used to list a project on
@@ -198,7 +198,7 @@ module Redmine
 
       # Returns the distinct versions of the issues that belong to +project+
       def project_versions(project)
-        project_issues(project).collect(&:fixed_version).compact.uniq
+        project_issues(project).filter_map(&:fixed_version).uniq
       end
 
       # Returns the issues that belong to +project+ and are assigned to +version+
