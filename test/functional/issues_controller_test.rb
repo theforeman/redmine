@@ -2772,15 +2772,14 @@ class IssuesControllerTest < Redmine::ControllerTest
 
   def test_show_with_thumbnails_enabled_should_display_thumbnails
     skip unless convert_installed?
-    skip "this test is broken when lightbox plugin is installed"
     @request.session[:user_id] = 2
     with_settings :thumbnails_enabled => '1' do
       get(:show, :params => {:id => 14})
       assert_response :success
     end
     assert_select 'div.thumbnails' do
-      assert_select 'a[href="/attachments/16"]' do
-        assert_select 'img[src="/attachments/thumbnail/16/200"]'
+      assert_select 'a[href="/attachments/download/16/testfile.png"]' do
+        assert_select 'img[src="/attachments/thumbnail/16"]'
       end
     end
   end
