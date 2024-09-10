@@ -8,7 +8,7 @@ state_permission 0o0640
 
 # How many worker processes to run.
 #
-workers 2
+workers 4
 
 # In clustered mode, Puma can "preload" your application. This loads all the
 # application code prior to forking. Preloading reduces total memory usage of
