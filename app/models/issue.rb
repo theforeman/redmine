@@ -314,9 +314,9 @@ class Issue < ActiveRecord::Base
         attachement.copy(:container => self)
       end
     end
+
     unless options[:watchers] == false
-      self.watcher_user_ids =
-        issue.watcher_users.select{|u| u.status == User::STATUS_ACTIVE}.map(&:id)
+      self.watcher_user_ids = issue.visible_watcher_users.select{|u| u.status == User::STATUS_ACTIVE}.map(&:id)
     end
     @copied_from = issue
     @copy_options = options
@@ -1018,7 +1018,7 @@ class Issue < ActiveRecord::Base
 
   # Returns true if this issue is blocked by another issue that is still open
   def blocked?
-    !relations_to.detect {|ir| ir.relation_type == 'blocks' && !ir.issue_from.closed?}.nil?
+    relations_to.any? {|ir| ir.relation_type == 'blocks' && ir.issue_from&.closed? == false}
   end
 
   # Returns true if this issue can be closed and if not, returns false and populates the reason
@@ -2069,7 +2069,7 @@ class Issue < ActiveRecord::Base
       tracker.disabled_core_fields.each do |attribute|
         send "#{attribute}=", nil
       end
-      self.priority_id ||= IssuePriority.default&.id || IssuePriority.active.first.id
+      self.priority_id ||= IssuePriority.default&.id || IssuePriority.active.first&.id
       self.done_ratio ||= 0
     end
   end
