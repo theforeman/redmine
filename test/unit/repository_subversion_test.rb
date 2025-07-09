@@ -20,8 +20,6 @@
 require_relative '../test_helper'
 
 class RepositorySubversionTest < ActiveSupport::TestCase
-  fixtures :projects, :repositories, :enabled_modules, :users, :roles
-
   include Redmine::I18n
 
   NUM_REV = 14
@@ -32,6 +30,7 @@ class RepositorySubversionTest < ActiveSupport::TestCase
     @repository = Repository::Subversion.create(:project => @project,
                     :url => self.class.subversion_repository_url)
     assert @repository
+    skip "SCM command is unavailable" unless @repository.class.scm_available
   end
 
   def test_invalid_url

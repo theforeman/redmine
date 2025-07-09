@@ -20,8 +20,6 @@
 require_relative '../test_helper'
 
 class EmailAddressTest < ActiveSupport::TestCase
-  fixtures :users
-
   def setup
     User.current = nil
   end
@@ -62,6 +60,12 @@ class EmailAddressTest < ActiveSupport::TestCase
       assert_not email.valid?
       email = EmailAddress.new(address: 'user@foo.subdomain.test')
       assert email.valid?
+    end
+  end
+
+  def test_domain_in_should_not_raise_exception_when_domain_is_nil
+    assert_nothing_raised do
+      assert_not EmailAddress.domain_in?(nil, 'example.com')
     end
   end
 

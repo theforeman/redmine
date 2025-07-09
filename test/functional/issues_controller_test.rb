@@ -20,34 +20,6 @@
 require_relative '../test_helper'
 
 class IssuesControllerTest < Redmine::ControllerTest
-  fixtures :projects,
-           :users, :email_addresses, :user_preferences,
-           :roles,
-           :members,
-           :member_roles,
-           :issues,
-           :issue_statuses,
-           :issue_relations,
-           :versions,
-           :trackers,
-           :projects_trackers,
-           :issue_categories,
-           :enabled_modules,
-           :enumerations,
-           :attachments,
-           :workflows,
-           :custom_fields,
-           :custom_values,
-           :custom_fields_projects,
-           :custom_fields_trackers,
-           :time_entries,
-           :journals,
-           :journal_details,
-           :queries,
-           :repositories,
-           :changesets,
-           :watchers, :groups_users
-
   include Redmine::I18n
 
   def setup
@@ -1764,7 +1736,7 @@ class IssuesControllerTest < Redmine::ControllerTest
       assert_select 'td.last_notes[colspan="4"]', :text => 'Some notes with Redmine links: #2, r2.'
       assert_select(
         'td.last_notes[colspan="4"]',
-        :text => 'A comment with inline image:  and a reference to #1 and r2.'
+        :text => 'A comment with inline image: and a reference to #1 and r2.'
       )
       get(
         :index,
@@ -3189,6 +3161,22 @@ class IssuesControllerTest < Redmine::ControllerTest
     assert_select '#history' do
       assert_select 'div.tabs ul a', 1
       assert_select 'div.tabs a[id=?]', 'tab-changesets', :text => 'Associated revisions'
+    end
+  end
+
+  def test_show_render_changeset_comments_in_original_context
+    issue = Issue.find(9)
+    issue.changeset_ids = [110]
+    issue.save!
+
+    @request.session[:user_id] = 2
+    get :issue_tab, params: {id: issue.id, name: 'changesets', format: 'js'}, xhr: true
+
+    assert_select 'div#changeset-110' do
+      # assert_select 'div.tabs a[id=?]', 'tab-changesets', text: 'unicorns'
+      assert_select 'div.changeset-comments' do
+        assert_select 'a[href=?]', '/projects/ecookbook/wiki/Wiki', text: 'wiki'
+      end
     end
   end
 

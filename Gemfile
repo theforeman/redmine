@@ -10,7 +10,7 @@ gem "actionpack-xml_parser"
 gem 'roadie-rails', '~> 3.1.0'
 gem 'marcel'
 gem 'mail', '~> 2.8.1'
-gem 'nokogiri', '~> 1.15.2'
+gem 'nokogiri', Gem.ruby_version >= Gem::Version.new('3.1') ? '1.18.3' : '~> 1.15.7'
 gem 'i18n', '~> 1.14.1'
 gem 'rbpdf', '~> 1.21.3'
 gem 'addressable'
@@ -18,7 +18,7 @@ gem 'rubyzip', '~> 2.3.0'
 
 #  Ruby Standard Gems
 gem 'csv', '~> 3.2.6'
-gem 'net-imap', '~> 0.3.4'
+gem 'net-imap', '~> 0.3.9'
 gem 'net-pop', '~> 0.1.2'
 gem 'net-smtp', '~> 0.3.3'
 gem 'rexml', require: false if Gem.ruby_version >= Gem::Version.new('3.0')
@@ -57,17 +57,24 @@ end
 
 # Include database gems for the adapters found in the database
 # configuration file
-require 'erb'
-require 'yaml'
 database_file = File.join(File.dirname(__FILE__), "config/database.yml")
 if File.exist?(database_file)
-  yaml_config = ERB.new(IO.read(database_file)).result
-  database_config = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(yaml_config) : YAML.load(yaml_config)
-  adapters = database_config.values.filter_map {|c| c['adapter']}.uniq
+  database_config = File.read(database_file)
+
+  # Requiring libraries in a Gemfile may cause Bundler warnings or
+  # unexpected behavior, especially if multiple gem versions are available.
+  # So, process database.yml through ERB only if it contains ERB syntax
+  # in the adapter setting. See https://www.redmine.org/issues/41749.
+  if database_config.match?(/^ *adapter: *<%=/)
+    require 'erb'
+    database_config = ERB.new(database_config).result
+  end
+
+  adapters = database_config.scan(/^ *adapter: *(.*)/).flatten.uniq
   if adapters.any?
     adapters.each do |adapter|
-      case adapter
-      when 'mysql2'
+      case adapter.strip
+      when /mysql2/
         gem "mysql2", "~> 0.5.0", :platforms => [:mri, :mingw, :x64_mingw]
         gem "with_advisory_lock"
       when /postgresql/
@@ -94,7 +101,7 @@ group :development do
 end
 
 group :test do
-  gem "rails-dom-testing"
+  gem "rails-dom-testing", '>= 2.3.0'
   gem 'mocha', '>= 2.0.1'
   gem 'simplecov', '~> 0.22.0', :require => false
   gem "ffi", platforms: [:mingw, :x64_mingw, :mswin]
@@ -109,6 +116,7 @@ group :test do
   end
   # RuboCop
   gem 'rubocop', '~> 1.57.0', require: false
+  gem 'rubocop-ast', '~> 1.40.0', require: false
   gem 'rubocop-performance', '~> 1.19.0', require: false
   gem 'rubocop-rails', '~> 2.22.1', require: false
 end
