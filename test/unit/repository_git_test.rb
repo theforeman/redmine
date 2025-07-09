@@ -20,8 +20,6 @@
 require_relative '../test_helper'
 
 class RepositoryGitTest < ActiveSupport::TestCase
-  fixtures :projects, :repositories, :enabled_modules, :users, :roles, :changesets
-
   include Redmine::I18n
 
   REPOSITORY_PATH = Rails.root.join('tmp/test/git_repository').to_s
@@ -43,6 +41,7 @@ class RepositoryGitTest < ActiveSupport::TestCase
         :path_encoding => 'ISO-8859-1'
       )
     assert @repository
+    skip "SCM command is unavailable" unless @repository.class.scm_available
   end
 
   def test_nondefault_repo_with_blank_identifier_destruction

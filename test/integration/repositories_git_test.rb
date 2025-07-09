@@ -20,9 +20,6 @@
 require_relative '../test_helper'
 
 class RepositoriesGitTest < Redmine::IntegrationTest
-  fixtures :projects, :users, :roles, :members, :member_roles,
-           :repositories, :enabled_modules
-
   REPOSITORY_PATH = Rails.root.join('tmp/test/git_repository').to_s
   REPOSITORY_PATH.tr!('/', "\\") if Redmine::Platform.mswin?
   PRJ_ID     = 3
@@ -38,6 +35,7 @@ class RepositoriesGitTest < Redmine::IntegrationTest
         :path_encoding => 'ISO-8859-1'
       )
     assert @repository
+    skip "SCM command is unavailable" unless @repository.class.scm_available
   end
 
   if File.directory?(REPOSITORY_PATH)

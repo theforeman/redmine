@@ -20,8 +20,6 @@
 require_relative '../../test_helper'
 
 class Redmine::ApiTest::CustomFieldsTest < Redmine::ApiTest::Base
-  fixtures :users, :custom_fields
-
   test "GET /custom_fields.xml should return custom fields" do
     get '/custom_fields.xml', :headers => credentials('admin')
     assert_response :success
@@ -39,6 +37,8 @@ class Redmine::ApiTest::CustomFieldsTest < Redmine::ApiTest::Base
         end
         assert_select 'trackers[type=array]'
         assert_select 'roles[type=array]'
+        assert_select 'visible', :text => 'true'
+        assert_select 'editable', :text => 'true'
       end
     end
   end

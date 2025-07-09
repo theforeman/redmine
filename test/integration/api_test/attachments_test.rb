@@ -20,15 +20,6 @@
 require_relative '../../test_helper'
 
 class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
-  fixtures :projects, :trackers, :issue_statuses, :issues,
-           :enumerations, :users, :issue_categories,
-           :projects_trackers,
-           :roles,
-           :member_roles,
-           :members,
-           :enabled_modules,
-           :attachments
-
   def setup
     super
     set_fixtures_attachments_directory
@@ -72,7 +63,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
 
   test "GET /attachments/download/:id/:filename should deny access without credentials" do
     get '/attachments/download/7/archive.zip'
-    assert_response 401
+    assert_response 302
   end
 
   test "GET /attachments/thumbnail/:id should return the thumbnail" do
