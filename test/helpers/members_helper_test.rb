@@ -23,7 +23,6 @@ class MembersHelperTest < Redmine::HelperTest
   include ERB::Util
   include MembersHelper
   include AvatarsHelper
-  include Rails.application.routes.url_helpers
 
   def test_render_principals_for_new_members
     project = Project.generate!

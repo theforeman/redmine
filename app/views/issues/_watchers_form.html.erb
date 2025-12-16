@@ -8,7 +8,7 @@
     </span>
   <% end %>
   <span class="search_for_watchers">
-  <%= link_to l(:label_search_for_watchers),
+  <%= link_to sprite_icon('add', l(:label_search_for_watchers), size: 12),
               {:controller => 'watchers', :action => 'new', :project_id => @issue.project},
               :class => 'icon icon-add-bullet',
               :remote => true,

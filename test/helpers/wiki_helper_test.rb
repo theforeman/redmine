@@ -21,7 +21,6 @@ require_relative '../test_helper'
 
 class WikiHelperTest < Redmine::HelperTest
   include WikiHelper
-  include Rails.application.routes.url_helpers
 
   def test_wiki_page_edit_cancel_path_for_new_page_without_parent_should_be_wiki_index
     wiki = Wiki.find(1)

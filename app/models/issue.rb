@@ -17,10 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class Issue < ActiveRecord::Base
+class Issue < ApplicationRecord
   include Redmine::SafeAttributes
   include Redmine::Utils::DateCalculation
   include Redmine::I18n
+  before_validation :default_assign, on: :create
+  before_validation :force_default_value_on_noneditable_custom_fields, on: :create
+  before_validation :clear_disabled_fields
   before_save :set_parent_id
   include Redmine::NestedSet::IssueNestedSet
 
@@ -107,9 +110,6 @@ class Issue < ActiveRecord::Base
     end
   end)
 
-  before_validation :default_assign, on: :create
-  before_validation :force_default_value_on_noneditable_custom_fields, on: :create
-  before_validation :clear_disabled_fields
   before_save :close_duplicates, :update_done_ratio_from_issue_status,
               :force_updated_on_change, :update_closed_on
   after_save do |issue|
@@ -117,11 +117,11 @@ class Issue < ActiveRecord::Base
       issue.send :after_project_change
     end
   end
+  after_destroy :update_parent_attributes
   after_save :reschedule_following_issues, :update_nested_set_attributes,
              :update_parent_attributes, :delete_selected_attachments, :create_journal
   # Should be after_create but would be called before previous after_save callbacks
   after_save :after_create_from_copy
-  after_destroy :update_parent_attributes
   # add_auto_watcher needs to run before sending notifications, thus it needs
   # to be added after send_notification (after_ callbacks are run in inverse order)
   # https://api.rubyonrails.org/v5.2.3/classes/ActiveSupport/Callbacks/ClassMethods.html#method-i-set_callback
@@ -473,10 +473,10 @@ class Issue < ActiveRecord::Base
 
     %w(project project_id tracker tracker_id).each do |attr|
       if attrs.has_key?(attr)
-        send "#{attr}=", attrs.delete(attr)
+        send :"#{attr}=", attrs.delete(attr)
       end
     end
-    super attrs, *args
+    super(attrs, *args)
   end
 
   def attributes=(new_attributes)
@@ -926,6 +926,18 @@ class Issue < ActiveRecord::Base
     result
   end
 
+  # Returns the assignee immediately prior to the current one from the issue history
+  def prior_assigned_to
+    prior_assigned_to_id =
+      journals.joins(:details)
+              .where(details: {prop_key: 'assigned_to_id'})
+              .where.not(details: {old_value: nil})
+              .order(id: :desc)
+              .pick(:old_value)
+
+    prior_assigned_to_id && Principal.find_by(id: prior_assigned_to_id)
+  end
+
   # Returns the initial status of the issue
   # Returns nil for a new issue
   def status_was
@@ -1166,8 +1178,16 @@ class Issue < ActiveRecord::Base
     end
   end
 
+  # Returns the number of estimated remaining hours on this issue
+  def estimated_remaining_hours
+    (estimated_hours || 0) * (100 - (done_ratio || 0)) / 100
+  end
+
   def relations
-    @relations ||= IssueRelation::Relations.new(self, (relations_from + relations_to).sort)
+    @relations ||= IssueRelation::Relations.new(
+      self,
+      IssueRelation.where('issue_from_id = ? OR issue_to_id = ?', id, id).sort
+    )
   end
 
   def last_updated_by
@@ -1452,7 +1472,7 @@ class Issue < ActiveRecord::Base
 
   # Returns a string of css classes that apply to the issue
   def css_classes(user=User.current)
-    s = +"issue tracker-#{tracker_id} status-#{status_id} #{priority.try(:css_classes)}"
+    s = "issue tracker-#{tracker_id} status-#{status_id} #{priority.try(:css_classes)}"
     s << ' closed' if closed?
     s << ' overdue' if overdue?
     s << ' child' if child?
@@ -2052,7 +2072,7 @@ class Issue < ActiveRecord::Base
 
   def add_auto_watcher
     if author&.active? &&
-        author&.allowed_to?(:add_issue_watchers, project) &&
+        author.allowed_to?(:add_issue_watchers, project) &&
         author.pref.auto_watch_on?('issue_created') &&
         self.watcher_user_ids.exclude?(author.id)
       self.set_watcher(author, true)
@@ -2068,7 +2088,7 @@ class Issue < ActiveRecord::Base
   def clear_disabled_fields
     if tracker
       tracker.disabled_core_fields.each do |attribute|
-        send "#{attribute}=", nil
+        send :"#{attribute}=", nil
       end
       self.priority_id ||= IssuePriority.default&.id || IssuePriority.active.first&.id
       self.done_ratio ||= 0

@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class Role < ActiveRecord::Base
+class Role < ApplicationRecord
   include Redmine::SafeAttributes
 
   # Custom coder for the permissions attribute that should be an
@@ -76,7 +76,7 @@ class Role < ActiveRecord::Base
   has_many :members, :through => :member_roles
   acts_as_positioned :scope => :builtin
 
-  serialize :permissions, ::Role::PermissionsAttributeCoder
+  serialize :permissions, coder: ::Role::PermissionsAttributeCoder
   store :settings, :accessors => [:permissions_all_trackers, :permissions_tracker_ids]
 
   validates_presence_of :name
@@ -224,7 +224,7 @@ class Role < ActiveRecord::Base
 
   def permissions_tracker_ids=(arg)
     h = arg.to_hash
-    h.values.each {|v| v.reject!(&:blank?)}
+    h.each_value {|v| v.reject!(&:blank?)}
     super(h)
   end
 

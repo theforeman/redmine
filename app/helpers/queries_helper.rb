@@ -30,7 +30,7 @@ module QueriesHelper
         group = (field_options[:through] || field_options[:field]).try(:name)
       elsif field =~ /^(.+)\./
         # association filters
-        group = "field_#{$1}".to_sym
+        group = :"field_#{$1}"
       elsif field_options[:type] == :relation
         group = :label_relations
       elsif field_options[:type] == :tree
@@ -151,7 +151,7 @@ module QueriesHelper
     tags
   end
 
-  def grouped_query_results(items, query, &block)
+  def grouped_query_results(items, query, &)
     result_count_by_group = query.result_count_by_group
     previous_group, first = false, true
     totals_by_group = query.totalable_columns.inject({}) do |h, column|
@@ -190,8 +190,10 @@ module QueriesHelper
   def total_tag(column, value)
     label = content_tag('span', "#{column.caption}:")
     value =
-      if [:hours, :spent_hours, :total_spent_hours, :estimated_hours, :total_estimated_hours].include? column.name
+      if [:hours, :spent_hours, :total_spent_hours, :estimated_hours, :total_estimated_hours, :estimated_remaining_hours].include? column.name
         format_hours(value)
+      elsif column.is_a?(QueryCustomFieldColumn)
+        format_object(value, thousands_delimiter: column.custom_field.thousands_delimiter?)
       else
         format_object(value)
       end
@@ -205,9 +207,11 @@ module QueriesHelper
       if column.name.to_s == query.sort_criteria.first_key
         if query.sort_criteria.first_asc?
           css = 'sort asc icon icon-sorted-desc'
+          icon = 'angle-up'
           order = 'desc'
         else
           css = 'sort desc icon icon-sorted-asc'
+          icon = 'angle-down'
           order = 'asc'
         end
       end
@@ -223,7 +227,7 @@ module QueriesHelper
       end
       content =
         link_to(
-          column.caption,
+          sprite_icon(icon, column.caption),
           {:params => request.query_parameters.deep_merge(sort_param)},
           link_options
         )
@@ -269,7 +273,7 @@ module QueriesHelper
           'span',
           value.to_s(item) {|other| link_to_issue(other, :subject => false, :tracker => false)}.html_safe,
           :class => value.css_classes_for(item))
-      when :hours, :estimated_hours, :total_estimated_hours
+      when :hours, :estimated_hours, :total_estimated_hours, :estimated_remaining_hours
         format_hours(value)
       when :spent_hours
         link_to_if(value > 0, format_hours(value), project_time_entries_path(item.project, :issue_id => "#{item.id}"))
@@ -277,6 +281,8 @@ module QueriesHelper
         link_to_if(value > 0, format_hours(value), project_time_entries_path(item.project, :issue_id => "~#{item.id}"))
       when :attachments
         value.to_a.map {|a| format_object(a)}.join(" ").html_safe
+      when :watcher_users
+        content_tag('ul', value.to_a.map {|user| content_tag('li', format_object(user))}.join.html_safe)
       else
         format_object(value)
       end
@@ -300,10 +306,12 @@ module QueriesHelper
     case column.name
     when :attachments
       value.to_a.map {|a| a.filename}.join("\n")
+    when :watcher_users
+      value.to_a.join("\n")
     else
-      format_object(value, false) do |value|
+      format_object(value, html: false) do |value|
         case value.class.name
-        when 'Float'
+        when 'Float', 'Rational'
           sprintf("%.2f", value).gsub('.', l(:general_csv_decimal_separator))
         when 'IssueRelation'
           value.to_s(object)
@@ -500,7 +508,9 @@ module QueriesHelper
           content_tag('li',
                       link_to(query.name,
                               url_params.merge(:query_id => query),
-                              :class => css) +
+                              :class => css,
+                              :title => query.description,
+                              :data => { :disable_with => CGI.escapeHTML(query.name) }) +
                         clear_link.html_safe)
         end.join("\n").html_safe,
         :class => 'queries'
@@ -509,7 +519,7 @@ module QueriesHelper
 
   def link_to_clear_query(params = {:set_filter => 1, :sort => '', :project_id => @project})
     link_to(
-      l(:button_clear),
+      sprite_icon('clear-query', l(:button_clear)),
       params,
       :class => 'icon-only icon-clear-query',
       :title => l(:button_clear)

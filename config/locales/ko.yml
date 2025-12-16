@@ -603,7 +603,6 @@ ko:
   label_day_plural: 일
   label_repository: 저장소
   label_repository_plural: 저장소
-  label_browse: 저장소 둘러보기
   label_revision: 개정판
   label_revision_plural: 개정판
   label_associated_revisions: 관련된 개정판들
@@ -926,7 +925,7 @@ ko:
   error_can_not_delete_custom_field: 사용자 정의 필드를 삭제할 수 없습니다.
   error_unable_to_connect: 연결할 수 없습니다((%{value})
   error_can_not_remove_role: 이 역할은 현재 사용 중이이서 삭제할 수 없습니다.
-  error_can_not_delete_tracker: 이 유형의 일감들이 있어서 삭제할 수 없습니다.
+  error_can_not_delete_tracker_html: 이 유형의 일감들이 있어서 삭제할 수 없습니다.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   field_principal: 신원
   notice_failed_to_save_members: "%{errors}:구성원을 저장 중 실패하였습니다"
   text_zoom_out: 더 작게
@@ -1507,4 +1506,16 @@ ko:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

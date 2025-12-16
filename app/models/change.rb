@@ -17,12 +17,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class Change < ActiveRecord::Base
+class Change < ApplicationRecord
   belongs_to :changeset
 
   validates_presence_of :changeset_id, :action, :path
-  before_save :init_path
   before_validation :replace_invalid_utf8_of_path
+  before_save :init_path
 
   def replace_invalid_utf8_of_path
     self.path      = Redmine::CodesetUtil.replace_invalid_utf8(self.path)

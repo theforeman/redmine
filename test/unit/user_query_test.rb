@@ -206,7 +206,31 @@ class UserQueryTest < ActiveSupport::TestCase
     users = q.results_scope
 
     assert_equal 2, users.size
-    assert_equal [2, 1], users.ids
+    assert_equal [2, 1], users.pluck(:id)
+  end
+
+  def test_user_query_is_only_visible_to_admins
+    q = UserQuery.new(name: '_')
+    assert q.save
+
+    admin = User.admin(true).first
+    user = User.admin(false).first
+
+    assert q.visible?(admin)
+    assert_include q, UserQuery.visible(admin).to_a
+
+    assert_not q.visible?(user)
+    assert_not_include q, UserQuery.visible(user)
+  end
+
+  def test_user_query_is_only_editable_by_admins
+    q = UserQuery.new(name: '_')
+
+    admin = User.admin(true).first
+    user = User.admin(false).first
+
+    assert q.editable_by?(admin)
+    assert_not q.editable_by?(user)
   end
 
   def test_user_query_is_only_visible_to_admins

@@ -70,7 +70,7 @@ class IssuesTest < Redmine::IntegrationTest
         }
       )
     end
-    assert_response 302
+    assert_response :found
   end
 
   def test_create_issue_by_anonymous_with_custom_permission_should_succeed
@@ -87,7 +87,7 @@ class IssuesTest < Redmine::IntegrationTest
           }
         }
       )
-      assert_response 302
+      assert_response :found
     end
     assert_equal User.anonymous, issue.author
   end
@@ -324,7 +324,7 @@ class IssuesTest < Redmine::IntegrationTest
           }
         }
       )
-      assert_response 302
+      assert_response :found
     end
 
     # Issue view
@@ -364,11 +364,11 @@ class IssuesTest < Redmine::IntegrationTest
     subject = 'Updated by an invalid http verb'
 
     get '/issues/update/1', :params => {:issue => {:subject => subject}}
-    assert_response 404
+    assert_response :not_found
     assert_not_equal subject, Issue.find(1).subject
 
     post '/issues/1', :params => {:issue => {:subject => subject}}
-    assert_response 404
+    assert_response :not_found
     assert_not_equal subject, Issue.find(1).subject
   end
 
@@ -377,7 +377,7 @@ class IssuesTest < Redmine::IntegrationTest
 
     assert_no_difference 'Watcher.count' do
       get '/watchers/watch?object_type=issue&object_id=1'
-      assert_response 404
+      assert_response :not_found
     end
   end
 
@@ -389,6 +389,6 @@ class IssuesTest < Redmine::IntegrationTest
       'v' => {'cf_9' => ['2021-05-25']}
     }
 
-    assert_response 404
+    assert_response :not_found
   end
 end

@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class Setting < ActiveRecord::Base
+class Setting < ApplicationRecord
   PASSWORD_CHAR_CLASSES = {
     'uppercase'     => /[A-Z]/,
     'lowercase'     => /[a-z]/,
@@ -169,7 +169,7 @@ class Setting < ActiveRecord::Base
        /\s*,\s*/]
     ].each do |enable_regex, regex_field, delimiter|
       if settings.key?(regex_field) || settings.key?(enable_regex)
-        regexp = Setting.send("#{enable_regex}?")
+        regexp = Setting.send(:"#{enable_regex}?")
         if settings.key?(enable_regex)
           regexp = settings[enable_regex].to_s != '0'
         end

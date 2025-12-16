@@ -18,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module CustomFieldsHelper
-
   CUSTOM_FIELDS_TABS = [
     {:name => 'IssueCustomField', :partial => 'custom_fields/index',
      :label => :label_issue_plural},
@@ -164,12 +163,12 @@ module CustomFieldsHelper
 
   # Return a string used to display a custom value
   def show_value(custom_value, html=true)
-    format_object(custom_value, html)
+    format_object(custom_value, html: html)
   end
 
   # Return a string used to display a custom value
   def format_value(value, custom_field)
-    format_object(custom_field.format.formatted_value(self, custom_field, value, false), false)
+    format_object(custom_field.format.formatted_value(self, custom_field, value, false), html: false)
   end
 
   # Return an array of custom field formats which can be used in select_tag
@@ -179,7 +178,7 @@ module CustomFieldsHelper
 
   # Yields the given block for each custom field value of object that should be
   # displayed, with the custom field and the formatted value as arguments
-  def render_custom_field_values(object, &block)
+  def render_custom_field_values(object, &)
     object.visible_custom_field_values.each do |custom_value|
       formatted = show_value(custom_value)
       if formatted.present?

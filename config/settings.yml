@@ -22,7 +22,10 @@
 app_title:
   default: Redmine
 welcome_text:
-  default:
+  default: |-
+    Welcome to Redmine, an open-source, flexible project management software.
+
+    Note: You can modify this message in the "Welcome text" setting (Administration > Settings > General).
 login_required:
   default: 0
   security_notifications: 1
@@ -187,6 +190,8 @@ parent_issue_done_ratio:
   default: 'derived'
 link_copied_issue:
   default: 'ask'
+copy_attachments_on_issue_copy:
+  default: 'ask'
 close_duplicate_issues:
   default: 1
 issue_group_assignment:
@@ -253,6 +258,9 @@ default_project_query:
   default: ''
 issue_done_ratio:
   default: 'issue_field'
+issue_done_ratio_interval:
+  format: int
+  default: 10
 default_projects_public:
   default: 1
 default_projects_modules:
@@ -314,7 +322,7 @@ jsonp_enabled:
   default: 0
   security_notifications: 1
 default_notification_option:
-  default: 'only_my_events'
+  default: 'only_assigned'
 emails_header:
   default: ''
 thumbnails_enabled:

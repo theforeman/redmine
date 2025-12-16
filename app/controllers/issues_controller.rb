@@ -67,13 +67,13 @@ class IssuesController < ApplicationController
           end
         end
         format.atom do
-          @issues = @query.issues(:limit => Setting.feeds_limit.to_i)
-          render_feed(@issues,
+          issues = @query.issues(:limit => Setting.feeds_limit.to_i)
+          render_feed(issues,
                       :title => "#{@project || Setting.app_title}: #{l(:label_issue_plural)}")
         end
         format.csv do
-          @issues = @query.issues(:limit => Setting.issues_export_limit.to_i)
-          send_data(query_to_csv(@issues, @query, params[:csv]),
+          issues = @query.issues(:limit => Setting.issues_export_limit.to_i)
+          send_data(query_to_csv(issues, @query, params[:csv]),
                     :type => 'text/csv; header=present', :filename => "#{filename_for_export(@query, 'issues')}.csv")
         end
         format.pdf do
@@ -84,7 +84,7 @@ class IssuesController < ApplicationController
     else
       respond_to do |format|
         format.html {render :layout => !request.xhr?}
-        format.any(:atom, :csv, :pdf) {head 422}
+        format.any(:atom, :csv, :pdf) {head :unprocessable_content}
         format.api {render_validation_errors(@query)}
       end
     end
@@ -93,14 +93,16 @@ class IssuesController < ApplicationController
   end
 
   def show
-    @journals = @issue.visible_journals_with_index
-    @has_changesets = @issue.changesets.visible.preload(:repository, :user).exists? unless api_request?
-    @relations =
-      @issue.relations.
-        select do |r|
-          r.other_issue(@issue) && r.other_issue(@issue).visible?
-        end
-    @journals.reverse! if User.current.wants_comments_in_reverse_order?
+    if !api_request? || include_in_api_response?('journals')
+      @journals = @issue.visible_journals_with_index
+      @journals.reverse! if User.current.wants_comments_in_reverse_order?
+    end
+    if !api_request? || include_in_api_response?('relations')
+      @relations = @issue.relations.select {|r| r.other_issue(@issue)&.visible?}
+    end
+    if !api_request? || include_in_api_response?('allowed_statuses')
+      @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
+    end
 
     if User.current.allowed_to?(:view_time_entries, @project)
       Issue.load_visible_spent_hours([@issue])
@@ -109,16 +111,15 @@ class IssuesController < ApplicationController
 
     respond_to do |format|
       format.html do
-        @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
         @priorities = IssuePriority.active
         @time_entry = TimeEntry.new(:issue => @issue, :project => @issue.project)
         @time_entries = @issue.time_entries.visible.preload(:activity, :user)
         @relation = IssueRelation.new
+        @has_changesets = @issue.changesets.visible.preload(:repository, :user).exists?
         retrieve_previous_and_next_issue_ids
         render :template => 'issues/show'
       end
       format.api do
-        @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
         if include_in_api_response?('changesets')
           @changesets = @issue.changesets.visible.preload(:repository, :user).to_a
           @changesets.reverse! if User.current.wants_comments_in_reverse_order?
@@ -327,7 +328,8 @@ class IssuesController < ApplicationController
     @versions = target_projects.map {|p| p.shared_versions.open}.reduce(:&)
     @categories = target_projects.map {|p| p.issue_categories}.reduce(:&)
     if @copy
-      @attachments_present = @issues.detect {|i| i.attachments.any?}.present?
+      @attachments_present = @issues.detect {|i| i.attachments.any?}.present? &&
+                               (Setting.copy_attachments_on_issue_copy == 'ask')
       @subtasks_present = @issues.detect {|i| !i.leaf?}.present?
       @watchers_present = User.current.allowed_to?(:add_issue_watchers, @projects) &&
                             Watcher.where(:watchable_type => 'Issue',
@@ -346,7 +348,6 @@ class IssuesController < ApplicationController
 
     attributes = parse_params_for_bulk_update(params[:issue])
     copy_subtasks = (params[:copy_subtasks] == '1')
-    copy_attachments = (params[:copy_attachments] == '1')
     copy_watchers = (params[:copy_watchers] == '1')
 
     if @copy
@@ -385,7 +386,7 @@ class IssuesController < ApplicationController
       if @copy
         issue = orig_issue.copy(
           {},
-          :attachments => copy_attachments,
+          :attachments => copy_attachments?(params[:copy_attachments]),
           :subtasks => copy_subtasks,
           :watchers => copy_watchers,
           :link => link_copy?(params[:link_copy])
@@ -501,8 +502,9 @@ class IssuesController < ApplicationController
       return
     end
     if !params[:set_filter] && use_session && session[:issue_query]
+      # Don't apply the default query if a valid query id is set in the session
       query_id, project_id = session[:issue_query].values_at(:id, :project_id)
-      return if IssueQuery.where(id: query_id).exists? && project_id == @project&.id
+      return if query_id && project_id == @project&.id && IssueQuery.exists?(id: query_id)
     end
     if default_query = IssueQuery.default(project: @project)
       params[:query_id] = default_query.id
@@ -522,7 +524,7 @@ class IssuesController < ApplicationController
         limit = 500
         issue_ids = @query.issue_ids(:limit => (limit + 1))
         if (idx = issue_ids.index(@issue.id)) && idx < limit
-          if issue_ids.size < 500
+          if issue_ids.size < limit
             @issue_position = idx + 1
             @issue_count = issue_ids.size
           end
@@ -591,7 +593,7 @@ class IssuesController < ApplicationController
         end
 
         @link_copy = link_copy?(params[:link_copy]) || request.get?
-        @copy_attachments = params[:copy_attachments].present? || request.get?
+        @copy_attachments = copy_attachments?(params[:copy_attachments]) || request.get?
         @copy_subtasks = params[:copy_subtasks].present? || request.get?
         @copy_watchers = User.current.allowed_to?(:add_issue_watchers, @project)
         @issue.copy_from(@copy_from, :attachments => @copy_attachments,
@@ -694,15 +696,27 @@ class IssuesController < ApplicationController
     end
   end
 
+  # Returns true if the attachments should be copied
+  # from the original issue
+  def copy_attachments?(param)
+    case Setting.copy_attachments_on_issue_copy
+    when 'yes'
+      true
+    when 'no'
+      false
+    when 'ask'
+      param == '1'
+    end
+  end
+
   # Redirects user after a successful issue creation
   def redirect_after_create
     if params[:continue]
       url_params = {}
-      url_params[:issue] =
-        {
-          :tracker_id => @issue.tracker,
-          :parent_issue_id => @issue.parent_issue_id
-        }.reject {|k, v| v.nil?}
+      url_params[:issue] = {
+        :tracker_id => @issue.tracker,
+        :parent_issue_id => @issue.parent_issue_id
+      }.compact
       url_params[:back_url] = params[:back_url].presence
 
       if params[:project_id]

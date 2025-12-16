@@ -89,7 +89,7 @@ fr:
     format:
       precision: 3
       separator: ','
-      delimiter: ' '
+      delimiter: ' '
     currency:
       format:
         unit: '€'
@@ -157,6 +157,7 @@ fr:
         must_contain_digits: "doit contenir des chiffres (0-9)"
         must_contain_special_chars: "doit contenir des caractères spéciaux (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Choisir
 
@@ -220,7 +221,7 @@ fr:
   error_no_tracker_in_project: "Aucun tracker n'est associé à ce projet. Vérifier la configuration du projet."
   error_no_default_issue_status: "Aucun statut de demande n'est défini par défaut. Vérifier votre configuration (Administration -> Statuts de demandes)."
   error_can_not_delete_custom_field: Impossible de supprimer le champ personnalisé
-  error_can_not_delete_tracker: Ce tracker contient des demandes et ne peut pas être supprimé.
+  error_can_not_delete_tracker_html: Ce tracker contient des demandes et ne peut pas être supprimé.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   error_can_not_remove_role: Ce rôle est utilisé et ne peut pas être supprimé.
   error_can_not_reopen_issue_on_closed_version: 'Une demande assignée à une version fermée ne peut pas être réouverte'
   error_can_not_archive_project: "Ce projet ne peut pas être archivé"
@@ -762,7 +763,6 @@ fr:
   label_repository: Dépôt
   label_repository_new: Nouveau dépôt
   label_repository_plural: Dépôts
-  label_browse: Parcourir
   label_branch: Branche
   label_tag: Tag
   label_revision: Révision
@@ -1466,4 +1466,16 @@ fr:
   text_select_apply_issue_status: Sélectionner les statuts des demandes
   field_name_or_email_or_login: Nom, email ou login
   text_default_active_job_queue_changed: Gestionnaire de file par défaut le plus adapté
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

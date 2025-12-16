@@ -77,7 +77,7 @@ sr-YU:
   number:
     format:
       separator: ","
-      delimiter: ""
+      delimiter: "."
       precision: 3
     human:
       format:
@@ -140,6 +140,7 @@ sr-YU:
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Molim odaberite
 
@@ -190,7 +191,7 @@ sr-YU:
   error_no_tracker_in_project: 'Ni jedno praćenje nije povezano sa ovim projektom. Molimo proverite podešavanja projekta.'
   error_no_default_issue_status: 'Podrazumevani status problema nije definisan. Molimo proverite vaše konfigurisanje (idite na "Administracija -> Statusi problema").'
   error_can_not_delete_custom_field: Nemoguće je izbrisati prilagođeno polje
-  error_can_not_delete_tracker: "Ovo praćenje sadrži probleme i ne može biti obrisano."
+  error_can_not_delete_tracker_html: "Ovo praćenje sadrži probleme i ne može biti obrisano.<p>The following projects have issues with this tracker:<br>%{projects}</p>"
   error_can_not_remove_role: "Ova uloga je u upotrebi i ne može biti obrisana."
   error_can_not_reopen_issue_on_closed_version: 'Problem dodeljen zatvorenoj verziji ne može biti ponovo otvoren'
   error_can_not_archive_project: Ovaj projekat se ne može arhivirati
@@ -598,7 +599,6 @@ sr-YU:
   label_day_plural: dana
   label_repository: Spremište
   label_repository_plural: Spremišta
-  label_browse: Pregledanje
   label_branch: Grana
   label_tag: Oznaka
   label_revision: Revizija
@@ -1488,4 +1488,16 @@ sr-YU:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

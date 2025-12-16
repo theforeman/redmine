@@ -167,12 +167,6 @@ module Redmine
           path.end_with?('/') ? path : "#{path}/"
         end
 
-        def with_trailling_slash(path)
-          ActiveSupport::Deprecation.warn 'Redmine::Scm::Adapters::AbstractAdapter#with_trailling_slash is ' \
-           'deprecated and will be removed in Redmine 6.0. Please use #with_trailing_slash instead.'
-          with_trailing_slash(path)
-        end
-
         def without_leading_slash(path)
           path ||= ''
           path.gsub(%r{^/+}, '')
@@ -181,12 +175,6 @@ module Redmine
         def without_trailing_slash(path)
           path ||= ''
           path.end_with?('/') ? path[0..-2] : path
-        end
-
-        def without_trailling_slash(path)
-          ActiveSupport::Deprecation.warn 'Redmine::Scm::Adapters::AbstractAdapter#without_trailling_slash is ' \
-          'deprecated and will be removed in Redmine 6.0. Please use #without_trailing_slash instead.'
-          without_trailing_slash(path)
         end
 
         def valid_name?(name)
@@ -206,7 +194,7 @@ module Redmine
 
         def target(path, sq=true)
           path ||= ''
-          base = /^\//.match?(path) ? root_url : url
+          base = path.start_with?('/') ? root_url : url
           str = "#{base}/#{path}".gsub(/[?<>\*]/, '')
           if sq
             str = shell_quote(str)
@@ -218,8 +206,8 @@ module Redmine
           self.class.logger
         end
 
-        def shellout(cmd, options = {}, &block)
-          self.class.shellout(cmd, options, &block)
+        def shellout(cmd, options = {}, &)
+          self.class.shellout(cmd, options, &)
         end
 
         # Path to the file where scm stderr output is logged
@@ -453,7 +441,7 @@ module Redmine
       module ScmData
         def self.binary?(data)
           unless data.empty?
-            data.count("^ -~", "^\r\n").fdiv(data.size) > 0.3 || data.index("\x00")
+            data.index("\x00") || data.count("\x00-\x1f\x7f", "^\t\r\n").fdiv(data.size) > 0.1
           end
         end
       end

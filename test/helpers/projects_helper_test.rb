@@ -20,10 +20,8 @@
 require_relative '../test_helper'
 
 class ProjectsHelperTest < Redmine::HelperTest
-  include ApplicationHelper
   include ProjectsHelper
   include ERB::Util
-  include Rails.application.routes.url_helpers
 
   def test_link_to_version_within_project
     @project = Project.find(2)

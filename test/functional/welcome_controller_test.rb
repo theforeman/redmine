@@ -115,6 +115,16 @@ class WelcomeControllerTest < Redmine::ControllerTest
     assert_select 'body.textarea-proportional'
   end
 
+  def test_data_text_setting_attribute
+    formats = %w(textile common_mark)
+    formats.each do |format|
+      with_settings text_formatting: format do
+        get :index
+        assert_select 'body[data-text-formatting=?]', format
+      end
+    end
+  end
+
   def test_logout_link_should_post
     @request.session[:user_id] = 2
 
@@ -171,7 +181,7 @@ class WelcomeControllerTest < Redmine::ControllerTest
     WelcomeController.any_instance.stubs(:index).raises(::Unauthorized)
 
     get :index
-    assert_response 302
+    assert_response :found
     assert_redirected_to('/login?back_url='+CGI.escape('http://test.host/'))
   end
 
@@ -180,6 +190,6 @@ class WelcomeControllerTest < Redmine::ControllerTest
 
     @request.env["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
     get :index
-    assert_response 401
+    assert_response :unauthorized
   end
 end

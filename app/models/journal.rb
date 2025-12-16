@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-class Journal < ActiveRecord::Base
+class Journal < ApplicationRecord
   include Redmine::SafeAttributes
 
   belongs_to :journalized, :polymorphic => true
@@ -142,8 +142,10 @@ class Journal < ActiveRecord::Base
   end
 
   def attachments
-    ids = details.select {|d| d.property == 'attachment' && d.value.present?}.map(&:prop_key)
-    Attachment.where(id: ids).sort_by {|a| ids.index(a.id.to_s)}
+    @attachments ||= begin
+      ids = details.select {|d| d.property == 'attachment' && d.value.present?}.map(&:prop_key)
+      ids.empty? ? [] : Attachment.where(id: ids).sort_by {|a| ids.index(a.id.to_s)}
+    end
   end
 
   def visible?(*args)
@@ -264,7 +266,7 @@ class Journal < ActiveRecord::Base
     # custom fields changes
     if @custom_values_before_change
       values_by_custom_field_id = {}
-      @custom_values_before_change.each do |custom_field_id, value|
+      @custom_values_before_change.each_key do |custom_field_id|
         values_by_custom_field_id[custom_field_id] = nil
       end
       journalized.custom_field_values.each do |c|
@@ -337,7 +339,7 @@ class Journal < ActiveRecord::Base
 
   def add_watcher
     if user&.active? &&
-        user&.allowed_to?(:add_issue_watchers, project) &&
+        user.allowed_to?(:add_issue_watchers, project) &&
         user.pref.auto_watch_on?('issue_contributed_to') &&
         !Watcher.any_watched?(Array.wrap(journalized), user)
       journalized.set_watcher(user, true)
@@ -352,7 +354,8 @@ class Journal < ActiveRecord::Base
           (Setting.notified_events.include?('issue_status_updated') && new_status.present?) ||
           (Setting.notified_events.include?('issue_assigned_to_updated') && detail_for_attribute('assigned_to_id').present?) ||
           (Setting.notified_events.include?('issue_priority_updated') && new_value_for('priority_id').present?) ||
-          (Setting.notified_events.include?('issue_fixed_version_updated') && detail_for_attribute('fixed_version_id').present?)
+          (Setting.notified_events.include?('issue_fixed_version_updated') && detail_for_attribute('fixed_version_id').present?) ||
+          (Setting.notified_events.include?('issue_attachment_added') && details.any? {|d| d.property == 'attachment' && d.value })
         )
       Mailer.deliver_issue_edit(self)
     end

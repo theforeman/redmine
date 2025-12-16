@@ -52,7 +52,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
 
   test "GET /attachments/:id.xml should deny access without credentials" do
     get '/attachments/7.xml'
-    assert_response 401
+    assert_response :unauthorized
   end
 
   test "GET /attachments/download/:id/:filename should return the attachment content" do
@@ -63,7 +63,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
 
   test "GET /attachments/download/:id/:filename should deny access without credentials" do
     get '/attachments/download/7/archive.zip'
-    assert_response 302
+    assert_response :redirect
   end
 
   test "GET /attachments/thumbnail/:id should return the thumbnail" do
@@ -109,7 +109,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
       :params => {:attachment => {:filename => '', :description => 'updated'}},
       :headers => credentials('jsmith')
     )
-    assert_response 422
+    assert_response :unprocessable_content
     assert_equal 'application/json', response.media_type
     json = ActiveSupport::JSON.decode(response.body)
     assert_include "File cannot be blank", json['errors']
@@ -200,7 +200,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
           "CONTENT_TYPE" => 'image/png'
         }.merge(credentials('jsmith'))
       )
-      assert_response 406
+      assert_response :not_acceptable
     end
   end
 
@@ -215,7 +215,7 @@ class Redmine::ApiTest::AttachmentsTest < Redmine::ApiTest::Base
             "CONTENT_TYPE" => 'application/octet-stream'
           }.merge(credentials('jsmith'))
         )
-        assert_response 422
+        assert_response :unprocessable_content
         assert_select 'error', :text => /exceeds the maximum allowed file size/
       end
     end

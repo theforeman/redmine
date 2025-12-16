@@ -78,12 +78,12 @@ class MessagesControllerTest < Redmine::ControllerTest
 
   def test_show_message_not_found
     get(:show, :params => {:board_id => 1, :id => 99999})
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_show_message_from_invalid_board_should_respond_with_404
     get(:show, :params => {:board_id => 999, :id => 1})
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_show_should_display_watchers
@@ -103,7 +103,8 @@ class MessagesControllerTest < Redmine::ControllerTest
           assert_select 'a[class*=delete]'
         end
         assert_select "li.user-10" do
-          assert_select 'img.gravatar[title=?]', 'A Team', is_display_gravatar
+          assert_select 'a.group', :text => 'A Team'
+          assert_select 'svg'
           assert_select 'a[href="/users/10"]', false
           assert_select 'a[class*=delete]'
         end
@@ -133,7 +134,7 @@ class MessagesControllerTest < Redmine::ControllerTest
   def test_get_new_with_invalid_board
     @request.session[:user_id] = 2
     get(:new, :params => {:board_id => 99})
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_post_new
@@ -285,7 +286,7 @@ class MessagesControllerTest < Redmine::ControllerTest
 
   def test_quote_if_message_is_root
     @request.session[:user_id] = 2
-    get(
+    post(
       :quote,
       :params => {
         :board_id => 1,
@@ -303,7 +304,7 @@ class MessagesControllerTest < Redmine::ControllerTest
 
   def test_quote_if_message_is_not_root
     @request.session[:user_id] = 2
-    get(
+    post(
       :quote,
       :params => {
         :board_id => 1,
@@ -319,9 +320,38 @@ class MessagesControllerTest < Redmine::ControllerTest
     assert_include '> An other reply', response.body
   end
 
+  def test_quote_with_partial_quote_if_message_is_root
+    @request.session[:user_id] = 2
+
+    params = { board_id: 1, id: 1,
+               quote: "the very first post\nin the forum" }
+    post :quote, params: params, xhr: true
+
+    assert_response :success
+    assert_equal 'text/javascript', response.media_type
+
+    assert_include 'RE: First post', response.body
+    assert_include "Redmine Admin wrote:", response.body
+    assert_include '> the very first post\n> in the forum', response.body
+  end
+
+  def test_quote_with_partial_quote_if_message_is_not_root
+    @request.session[:user_id] = 2
+
+    params = { board_id: 1, id: 3, quote: 'other reply' }
+    post :quote, params: params, xhr: true
+
+    assert_response :success
+    assert_equal 'text/javascript', response.media_type
+
+    assert_include 'RE: First post', response.body
+    assert_include 'John Smith wrote in message#3:', response.body
+    assert_include '> other reply', response.body
+  end
+
   def test_quote_as_html_should_respond_with_404
     @request.session[:user_id] = 2
-    get(
+    post(
       :quote,
       :params => {
         :board_id => 1,
@@ -329,7 +359,7 @@ class MessagesControllerTest < Redmine::ControllerTest
       }
     )
 
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_preview_new

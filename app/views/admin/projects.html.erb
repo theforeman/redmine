@@ -1,8 +1,9 @@
 <div class="contextual">
-<%= link_to l(:label_project_new), new_project_path, :class => 'icon icon-add' %>
+<%= link_to sprite_icon('add', l(:label_project_new)), new_project_path, :class => 'icon icon-add' %>
 </div>
 
 <h2><%= @query.new_record? ? l(:label_project_plural) : @query.name %></h2>
+<%= @query.persisted? && @query.description.present? ? content_tag('p', @query.description, class: 'subtitle') : '' %>
 
 <%= form_tag(admin_projects_path(@project, nil), :method => :get, :id => 'query_form') do %>
 <%= render :partial => 'queries/query_form' %>

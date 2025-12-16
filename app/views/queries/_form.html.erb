@@ -12,6 +12,8 @@
   </label>
   <%= text_field 'query', 'name', :size => 80 %>
 </p>
+<p><label for="query_description"><%=l(:field_description)%></label>
+<%= text_field 'query', 'description', :size => 80 %></p>
 
 <% if User.current.admin? ||
       User.current.allowed_to?(:manage_public_queries, @query.project) %>
@@ -100,7 +102,11 @@
 <% unless params[:calendar] %>
   <%= content_tag 'fieldset', :id => 'columns' do %>
   <legend><%= l(:field_column_names) %></legend>
-  <%= render_query_columns_selection(query) %>
+  <div id="list-definition">
+    <div>
+      <%= render_query_columns_selection(query) %>
+    </div>
+  </div>
   <% end %>
 <% end %>
 

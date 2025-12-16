@@ -149,6 +149,7 @@ pl:
         must_contain_digits: "musi zawierać cyfry (0-9)"
         must_contain_special_chars: "musi zawierać znaki specjalne (!, $, %, ...)"
         domain_not_allowed: "zawiera niedozwoloną domenę (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: wybierz
 
@@ -216,7 +217,7 @@ pl:
   error_no_tracker_in_project: Projekt nie posiada powiązanych typów zagadnień. Sprawdź ustawienia projektu.
   error_no_default_issue_status: 'Nie zdefiniowano domyślnego statusu zagadnień. Sprawdź konfigurację (Przejdź do "Administracja -> Statusy zagadnień").'
   error_can_not_delete_custom_field: Nie można usunąć tego pola
-  error_can_not_delete_tracker: Ten typ przypisany jest do części zagadnień i nie może zostać usunięty.
+  error_can_not_delete_tracker_html: Ten typ przypisany jest do części zagadnień i nie może zostać usunięty.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   error_can_not_remove_role: Ta rola przypisana jest niektórym użytkownikom i nie może zostać usunięta.
   error_can_not_reopen_issue_on_closed_version: Zagadnienie przydzielone do zakończonej wersji nie może zostać ponownie otwarte
   error_can_not_archive_project: Ten projekt nie może zostać zarchiwizowany
@@ -839,7 +840,6 @@ pl:
   label_repository: Repozytorium
   label_repository_new: Nowe repozytorium
   label_repository_plural: Repozytoria
-  label_browse: Przegląd
   label_branch: Branch
   label_tag: Tag
   label_revision: Rewizja
@@ -1430,4 +1430,16 @@ pl:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

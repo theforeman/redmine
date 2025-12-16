@@ -180,7 +180,14 @@ module Redmine
           url = '#'
           options.reverse_merge!(:onclick => 'return false;')
         end
-        link_to(h(caption), use_absolute_controller(url), options)
+
+        label = if item.icon.present?
+                  sprite_icon(item.icon, h(caption), plugin: item.plugin)
+                else
+                  h(caption)
+                end
+
+        link_to(label, use_absolute_controller(url), options)
       end
 
       def render_unattached_menu_item(menu_item, project)
@@ -292,6 +299,8 @@ module Redmine
           target_root = @menu_items.root
         end
 
+        target_root.children.reject! {|item| item.name == name}
+
         # menu item position
         if first = options.delete(:first)
           target_root.prepend(MenuItem.new(name, url, options))
@@ -367,9 +376,9 @@ module Redmine
         @children.inject(1) {|sum, node| sum + node.size}
       end
 
-      def each(&block)
+      def each(...)
         yield self
-        children {|child| child.each(&block)}
+        children {|child| child.each(...)}
       end
 
       # Adds a child at first position
@@ -379,9 +388,7 @@ module Redmine
 
       # Adds a child at given position
       def add_at(child, position)
-        raise "Child already added" if find {|node| node.name == child.name}
-
-        @children = @children.insert(position, child)
+        @children.insert(position, child)
         child.parent = self
         child
       end
@@ -424,7 +431,7 @@ module Redmine
     class MenuItem < MenuNode
       include Redmine::I18n
       attr_reader :name, :url, :param, :condition, :parent,
-                  :child_menus, :last, :permission
+                  :child_menus, :last, :permission, :icon, :plugin
 
       def initialize(name, url, options={})
         if options[:if] && !options[:if].respond_to?(:call)
@@ -447,13 +454,15 @@ module Redmine
         @permission ||= false if options.key?(:permission)
         @param = options[:param] || :id
         @caption = options[:caption]
+        @icon = options[:icon]
         @html_options = options[:html] || {}
         # Adds a unique class to each menu item based on its name
         @html_options[:class] = [@html_options[:class], @name.to_s.dasherize].compact.join(' ')
         @parent = options[:parent]
         @child_menus = options[:children]
         @last = options[:last] || false
-        super @name.to_sym
+        @plugin = options[:plugin]
+        super(@name.to_sym)
       end
 
       def caption(project=nil)

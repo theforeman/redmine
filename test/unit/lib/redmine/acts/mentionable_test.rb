@@ -21,7 +21,7 @@ require_relative '../../../../test_helper'
 
 class Redmine::Acts::MentionableTest < ActiveSupport::TestCase
   def test_mentioned_users_with_user_mention
-    to_test = %w(@dlopper @dlopper! @dlopper? @dlopper. @dlopper)
+    to_test = %w(@dlopper @dlopper! @dlopper? @dlopper. @dlopper,)  # rubocop:disable Lint/PercentStringArray
 
     to_test.each do |item|
       issue = Issue.generate!(project_id: 1, description: item)
@@ -105,7 +105,7 @@ class Redmine::Acts::MentionableTest < ActiveSupport::TestCase
       ```
     STR
 
-    with_settings text_formatting: 'markdown' do
+    with_settings text_formatting: 'common_mark' do
       issue = Issue.generate!(project_id: 1, description: description)
 
       assert_equal [], issue.mentioned_users

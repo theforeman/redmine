@@ -23,11 +23,10 @@ module Redmine
       module Helper
         def wikitoolbar_for(field_id, preview_url = preview_text_path)
           heads_for_wiki_formatter
-          url = help_path(current_language)
 
           javascript_tag(
             "var wikiToolbar = new jsToolBar(document.getElementById('#{field_id}')); " \
-            "wikiToolbar.setHelpLink('#{escape_javascript url}'); " \
+            "wikiToolbar.setHelpLink('#{escape_javascript help_wiki_syntax_path}'); " \
             "wikiToolbar.setPreviewUrl('#{escape_javascript preview_url}'); " \
             "wikiToolbar.draw();"
           )
@@ -44,7 +43,7 @@ module Redmine
         end
 
         def initial_page_content(page)
-          "# #{@page.pretty_title}"
+          "# #{page.pretty_title}"
         end
 
         def heads_for_wiki_formatter

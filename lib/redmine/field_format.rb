@@ -130,6 +130,8 @@ module Redmine
           if value.empty?
             value << ''
           end
+        elsif custom_field.field_format == 'float'
+          value = normalize_float(value)
         else
           value = value.to_s
         end
@@ -187,7 +189,7 @@ module Redmine
         end
       end
 
-      def parse_keyword(custom_field, keyword, &block)
+      def parse_keyword(custom_field, keyword, &)
         separator = Regexp.escape ","
         keyword = keyword.dup.to_s
 
@@ -250,7 +252,7 @@ module Redmine
         casted = cast_value(custom_field, value, customized)
         if html && custom_field.url_pattern.present?
           texts_and_urls = Array.wrap(casted).map do |single_value|
-            text = view.format_object(single_value, false).to_s
+            text = view.format_object(single_value, html: false).to_s
             url = url_from_pattern(custom_field, single_value, customized)
             [text, url]
           end
@@ -498,6 +500,7 @@ module Redmine
     class Numeric < Unbounded
       self.form_partial = 'custom_fields/formats/numeric'
       self.totalable_supported = true
+      field_attributes :thousands_delimiter
 
       def order_statement(custom_field)
         # Make the database cast values into numeric
@@ -562,7 +565,7 @@ module Redmine
 
       def validate_single_value(custom_field, value, customized=nil)
         errs = super
-        errs << ::I18n.t('activerecord.errors.messages.invalid') unless (Kernel.Float(value) rescue nil)
+        errs << ::I18n.t('activerecord.errors.messages.invalid') unless Kernel.Float(value, exception: false)
         errs
       end
 
@@ -850,6 +853,8 @@ module Redmine
     end
 
     class EnumerationFormat < RecordList
+      self.customized_class_names = nil
+
       add 'enumeration'
       self.form_partial = 'custom_fields/formats/enumeration'
 

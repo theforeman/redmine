@@ -73,7 +73,7 @@ class CommentsControllerTest < Redmine::ControllerTest
           }
         }
       )
-      assert_response 403
+      assert_response :forbidden
     end
   end
 

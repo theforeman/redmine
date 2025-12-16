@@ -73,7 +73,7 @@ nl:
   number:
     format:
       separator: ","
-      delimiter: ""
+      delimiter: "."
       precision: 3
     human:
       format:
@@ -135,6 +135,7 @@ nl:
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Selecteren
 
@@ -330,7 +331,6 @@ nl:
   label_board_new: Nieuw forum
   label_board_plural: Forums
   label_boolean: Booleaanse waarde
-  label_browse: Bladeren
   label_bulk_edit_selected_issues: Geselecteerde issues in bulk bewerken
   label_calendar: Kalender
   label_change_plural: Wijzigingen
@@ -863,7 +863,7 @@ nl:
   error_can_not_delete_custom_field: Custom field verwijderen is niet mogelijk
   error_unable_to_connect: Geen connectie (%{value})
   error_can_not_remove_role: Deze rol is in gebruik en kan niet worden verwijderd.
-  error_can_not_delete_tracker: Deze tracker bevat nog issues en kan niet verwijderd worden.
+  error_can_not_delete_tracker_html: Deze tracker bevat nog issues en kan niet verwijderd worden.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   field_principal: User or Group
   notice_failed_to_save_members: "Het is niet gelukt om lid/leden op te slaan: %{errors}."
   text_zoom_out: Uitzoomen
@@ -1461,4 +1461,16 @@ nl:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

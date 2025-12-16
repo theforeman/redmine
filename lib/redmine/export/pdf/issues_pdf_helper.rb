@@ -21,6 +21,8 @@ module Redmine
   module Export
     module PDF
       module IssuesPdfHelper
+        include ActionView::Helpers::NumberHelper
+
         # Returns a PDF string of a single issue
         def issue_to_pdf(issue, assoc={})
           pdf = ITCPDF.new(current_language)
@@ -36,7 +38,7 @@ module Redmine
           i = 1
           issue.ancestors.visible.each do |ancestor|
             pdf.set_x(base_x + i)
-            buf = "#{ancestor.tracker} # #{ancestor.id} (#{ancestor.status.to_s}): #{ancestor.subject}"
+            buf = "#{ancestor.tracker} # #{ancestor.id} (#{ancestor.status}): #{ancestor.subject}"
             pdf.RDMMultiCell(190 - i, 5, buf)
             i += 1 if i < 35
           end
@@ -400,13 +402,15 @@ module Redmine
                   value = "  " * level + value
                 when :attachments
                   value = value.to_a.map {|a| a.filename}.join("\n")
+                when :watcher_users
+                  value = value.to_a.join("\n")
                 end
                 if value.is_a?(Date)
                   format_date(value)
                 elsif value.is_a?(Time)
                   format_time(value)
                 elsif value.is_a?(Float)
-                  sprintf "%.2f", value
+                  number_with_delimiter(sprintf('%.2f', value), delimiter: nil)
                 else
                   value
                 end
