@@ -32,16 +32,6 @@ module Redmine
           )
         end
 
-        def help_path(lang)
-          help_file = "help/#{lang.to_s.downcase}/wiki_syntax_common_mark.html"
-          # fall back to the english help page if there is none for the current
-          # language
-          unless Rails.public_path.join(help_file).readable?
-            help_file = "help/en/wiki_syntax_common_mark.html"
-          end
-          File.join(Redmine::Utils.relative_url_root, help_file)
-        end
-
         def initial_page_content(page)
           "# #{page.pretty_title}"
         end
