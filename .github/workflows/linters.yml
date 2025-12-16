@@ -11,6 +11,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Delete Gemfile.lock
+        run: rm -f Gemfile.lock
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -44,6 +47,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Delete Gemfile.lock
+        run: rm -f Gemfile.lock
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
