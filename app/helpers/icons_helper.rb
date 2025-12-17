@@ -90,29 +90,6 @@ module IconsHelper
     sprite_icon(icon_name, **)
   end
 
-  def scm_change_icon(action, name, **options)
-    icon_name = case action
-                when 'A'
-                  "add"
-                when 'D'
-                  "circle-minus"
-                else
-                  "circle-dot-filled"
-                end
-    sprite_icon(icon_name, name, size: 14)
-  end
-
-  def notice_icon(type, **options)
-    icon_name = case type
-                when 'notice'
-                  'checked'
-                when 'warning', 'error'
-                  'warning'
-                end
-
-    sprite_icon(icon_name, **options)
-  end
-
   private
 
   def svg_sprite_icon(icon_name, size: DEFAULT_ICON_SIZE, style: :outline, sprite: DEFAULT_SPRITE, css_class: nil, rtl: false)

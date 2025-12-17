@@ -945,9 +945,6 @@ table.projects td.name .icon-bookmarked-project svg,
 table.projects td.name .my-project svg {
   margin-left: 4px;
 }
-#projects-index div.wiki p {
-  margin-top: 0px;
-}
 
 #notified-projects>ul, #tracker_project_ids>ul, #custom_field_project_ids>ul {max-height:250px; overflow-y:auto;}
 
