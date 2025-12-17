@@ -93,7 +93,7 @@ class RepositoriesController < ApplicationController
     @entries = @repository.entries(@path, @rev)
     @changeset = @repository.find_changeset_by_name(@rev)
     if request.xhr?
-      @entries ? render(:partial => 'dir_list_content') : head(200)
+      @entries ? render(:partial => 'dir_list_content') : head(:ok)
     else
       (show_error_not_found; return) unless @entries
       @changesets = @repository.latest_changesets(@path, @rev)
@@ -107,7 +107,11 @@ class RepositoriesController < ApplicationController
 
   def fetch_changesets
     @repository.fetch_changesets if @project.active? && @path.empty? && !Setting.autofetch_changesets?
-    show
+
+    redirect_to(
+      controller: :repositories, action: :show,
+      id: @project, repository_id: @repository.identifier_param
+    )
   end
 
   def changes
@@ -238,7 +242,7 @@ class RepositoriesController < ApplicationController
   # Adds a related issue to a changeset
   # POST /projects/:project_id/repository/(:repository_id/)revisions/:rev/issues
   def add_related_issue
-    issue_id = params[:issue_id].to_s.sub(/^#/, '')
+    issue_id = params[:issue_id].to_s.delete_prefix('#')
     @issue = @changeset.find_referenced_issue_by_id(issue_id)
     if @issue && (!@issue.visible? || @changeset.issues.include?(@issue))
       @issue = nil
@@ -272,7 +276,7 @@ class RepositoriesController < ApplicationController
     if params[:format] == 'diff'
       @diff = @repository.diff(@path, @rev, @rev_to)
       (show_error_not_found; return) unless @diff
-      filename = +"changeset_r#{@rev}"
+      filename = "changeset_r#{@rev}"
       filename << "_r#{@rev_to}" if @rev_to
       send_data @diff.join, :filename => "#{filename}.diff",
                             :type => 'text/x-patch',
@@ -287,7 +291,7 @@ class RepositoriesController < ApplicationController
         User.current.preference.save
       end
       @cache_key = "repositories/diff/#{@repository.id}/" +
-                      Digest::MD5.hexdigest("#{@path}-#{@rev}-#{@rev_to}-#{@diff_type}-#{current_language}")
+                      ActiveSupport::Digest.hexdigest("#{@path}-#{@rev}-#{@rev_to}-#{@diff_type}-#{current_language}")
       unless read_fragment(@cache_key)
         @diff = @repository.diff(@path, @rev, @rev_to)
         (show_error_not_found; return) unless @diff
@@ -296,8 +300,7 @@ class RepositoriesController < ApplicationController
       @changeset = @repository.find_changeset_by_name(@rev)
       @changeset_to = @rev_to ? @repository.find_changeset_by_name(@rev_to) : nil
       @diff_format_revisions = @repository.diff_format_revisions(@changeset, @changeset_to)
-      # TODO: Fix DEPRECATION WARNING: Rendering actions with '.' in the name is deprecated
-      render :diff, :formats => :html, :layout => 'base.html.erb'
+      render :diff, :formats => :html
     end
   end
 

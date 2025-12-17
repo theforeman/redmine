@@ -61,7 +61,7 @@ class WatchersController < ApplicationController
     respond_to do |format|
       format.html do
         redirect_to_referer_or do
-          render(:html => 'Watcher added.', :status => 200, :layout => true)
+          render(:html => 'Watcher added.', :status => :ok, :layout => true)
         end
       end
       format.js  {@users = users_for_new_watcher}
@@ -75,7 +75,7 @@ class WatchersController < ApplicationController
       @users = Principal.assignable_watchers.where(:id => user_ids).to_a
     end
     if @users.blank?
-      head 200
+      head :ok
     end
   end
 
@@ -89,7 +89,7 @@ class WatchersController < ApplicationController
     respond_to do |format|
       format.html do
         redirect_to_referer_or do
-          render(:html => 'Watcher removed.', :status => 200, :layout => true)
+          render(:html => 'Watcher removed.', :status => :ok, :layout => true)
         end
       end
       format.js
@@ -138,7 +138,7 @@ class WatchersController < ApplicationController
       format.html do
         text = watching ? 'Watcher added.' : 'Watcher removed.'
         redirect_to_referer_or do
-          render(:html => text, :status => 200, :layout => true)
+          render(:html => text, :status => :ok, :layout => true)
         end
       end
       format.js do
@@ -214,7 +214,7 @@ class WatchersController < ApplicationController
         nil
       end
     return unless klass && Class === klass # rubocop:disable Style/CaseEquality
-    return unless klass < ActiveRecord::Base
+    return unless klass < ApplicationRecord
     return unless klass < Redmine::Acts::Watchable::InstanceMethods
 
     scope = klass.where(:id => Array.wrap(params[:object_id])).order(:id)

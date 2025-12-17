@@ -19,7 +19,7 @@
 
 require 'zlib'
 
-class WikiContentVersion < ActiveRecord::Base
+class WikiContentVersion < ApplicationRecord
   belongs_to :page, :class_name => 'WikiPage'
   belongs_to :author, :class_name => 'User'
 
@@ -83,8 +83,7 @@ class WikiContentVersion < ActiveRecord::Base
               # uncompressed data
               data
             end
-      str.force_encoding("UTF-8")
-      str
+      (+str).force_encoding('UTF-8')
     end
   end
 

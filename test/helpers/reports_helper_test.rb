@@ -21,7 +21,6 @@ require_relative '../test_helper'
 
 class ReportsHlperTest < Redmine::HelperTest
   include ReportsHelper
-  include Rails.application.routes.url_helpers
 
   def test_aggregate_path_for_spacified_row
     project = Project.find(1)

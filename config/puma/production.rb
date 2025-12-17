@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 run_dir = Rails.root.join('tmp')
 
 # Store server info state.

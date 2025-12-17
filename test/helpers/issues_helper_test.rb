@@ -23,7 +23,6 @@ class IssuesHelperTest < Redmine::HelperTest
   include IssuesHelper
   include CustomFieldsHelper
   include ERB::Util
-  include Rails.application.routes.url_helpers
 
   def test_issue_heading
     assert_equal "Bug #1", issue_heading(Issue.find(1))

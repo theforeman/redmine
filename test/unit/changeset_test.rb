@@ -498,7 +498,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :revision     => '123',
                       :scmid        => '12345',
                       :comments     => str)
-    assert( c.save )
+    assert(c.save)
     assert_equal 'Texte encodé en ISO-8859-1.', c.comments
   end
 
@@ -518,7 +518,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :scmid        => '12345',
                       :comments     => "Texte encod\xE9 en ISO-8859-1.",
                       :committer    => str2)
-    assert( c.save )
+    assert(c.save)
     assert_equal "Texte encod? en ISO-8859-1.", c.comments
     assert_equal "?a?b?c?d?e test", c.committer
   end
@@ -538,7 +538,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :revision     => '123',
                       :scmid        => '12345',
                       :comments     => str)
-    assert( c.save )
+    assert(c.save)
     assert_equal "test??test??", c.comments
   end
 
@@ -565,7 +565,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :revision     => '123',
                       :scmid        => '12345',
                       :comments     => s1)
-    assert( c.save )
+    assert(c.save)
     assert_equal s4, c.comments
   end
 
@@ -616,7 +616,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :scmid        => '12345',
                       :comments     => nil,
                       :committer    => nil)
-    assert( c.save )
+    assert(c.save)
     assert_equal "", c.comments
     assert_nil c.committer
     assert_equal "UTF-8", c.comments.encoding.to_s
@@ -637,7 +637,7 @@ class ChangesetTest < ActiveSupport::TestCase
                       :scmid        => '12345',
                       :comments     => "",
                       :committer    => "")
-    assert( c.save )
+    assert(c.save)
     assert_equal "", c.comments
     assert_equal "", c.committer
     assert_equal "UTF-8", c.comments.encoding.to_s
@@ -649,10 +649,10 @@ class ChangesetTest < ActiveSupport::TestCase
                       :committed_on => Time.now,
                       :revision     => '123',
                       :scmid        => '12345',
-                      :comments     => "a" * 500.kilobyte)
+                      :comments     => "a" * 500.kilobytes)
     assert c.save
     c.reload
-    assert_equal 500.kilobyte, c.comments.size
+    assert_equal 500.kilobytes, c.comments.size
   end
 
   def test_identifier

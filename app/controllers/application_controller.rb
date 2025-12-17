@@ -28,9 +28,11 @@ class ApplicationController < ActionController::Base
   include Redmine::Hook::Helper
   include RoutesHelper
   include AvatarsHelper
+  include IconsHelper
 
   helper :routes
   helper :avatars
+  helper :icons
 
   class_attribute :accept_api_auth_actions
   class_attribute :accept_atom_auth_actions
@@ -261,7 +263,7 @@ class ApplicationController < ActionController::Base
   end
 
   def require_login
-    if !User.current.logged?
+    unless User.current.logged?
       # Extract only the basic url parameters on non-GET requests
       if request.get?
         url = request.original_url
@@ -297,7 +299,7 @@ class ApplicationController < ActionController::Base
   def require_admin
     return unless require_login
 
-    if !User.current.admin?
+    unless User.current.admin?
       render_403
       return false
     end
@@ -475,11 +477,6 @@ class ApplicationController < ActionController::Base
     url = params[:back_url]
     if url.nil? && referer = request.env['HTTP_REFERER']
       url = CGI.unescape(referer.to_s)
-      # URLs that contains the utf8=[checkmark] parameter added by Rails are
-      # parsed as invalid by URI.parse so the redirect to the back URL would
-      # not be accepted (ApplicationController#validate_back_url would return
-      # false)
-      url.gsub!(/(\?|&)utf8=\u2713&?/, '\1')
     end
     url
   end
@@ -507,25 +504,22 @@ class ApplicationController < ActionController::Base
     end
 
     begin
-      uri = URI.parse(back_url)
-    rescue URI::InvalidURIError
+      uri = Addressable::URI.parse(back_url)
+      [:scheme, :host, :port].each do |component|
+        if uri.send(component).present? && uri.send(component) != request.send(component)
+          return false
+        end
+      end
+      # Remove unnecessary components to convert the URL into a relative URL
+      uri.omit!(:scheme, :authority)
+    rescue Addressable::URI::InvalidURIError
       return false
     end
-
-    [:scheme, :host, :port].each do |component|
-      if uri.send(component).present? && uri.send(component) != request.send(component)
-        return false
-      end
-
-      uri.send(:"#{component}=", nil)
-    end
-    # Always ignore basic user:password in the URL
-    uri.userinfo = nil
 
     path = uri.to_s
     # Ensure that the remaining URL starts with a slash, followed by a
     # non-slash character or the end
-    if !%r{\A/([^/]|\z)}.match?(path)
+    unless %r{\A/([^/]|\z)}.match?(path)
       return false
     end
 
@@ -635,19 +629,8 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def self.accept_rss_auth(*actions)
-    ActiveSupport::Deprecation.warn "Application#self.accept_rss_auth is deprecated and will be removed in Redmine 6.0. Please use #self.accept_atom_auth instead."
-    self.class.accept_atom_auth(*actions)
-  end
-
   def accept_atom_auth?(action=action_name)
     self.class.accept_atom_auth.include?(action.to_sym)
-  end
-
-  # TODO: remove in Redmine 6.0
-  def accept_rss_auth?(action=action_name)
-    ActiveSupport::Deprecation.warn "Application#accept_rss_auth? is deprecated and will be removed in Redmine 6.0. Please use #accept_atom_auth? instead."
-    accept_atom_auth?(action)
   end
 
   def self.accept_api_auth(*actions)
@@ -783,19 +766,12 @@ class ApplicationController < ActionController::Base
 
   def render_api_errors(*messages)
     @error_messages = messages.flatten
-    render :template => 'common/error_messages', :format => [:api], :status => :unprocessable_entity, :layout => nil
+    render :template => 'common/error_messages', :format => [:api], :status => :unprocessable_content, :layout => nil
   end
 
   # Overrides #_include_layout? so that #render with no arguments
   # doesn't use the layout for api requests
   def _include_layout?(*args)
     api_request? ? false : super
-  end
-
-  before_action :block_spiders
-  def block_spiders
-    if request.env['HTTP_USER_AGENT'] =~ %r{Sogou|AhrefsBot|SemrushBot|BLEXBot} || request.env['HTTP_USER_AGENT'] == 'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)'
-      render :text => 'access denied, spider is causing too much load', :status => 403
-    end
   end
 end

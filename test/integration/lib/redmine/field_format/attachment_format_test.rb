@@ -52,7 +52,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
             }
           }
         )
-        assert_response 302
+        assert_response :found
       end
     end
 
@@ -92,7 +92,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
             }
           }
         )
-        assert_response 302
+        assert_response :found
       end
     end
 
@@ -150,7 +150,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
             }
           }
         )
-        assert_response 302
+        assert_response :found
       end
     end
 
@@ -177,7 +177,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
             }
           }
         )
-        assert_response 302
+        assert_response :found
       end
     end
   end

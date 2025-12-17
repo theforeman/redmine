@@ -194,6 +194,7 @@
         must_contain_digits: "必須包含數字 (0-9)"
         must_contain_special_chars: "必須包含特殊字元 (!, $, %, ...)"
         domain_not_allowed: "包含不允許的網域 (%{domain})"
+        too_simple: "is too simple"
 
       # You can define own errors for models or model attributes.
       # The values :model, :attribute and :value are always available for interpolation.
@@ -284,7 +285,7 @@
   error_no_tracker_in_project: '此專案尚未指定追蹤標籤。請檢查專案的設定資訊。'
   error_no_default_issue_status: '尚未定義議題狀態的預設值。請您前往「網站管理」->「議題狀態清單」頁面，檢查相關組態設定。'
   error_can_not_delete_custom_field: 無法刪除自訂欄位
-  error_can_not_delete_tracker: "此追蹤標籤已包含議題，無法被刪除。"
+  error_can_not_delete_tracker_html: "此追蹤標籤已包含議題，無法被刪除。<p>下列專案包含了使用此追蹤標籤的項目：<br>%{projects}</p>"
   error_can_not_remove_role: "此角色已被使用，無法將其刪除。"
   error_can_not_reopen_issue_on_closed_version: '分派給「已結束」版本的議題，無法再將其狀態變更為「進行中」'
   error_can_not_archive_project: 此專案無法被封存
@@ -836,7 +837,6 @@
   label_repository: 儲存機制
   label_repository_new: 建立新儲存機制
   label_repository_plural: 儲存機制清單
-  label_browse: 瀏覽
   label_branch: 分支
   label_tag: 標籤
   label_revision: 修訂版
@@ -1503,4 +1503,16 @@
   text_select_apply_issue_status: 選擇議題狀態
   field_name_or_email_or_login: 姓名, 電子郵件或帳戶名稱
   text_default_active_job_queue_changed: 已變更僅適用於開發/測試環境的佇列適配器 (queue adapter)
+  label_option_auto_lang: 自動選取語言
+  label_issue_attachment_added: 附加檔案已新增
+  field_estimated_remaining_hours: 預估剩餘工時
+  field_last_activity_date: 最近一次活動
+  setting_issue_done_ratio_interval: 完成百分比選項的間隔值
+  setting_copy_attachments_on_issue_copy: 連同附件檔案一起複製
+  field_thousands_delimiter: 千分位分隔符號
+  label_involved_principals: 作者 / 歷任被分派者
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} 與另 1 個檔案"
+    other: "%{filename} 與另外 %{count} 個檔案"
   twofa_already_setup: Two-factor authentication already set up

@@ -1,3 +1,20 @@
+# Redmine - project management software
+# Copyright (C) 2006-  Jean-Philippe Lang
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 desc 'Updates and checks locales against en.yml'
 task :locales do
   %w(locales:update locales:check_interpolation).collect do |task|
@@ -26,7 +43,7 @@ namespace :locales do
 
       missing_keys.each do |key|
         {key => en_strings[key]}.to_yaml.each_line do |line|
-          next if line =~ /^---/ || line.empty?
+          next if line.start_with?('---') || line.empty?
           puts "  #{line}"
           lang << "  #{line}"
         end
@@ -116,7 +133,7 @@ END_DESC
       File.open(path, 'a') do |file|
         adds.each do |kv|
           Hash[*kv].to_yaml.each_line do |line|
-            file.puts "  #{line}" unless (line =~ /^---/ || line.empty?)
+            file.puts "  #{line}" unless (line.start_with?('---') || line.empty?)
           end
         end
       end

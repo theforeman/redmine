@@ -151,6 +151,7 @@ tr:
         must_contain_digits: "sayı içermelidir (0-9)"
         must_contain_special_chars: "özel karakterler içermelidir (!, $, %, ...)"
         domain_not_allowed: "izin verilmeyen bir alan adı içeriyor (%{domain})"
+        too_simple: "is too simple"
       models:
 
   actionview_instancetag_blank_option: Lütfen Seçin
@@ -205,7 +206,7 @@ tr:
 
 
   field_name: İsim
-  field_description: Yorum
+  field_description: Açıklama
   field_summary: Özet
   field_is_required: Gerekli
   field_firstname: Ad
@@ -279,7 +280,7 @@ tr:
   field_is_filter: süzgeç olarak kullanılmış
   field_issue_to: İlişkili iş
   field_delay: Gecikme
-  field_assignable: Bu role atanabilecek işler
+  field_assignable: Bu roldeki kullanıcılara iş atanabilir
   field_redirect_existing_links: Mevcut bağlantıları yönlendir
   field_estimated_hours: Kalan zaman
   field_column_names: Sütunlar
@@ -496,7 +497,6 @@ tr:
   label_day_plural: Günler
   label_repository: Depo
   label_repository_plural: Depolar
-  label_browse: Gözat
   label_revision: Değişiklik
   label_revision_plural: Değişiklikler
   label_associated_revisions: Birleştirilmiş değişiklikler
@@ -891,7 +891,7 @@ tr:
   error_can_not_delete_custom_field: Özel alan silinemiyor
   error_unable_to_connect: Bağlanılamıyor (%{value})
   error_can_not_remove_role: Bu rol kullanımda olduğundan silinemez.
-  error_can_not_delete_tracker: Bu iş tipi içerisinde iş barındırdığından silinemiyor.
+  error_can_not_delete_tracker_html: Bu iş tipi içerisinde iş barındırdığından silinemiyor.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   field_principal: User or Group
   notice_failed_to_save_members: "Üyeler kaydedilemiyor: %{errors}."
   text_zoom_out: Uzaklaş
@@ -1485,4 +1485,16 @@ tr:
   field_name_or_email_or_login: İsim, e-posta veya giriş
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

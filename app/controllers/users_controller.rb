@@ -47,10 +47,6 @@ class UsersController < ApplicationController
 
     # API backwards compatibility: handle legacy filter parameters
     unless request.format.html?
-      if params.include?(:status) && params[:status].blank?
-        ActiveSupport::Deprecation.warn "Getting all users from API using an empty status param (status=) is deprecated and it will be removed in Redmine 6.0. Please use \"status=*\"."
-        @query.add_filter 'status', '*'
-      end
       if name = params[:name].presence
         @query.add_filter 'name', '~', [name]
       end
@@ -74,8 +70,8 @@ class UsersController < ApplicationController
         end
         format.csv do
           # Export all entries
-          @entries = scope.to_a
-          send_data(query_to_csv(@entries, @query, params), :type => 'text/csv; header=present', :filename => "#{filename_for_export(@query, 'users')}.csv")
+          entries = scope.to_a
+          send_data(query_to_csv(entries, @query, params), :type => 'text/csv; header=present', :filename => "#{filename_for_export(@query, 'users')}.csv")
         end
         format.api do
           @offset, @limit = api_offset_and_limit
@@ -85,7 +81,7 @@ class UsersController < ApplicationController
     else
       respond_to do |format|
         format.html {render :layout => !request.xhr?}
-        format.csv {head :unprocessable_entity}
+        format.csv {head :unprocessable_content}
         format.api {render_validation_errors(@query)}
       end
     end
@@ -250,15 +246,19 @@ class UsersController < ApplicationController
     @users = User.logged.where(id: params[:ids]).where.not(id: User.current)
     (render_404; return) unless @users.any?
 
-    if params[:lock]
-      @users.update_all status: User::STATUS_LOCKED
-      flash[:notice] = l(:notice_successful_update)
-      redirect_to users_path
-    elsif params[:confirm] == I18n.t(:general_text_Yes)
+    if params[:confirm] == I18n.t(:general_text_Yes)
       @users.destroy_all
       flash[:notice] = l(:notice_successful_delete)
       redirect_to users_path
     end
+  end
+
+  def bulk_lock
+    bulk_update_status(params[:ids], User::STATUS_LOCKED)
+  end
+
+  def bulk_unlock
+    bulk_update_status(params[:ids], User::STATUS_ACTIVE)
   end
 
   private
@@ -274,5 +274,14 @@ class UsersController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  def bulk_update_status(user_ids, status)
+    users = User.logged.where(id: user_ids).where.not(id: User.current)
+    (render_404; return) unless users.any?
+
+    users.update_all status: status
+    flash[:notice] = l(:notice_successful_update)
+    redirect_to users_path
   end
 end

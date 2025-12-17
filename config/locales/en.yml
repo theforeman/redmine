@@ -74,7 +74,7 @@ en:
   number:
     format:
       separator: "."
-      delimiter: ""
+      delimiter: ","
       precision: 3
 
     human:
@@ -137,6 +137,7 @@ en:
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Please select
 
@@ -204,7 +205,7 @@ en:
   error_no_tracker_in_project: 'No tracker is associated to this project. Please check the Project settings.'
   error_no_default_issue_status: 'No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").'
   error_can_not_delete_custom_field: Unable to delete custom field
-  error_can_not_delete_tracker: "This tracker contains issues and cannot be deleted."
+  error_can_not_delete_tracker_html: "This tracker contains issues and cannot be deleted.<p>The following projects have issues with this tracker:<br>%{projects}</p>"
   error_can_not_remove_role: "This role is in use and cannot be deleted."
   error_can_not_reopen_issue_on_closed_version: 'An issue assigned to a closed version cannot be reopened'
   error_can_not_archive_project: This project cannot be archived
@@ -418,6 +419,9 @@ en:
   field_default_project_query: Default project query
   field_default_time_entry_activity: Default spent time activity
   field_any_searchable: Any searchable text
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  field_thousands_delimiter: Thousands delimiter
 
   setting_app_title: Application title
   setting_welcome_text: Welcome text
@@ -475,6 +479,7 @@ en:
   setting_default_projects_modules: Default enabled modules for new projects
   setting_issue_done_ratio: Calculate the issue done ratio with
   setting_issue_done_ratio_issue_field: Use the issue field
+  setting_issue_done_ratio_interval: Done ratio options interval
   setting_issue_done_ratio_issue_status: Use the issue status
   setting_start_of_week: Start calendars on
   setting_rest_api_enabled: Enable REST web service
@@ -499,6 +504,7 @@ en:
   setting_force_default_language_for_anonymous: Force default language for anonymous users
   setting_force_default_language_for_loggedin: Force default language for logged-in users
   setting_link_copied_issue: Link issues on copy
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
   setting_max_additional_emails: Maximum number of additional email addresses
   setting_email_domains_allowed: Allowed email domains
   setting_email_domains_denied: Disallowed email domains
@@ -629,6 +635,7 @@ en:
   label_issue_assigned_to_updated: Assignee updated
   label_issue_priority_updated: Priority updated
   label_issue_fixed_version_updated: Target version updated
+  label_issue_attachment_added: Attachment added
   label_document: Document
   label_document_new: New document
   label_document_plural: Documents
@@ -710,6 +717,10 @@ en:
   label_attachment_plural: Files
   label_file_added: File added
   label_attachment_description: File description
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   label_report: Report
   label_report_plural: Reports
   label_news: News
@@ -825,7 +836,6 @@ en:
   label_repository: Repository
   label_repository_new: New repository
   label_repository_plural: Repositories
-  label_browse: Browse
   label_branch: Branch
   label_tag: Tag
   label_revision: Revision
@@ -879,6 +889,7 @@ en:
   label_diff_inline: inline
   label_diff_side_by_side: side by side
   label_options: Options
+  label_option_auto_lang: auto
   label_copy_workflow_from: Copy workflow from
   label_permissions_report: Permissions report
   label_watched_issues: Watched issues
@@ -1138,6 +1149,7 @@ en:
   label_default_query: Default query
   label_edited: Edited
   label_time_by_author: "%{time} by %{author}"
+  label_involved_principals: Author / Previous assignee
 
   button_login: Login
   button_submit: Submit

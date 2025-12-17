@@ -44,7 +44,7 @@ class UserQuery < Query
   end
 
   def initialize(attributes=nil, *args)
-    super attributes
+    super(attributes)
     self.filters ||= { 'status' => {operator: "=", values: [User::STATUS_ACTIVE]} }
   end
 
@@ -55,7 +55,7 @@ class UserQuery < Query
       type: :list_optional, values: ->{ auth_sources_values }
     add_available_filter "is_member_of_group",
       type: :list_optional,
-      values: ->{ Group.givable.visible.map {|g| [g.name, g.id.to_s] } }
+      values: ->{ Group.givable.visible.pluck(:name, :id).map {|name, id| [name, id.to_s]} }
     if Setting.twofa?
       add_available_filter "twofa_scheme",
         type: :list_optional,
@@ -83,9 +83,7 @@ class UserQuery < Query
   end
 
   def auth_sources_values
-    AuthSource.order(name: :asc).to_a.map do |auth_source|
-      [auth_source.name, auth_source.id]
-    end
+    AuthSource.order(name: :asc).pluck(:name, :id)
   end
 
   def user_statuses_values
@@ -149,7 +147,7 @@ class UserQuery < Query
 
   def sql_for_is_member_of_group_field(field, operator, value)
     if ["*", "!*"].include? operator
-      value = Group.givable.map(&:id)
+      value = Group.givable.ids
     end
 
     e = operator.start_with?("!") ? "NOT EXISTS" : "EXISTS"

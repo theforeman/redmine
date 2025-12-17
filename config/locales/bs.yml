@@ -563,7 +563,6 @@ bs:
   label_day_plural: dani
   label_repository: Repozitorij
   label_repository_plural: Repozitoriji
-  label_browse: Pregled
   label_revision: Revizija
   label_revision_plural: Revizije
   label_associated_revisions: Doddjeljene revizije
@@ -893,7 +892,7 @@ bs:
   error_can_not_delete_custom_field: Nije moguće obrisati proizvoljno polje
   error_unable_to_connect: Nije se moguće povezati (%{value})
   error_can_not_remove_role: Ova uloga je u upotrebi i nije je moguće obrisati.
-  error_can_not_delete_tracker: Ovaj tok rada sadrži tikete i nije ga moguće obrisati.
+  error_can_not_delete_tracker_html: Ovaj tok rada sadrži tikete i nije ga moguće obrisati.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   field_principal: Glavni
   notice_failed_to_save_members: "Neuspješno snimanje članova: %{errors}."
   text_zoom_out: Smanji
@@ -1473,4 +1472,16 @@ bs:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

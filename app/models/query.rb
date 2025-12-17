@@ -30,7 +30,7 @@ class QueryColumn
     self.totalable = options[:totalable] || false
     self.default_order = options[:default_order]
     @inline = options.key?(:inline) ? options[:inline] : true
-    @caption_key = options[:caption] || "field_#{name}".to_sym
+    @caption_key = options[:caption] || :"field_#{name}"
     @frozen = options[:frozen]
   end
 
@@ -104,11 +104,19 @@ class TimestampQueryColumn < QueryColumn
   end
 end
 
+class WatcherQueryColumn < QueryColumn
+  def value_object(object)
+    return nil unless User.current.allowed_to?(:"view_#{object.class.name.underscore}_watchers", object.try(:project))
+
+    super
+  end
+end
+
 class QueryAssociationColumn < QueryColumn
   def initialize(association, attribute, options={})
     @association = association
     @attribute = attribute
-    name_with_assoc = "#{association}.#{attribute}".to_sym
+    name_with_assoc = :"#{association}.#{attribute}"
     super(name_with_assoc, options)
   end
 
@@ -126,7 +134,7 @@ end
 
 class QueryCustomFieldColumn < QueryColumn
   def initialize(custom_field, options={})
-    name = "cf_#{custom_field.id}".to_sym
+    name = :"cf_#{custom_field.id}"
     super(
       name,
       :sortable => custom_field.order_statement || false,
@@ -181,7 +189,7 @@ end
 class QueryAssociationCustomFieldColumn < QueryCustomFieldColumn
   def initialize(association, custom_field, options={})
     super(custom_field, options)
-    self.name = "#{association}.cf_#{custom_field.id}".to_sym
+    self.name = :"#{association}.cf_#{custom_field.id}"
     # TODO: support sorting by association custom field
     self.sortable = false
     self.groupable = false
@@ -211,7 +219,7 @@ class QueryFilter
   def initialize(field, options)
     @field = field.to_s
     @options = options
-    @options[:name] ||= l(options[:label] || "field_#{field}".gsub(/_id$/, ''))
+    @options[:name] ||= l(options[:label] || "field_#{field}".delete_suffix('_id'))
     # Consider filters with a Proc for values as remote by default
     @remote = options.key?(:remote) ? options[:remote] : options[:values].is_a?(Proc)
   end
@@ -239,7 +247,7 @@ class QueryFilter
   end
 end
 
-class Query < ActiveRecord::Base
+class Query < ApplicationRecord
   class StatementInvalid < ::ActiveRecord::StatementInvalid
   end
 
@@ -257,11 +265,12 @@ class Query < ActiveRecord::Base
   has_and_belongs_to_many :roles, :join_table => "#{table_name_prefix}queries_roles#{table_name_suffix}", :foreign_key => "query_id"
   serialize :filters
   serialize :column_names
-  serialize :sort_criteria, Array
-  serialize :options, Hash
+  serialize :sort_criteria, type: Array
+  serialize :options, type: Hash
 
   validates_presence_of :name
   validates_length_of :name, :maximum => 255
+  validates_length_of :description, :maximum => 255
   validates :visibility, :inclusion => {:in => [VISIBILITY_PUBLIC, VISIBILITY_ROLES, VISIBILITY_PRIVATE]}
   validate :validate_query_filters
   validate do |query|
@@ -381,16 +390,17 @@ class Query < ActiveRecord::Base
       scope.where("#{table_name}.visibility <> ? OR #{table_name}.user_id = ?", VISIBILITY_PRIVATE, user.id)
     elsif user.memberships.any?
       scope.where(
-        "#{table_name}.visibility = ?" +
-          " OR (#{table_name}.visibility = ? AND #{table_name}.id IN (" +
-          "SELECT DISTINCT q.id FROM #{table_name} q" +
-          " INNER JOIN #{table_name_prefix}queries_roles#{table_name_suffix} qr on qr.query_id = q.id" +
-          " INNER JOIN #{MemberRole.table_name} mr ON mr.role_id = qr.role_id" +
-          " INNER JOIN #{Member.table_name} m ON m.id = mr.member_id AND m.user_id = ?" +
-          " INNER JOIN #{Project.table_name} p ON p.id = m.project_id AND p.status <> ?" +
-          " WHERE q.project_id IS NULL OR q.project_id = m.project_id))" +
-          " OR #{table_name}.user_id = ?",
-        VISIBILITY_PUBLIC, VISIBILITY_ROLES, user.id, Project::STATUS_ARCHIVED, user.id)
+        "#{table_name}.visibility = ?" \
+        " OR (#{table_name}.visibility = ? AND EXISTS (SELECT 1" \
+        " FROM #{table_name_prefix}queries_roles#{table_name_suffix} qr" \
+        " INNER JOIN #{MemberRole.table_name} mr ON mr.role_id = qr.role_id" \
+        " INNER JOIN #{Member.table_name} m ON m.id = mr.member_id AND m.user_id = ?" \
+        " INNER JOIN #{Project.table_name} p ON p.id = m.project_id AND p.status <> ?" \
+        " WHERE qr.query_id = #{table_name}.id" \
+        " AND (#{table_name}.project_id IS NULL OR #{table_name}.project_id = m.project_id)))" \
+        " OR #{table_name}.user_id = ?",
+        VISIBILITY_PUBLIC, VISIBILITY_ROLES, user.id, Project::STATUS_ARCHIVED, user.id
+      )
     elsif user.logged?
       scope.where("#{table_name}.visibility = ? OR #{table_name}.user_id = ?", VISIBILITY_PUBLIC, user.id)
     else
@@ -409,7 +419,7 @@ class Query < ActiveRecord::Base
       true
     when VISIBILITY_ROLES
       if project
-        (user.roles_for_project(project) & roles).any?
+        user.roles_for_project(project).intersect?(roles)
       else
         user.memberships.joins(:member_roles).where(:member_roles => {:role_id => roles.map(&:id)}).any?
       end
@@ -591,7 +601,7 @@ class Query < ActiveRecord::Base
   end
 
   def subproject_values
-    project.descendants.visible.collect{|s| [s.name, s.id.to_s]}
+    project.descendants.visible.pluck(:name, :id).map {|name, id| [name, id.to_s]}
   end
 
   def principals
@@ -653,7 +663,7 @@ class Query < ActiveRecord::Base
     else
       statuses = IssueStatus.all.sorted
     end
-    statuses.collect{|s| [s.name, s.id.to_s]}
+    statuses.pluck(:name, :id).map {|name, id| [name, id.to_s]}
   end
 
   def watcher_values
@@ -998,7 +1008,7 @@ class Query < ActiveRecord::Base
 
       if field == 'project_id' || (is_a?(ProjectQuery) && %w[id parent_id].include?(field))
         if v.delete('mine')
-          v += User.current.memberships.map {|m| m.project_id.to_s}
+          v += User.current.memberships.pluck(:project_id).map(&:to_s)
         end
         if v.delete('bookmarks')
           v += User.current.bookmarked_project_ids
@@ -1089,7 +1099,7 @@ class Query < ActiveRecord::Base
 
   private
 
-  def grouped_query(&block)
+  def grouped_query(&)
     r = nil
     if grouped?
       r = yield base_group_scope
@@ -1112,7 +1122,7 @@ class Query < ActiveRecord::Base
       custom_field = column.custom_field
       send :total_for_custom_field, custom_field, scope
     else
-      send "total_for_#{column.name}", scope
+      send :"total_for_#{column.name}", scope
     end
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
@@ -1128,13 +1138,13 @@ class Query < ActiveRecord::Base
       group(group_by_statement)
   end
 
-  def total_for_custom_field(custom_field, scope, &block)
+  def total_for_custom_field(custom_field, scope, &)
     total = custom_field.format.total_for_scope(custom_field, scope)
     total = map_total(total) {|t| custom_field.format.cast_total_value(custom_field, t)}
     total
   end
 
-  def map_total(total, &block)
+  def map_total(total, &)
     if total.is_a?(Hash)
       total.each_key {|k| total[k] = yield total[k]}
     else
@@ -1199,7 +1209,6 @@ class Query < ActiveRecord::Base
       "  SELECT customized_id FROM #{CustomValue.table_name}" +
       "  WHERE customized_type='#{target_class}' AND custom_field_id=#{chained_custom_field_id}" +
       "  AND #{sql_for_field(field, operator, value, CustomValue.table_name, 'value', true)}))"
-
   end
 
   def sql_for_custom_field_attribute(field, operator, value, custom_field_id, attribute)
@@ -1633,7 +1642,7 @@ class Query < ActiveRecord::Base
       else
         from = from - 1 # second
       end
-      if self.class.default_timezone == :utc
+      if ActiveRecord.default_timezone == :utc
         from = from.utc
       end
       s << ("#{table}.#{field} > '%s'" % [quoted_time(from, is_custom_filter)])
@@ -1642,7 +1651,7 @@ class Query < ActiveRecord::Base
       if to.is_a?(Date)
         to = date_for_user_time_zone(to.year, to.month, to.day).end_of_day
       end
-      if self.class.default_timezone == :utc
+      if ActiveRecord.default_timezone == :utc
         to = to.utc
       end
       s << ("#{table}.#{field} <= '%s'" % [quoted_time(to, is_custom_filter)])

@@ -63,7 +63,7 @@ class ActivitiesControllerTest < Redmine::ControllerTest
 
   def test_project_index_with_invalid_project_id_should_respond_404
     get(:index, :params => {:id => 299})
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_previous_project_index
@@ -120,7 +120,7 @@ class ActivitiesControllerTest < Redmine::ControllerTest
         :user_id => 299
       }
     )
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_user_index_with_non_visible_user_id_should_respond_404
@@ -132,7 +132,7 @@ class ActivitiesControllerTest < Redmine::ControllerTest
       :user_id => user.id
     }
 
-    assert_response 404
+    assert_response :not_found
   end
 
   def test_index_atom_feed

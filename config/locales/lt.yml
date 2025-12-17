@@ -142,6 +142,7 @@ lt:
         must_contain_digits: "must contain digits (0-9)"
         must_contain_special_chars: "must contain special characters (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Prašom parinkti
 
@@ -204,7 +205,7 @@ lt:
   error_no_tracker_in_project: 'Joks pėdsekys nesusietas su šiuo projektu. Prašom patikrinti Projekto nustatymus.'
   error_no_default_issue_status: 'Nenustatyta numatytoji darbo būsena. Prašome patikrinti nustatymus ("Administravimas -> Darbų būsenos").'
   error_can_not_delete_custom_field: Negalima ištrinti kliento lauko
-  error_can_not_delete_tracker: "Šis pėdsekys turi įrašų ir todėl negali būti ištrintas."
+  error_can_not_delete_tracker_html: "Šis pėdsekys turi įrašų ir todėl negali būti ištrintas.<p>The following projects have issues with this tracker:<br>%{projects}</p>"
   error_can_not_remove_role: "Ši rolė yra naudojama ir negali būti ištrinta."
   error_can_not_reopen_issue_on_closed_version: 'Uždarytai versijai priskirtas darbas negali būti atnaujintas.'
   error_can_not_archive_project: Šio projekto negalima suarchyvuoti
@@ -728,7 +729,6 @@ lt:
   label_repository: Saugykla
   label_repository_new: Nauja saugykla
   label_repository_plural: Saugyklos
-  label_browse: Naršyti
   label_branch: Šaka
   label_tag: Tag'as
   label_revision: Revizija
@@ -1447,4 +1447,16 @@ lt:
   field_name_or_email_or_login: Name, email or login
   text_default_active_job_queue_changed: Default queue adapter which is well suited
     only for dev/test changed
+  label_option_auto_lang: auto
+  label_issue_attachment_added: Attachment added
+  field_estimated_remaining_hours: Estimated remaining time
+  field_last_activity_date: Last activity
+  setting_issue_done_ratio_interval: Done ratio options interval
+  setting_copy_attachments_on_issue_copy: Copy attachments on copy
+  field_thousands_delimiter: Thousands delimiter
+  label_involved_principals: Author / Previous assignee
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} and 1 file"
+    other: "%{filename} and %{count} files"
   twofa_already_setup: Two-factor authentication already set up

@@ -23,7 +23,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
   tests RepositoriesController
 
   PRJ_ID = 3
-  NUM_REV = 14
+  NUM_REV = 16
 
   def setup
     super
@@ -118,13 +118,14 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
       assert_response :success
 
       assert_select 'table.entries tbody' do
-        assert_select 'tr', 6
+        assert_select 'tr', 7
         assert_select 'tr.dir td.filename a', :text => '[folder_with_brackets]'
         assert_select 'tr.dir td.filename a', :text => 'folder'
         assert_select 'tr.file td.filename a', :text => '+.md'
         assert_select 'tr.file td.filename a', :text => '.project'
         assert_select 'tr.file td.filename a', :text => 'helloworld.c'
         assert_select 'tr.file td.filename a', :text => 'textfile.txt'
+        assert_select 'tr.file td.filename a', :text => 'foo.js'
       end
 
       assert_select 'a.text-x-c', :text => 'helloworld.c'
@@ -357,6 +358,27 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
       assert_equal "attachment; filename=\"helloworld.c\"; filename*=UTF-8''helloworld.c", @response.headers['Content-Disposition']
     end
 
+    def test_entry_should_return_text_plain_for_js_files
+      # JavaScript files should be served as 'text/plain' instead of
+      # 'application/javascript' to avoid
+      # ActionController::InvalidCrossOriginRequest exception
+      assert_equal 0, @repository.changesets.count
+      @repository.fetch_changesets
+      @project.reload
+      assert_equal NUM_REV, @repository.changesets.count
+      get(
+        :raw,
+        :params => {
+          :id => PRJ_ID,
+          :repository_id => @repository.id,
+          :path => repository_path_hash(['subversion_test', 'foo.js'])[:param]
+        }
+      )
+      assert_response :success
+      assert_equal 'text/plain', @response.media_type
+      assert_match /attachment/, @response.headers['Content-Disposition']
+    end
+
     def test_directory_entry
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
@@ -410,7 +432,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
           :rev => 'something_weird'
         }
       )
-      assert_response 404
+      assert_response :not_found
       assert_select_error /was not found/
     end
 
@@ -424,7 +446,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
           :rev_to => 'something_weird'
         }
       )
-      assert_response 404
+      assert_response :not_found
       assert_select_error /was not found/
     end
 
@@ -442,7 +464,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
             :rev => r
           }
         )
-        assert_response 404
+        assert_response :not_found
         assert_select_error /was not found/
       end
     end
@@ -595,7 +617,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
       assert_difference 'Repository.count', -1 do
         delete(:destroy, :params => {:id => @repository.id})
       end
-      assert_response 302
+      assert_response :found
       @project.reload
       assert_nil @project.repository
     end
@@ -615,7 +637,7 @@ class RepositoriesSubversionControllerTest < Redmine::RepositoryControllerTest
       assert_difference 'Repository.count', -1 do
         delete(:destroy, :params => {:id => @repository.id})
       end
-      assert_response 302
+      assert_response :found
       @project.reload
       assert_nil @project.repository
     end

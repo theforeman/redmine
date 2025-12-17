@@ -179,11 +179,11 @@ class UserTest < ActiveSupport::TestCase
   end
 
   def test_user_before_create_should_set_the_mail_notification_to_the_default_setting
-    @user1 = User.generate!
-    assert_equal 'only_my_events', @user1.mail_notification
+    user1 = User.generate!
+    assert_equal 'only_assigned', user1.mail_notification
     with_settings :default_notification_option => 'all' do
-      @user2 = User.generate!
-      assert_equal 'all', @user2.mail_notification
+      user2 = User.generate!
+      assert_equal 'all', user2.mail_notification
     end
   end
 
@@ -296,12 +296,17 @@ class UserTest < ActiveSupport::TestCase
   def test_destroy_should_update_journals
     issue = Issue.generate!(:project_id => 1, :author_id => 2,
                           :tracker_id => 1, :subject => 'foo')
+    # Prepare a journal with both user_id and updated_by_id set to 2
     issue.init_journal(User.find(2), "update")
     issue.save!
+    journal = issue.journals.first
+    journal.update_columns(updated_by_id: 2)
 
     User.find(2).destroy
     assert_nil User.find_by_id(2)
-    assert_equal User.anonymous, issue.journals.first.reload.user
+    journal.reload
+    assert_equal User.anonymous, journal.user
+    assert_equal User.anonymous, journal.updated_by
   end
 
   def test_destroy_should_update_journal_details_old_value
@@ -543,6 +548,25 @@ class UserTest < ActiveSupport::TestCase
         assert !user.save
         assert_equal 1, user.errors.count
       end
+    end
+  end
+
+  def test_validate_password_complexity
+    set_language_if_valid 'en'
+    user = users(:users_002)
+    bad_passwords = [
+      user.login,
+      user.lastname,
+      user.firstname,
+      user.mail,
+      user.login.upcase
+    ]
+
+    bad_passwords.each do |p|
+      user.password = p
+      user.password_confirmation = p
+      assert_not user.save
+      assert_includes user.errors.full_messages, 'Password is too simple'
     end
   end
 

@@ -206,7 +206,7 @@ class UserQueryTest < ActiveSupport::TestCase
     users = q.results_scope
 
     assert_equal 2, users.size
-    assert_equal [2, 1], users.ids
+    assert_equal [2, 1], users.pluck(:id)
   end
 
   def test_user_query_is_only_visible_to_admins

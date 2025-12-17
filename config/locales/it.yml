@@ -150,6 +150,7 @@ it:
         must_contain_digits: "deve contenere cifre (0-9)"
         must_contain_special_chars: "deve contenere caratteri speciali (!, $, %, ...)"
         domain_not_allowed: "contiene un dominio non consentito (%{domain})"
+        too_simple: "è troppo semplice"
 
   actionview_instancetag_blank_option: Scegli
 
@@ -217,7 +218,7 @@ it:
   error_no_tracker_in_project: 'Nessun tracker è associato a questo progetto. Per favore verifica le impostazioni del Progetto.'
   error_no_default_issue_status: 'Nessuno stato predefinito delle segnalazioni è configurato. Per favore verifica le impostazioni (Vai in "Amministrazione -> Stati segnalazioni").'
   error_can_not_delete_custom_field: Impossibile eliminare il campo personalizzato
-  error_can_not_delete_tracker: "Questo tracker contiene segnalazioni e non può essere eliminato."
+  error_can_not_delete_tracker_html: "Questo tracker contiene segnalazioni e non può essere eliminato.<p>I seguenti progetti presentano problemi con questo tracker:<br>%{projects}</p>"
   error_can_not_remove_role: "Questo ruolo è in uso e non può essere eliminato."
   error_can_not_reopen_issue_on_closed_version: Una segnalazione assegnata ad una versione chiusa non può essere riaperta
   error_can_not_archive_project: Questo progetto non può essere archiviato
@@ -431,6 +432,9 @@ it:
   field_default_project_query: Query predefinita progetto
   field_default_time_entry_activity: Attività predefinita tempo speso
   field_any_searchable: Qualsiasi testo ricercabile
+  field_estimated_remaining_hours: Tempo rimanente stimato
+  field_last_activity_date: Ultima attività
+  field_thousands_delimiter: Delimitatore delle migliaia
 
   setting_app_title: Titolo applicazione
   setting_welcome_text: Testo di benvenuto
@@ -488,6 +492,7 @@ it:
   setting_default_projects_modules: Moduli predefiniti abilitati per i nuovi progetti
   setting_issue_done_ratio: Calcola la percentuale di segnalazioni completate con
   setting_issue_done_ratio_issue_field: Usa il campo segnalazioni
+  setting_issue_done_ratio_interval: Intervallo opzioni percentuale di completamento
   setting_issue_done_ratio_issue_status: Usa lo stato segnalazioni
   setting_start_of_week: Avvia calendari il
   setting_rest_api_enabled: Abilita il servizio web REST
@@ -512,6 +517,7 @@ it:
   setting_force_default_language_for_anonymous: Forza la lingua di default per gli utenti anonimi
   setting_force_default_language_for_loggedin: Forza la lingua di default per gli utenti loggati
   setting_link_copied_issue: Collega le segnalazioni dopo la copia
+  setting_copy_attachments_on_issue_copy: Copia allegati sulla copia
   setting_max_additional_emails: Numero massimo di email aggiuntive
   setting_email_domains_allowed: Domini di posta elettronica consentiti
   setting_email_domains_denied: Domini di posta elettronica non consentiti
@@ -642,6 +648,7 @@ it:
   label_issue_assigned_to_updated: Assegnatario aggiornato
   label_issue_priority_updated: Priorità aggiornata
   label_issue_fixed_version_updated: Versione prevista aggiornata
+  label_issue_attachment_added: File aggiunto
   label_document: Documento
   label_document_new: Nuovo documento
   label_document_plural: Documenti
@@ -723,6 +730,10 @@ it:
   label_attachment_plural: File
   label_file_added: File aggiunti
   label_attachment_description: Descrizione del file
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} e 1 file"
+    other: "%{filename} e %{count} file"
   label_report: Report
   label_report_plural: Report
   label_news: News
@@ -838,7 +849,6 @@ it:
   label_repository: Repository
   label_repository_new: Nuovo repository
   label_repository_plural: Repository
-  label_browse: Sfoglia
   label_branch: Branch
   label_tag: Tag
   label_revision: Versione
@@ -892,6 +902,7 @@ it:
   label_diff_inline: in linea
   label_diff_side_by_side: fianco a fianco
   label_options: Opzioni
+  label_option_auto_lang: auto
   label_copy_workflow_from: Copia workflow da
   label_permissions_report: Report permessi
   label_watched_issues: Segnalazioni osservate
@@ -1151,6 +1162,7 @@ it:
   label_default_query: Query predefinita
   label_edited: Modificato
   label_time_by_author: "%{time} da %{author}"
+  label_involved_principals: Autore / Assegnatario precedente
 
   button_login: Entra
   button_submit: Invia

@@ -1,27 +1,27 @@
 source 'https://rubygems.org'
 
-ruby '>= 2.7.0', '< 3.3.0'
+ruby '>= 3.1.0', '< 3.4.0'
 
-gem 'rails', '6.1.7.10'
-gem 'rouge', '~> 4.2.0'
-gem 'request_store', '~> 1.5.0'
+gem 'rails', '7.2.2.2'
+gem 'rouge', '~> 4.5'
 gem 'mini_mime', '~> 1.1.0'
 gem "actionpack-xml_parser"
-gem 'roadie-rails', '~> 3.1.0'
+gem 'roadie-rails', '~> 3.2.0'
 gem 'marcel'
 gem 'mail', '~> 2.8.1'
-gem 'nokogiri', Gem.ruby_version >= Gem::Version.new('3.1') ? '1.18.3' : '~> 1.15.7'
+gem 'nokogiri', '~> 1.18.3'
 gem 'i18n', '~> 1.14.1'
-gem 'rbpdf', '~> 1.21.3'
+gem 'rbpdf', '~> 1.21.4'
 gem 'addressable'
 gem 'rubyzip', '~> 2.3.0'
+gem 'propshaft', '~> 1.1.0'
+gem 'rack', '>= 3.1.3'
 
 #  Ruby Standard Gems
-gem 'csv', '~> 3.2.6'
-gem 'net-imap', '~> 0.3.9'
+gem 'csv', '~> 3.2.8'
+gem 'net-imap', '~> 0.4.20'
 gem 'net-pop', '~> 0.1.2'
-gem 'net-smtp', '~> 0.3.3'
-gem 'rexml', require: false if Gem.ruby_version >= Gem::Version.new('3.0')
+gem 'net-smtp', '~> 0.4.0'
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :x64_mingw, :mswin]
@@ -41,12 +41,7 @@ end
 
 # Optional gem for exporting the gantt to a PNG file
 group :minimagick do
-  gem 'mini_magick', '~> 4.12.0'
-end
-
-# Optional Markdown support
-group :markdown do
-  gem 'redcarpet', '~> 3.6.0'
+  gem 'mini_magick', '~> 5.0.1'
 end
 
 # Optional CommonMark support, not for JRuby
@@ -75,15 +70,15 @@ if File.exist?(database_file)
     adapters.each do |adapter|
       case adapter.strip
       when /mysql2/
-        gem "mysql2", "~> 0.5.0", :platforms => [:mri, :mingw, :x64_mingw]
+        gem 'mysql2', '~> 0.5.0'
         gem "with_advisory_lock"
       when /postgresql/
-        gem 'pg', '~> 1.5.3', :platforms => [:mri, :mingw, :x64_mingw]
+        gem 'pg', '~> 1.5.3'
       when /sqlite3/
-        gem 'sqlite3', '~> 1.6.0', :platforms => [:mri, :mingw, :x64_mingw]
+        gem 'sqlite3', '~> 1.7.0'
       when /sqlserver/
-        gem "tiny_tds", "~> 2.1.2", :platforms => [:mri, :mingw, :x64_mingw]
-        gem "activerecord-sqlserver-adapter", "~> 6.1.0", :platforms => [:mri, :mingw, :x64_mingw]
+        gem 'tiny_tds', '~> 2.1.2'
+        gem 'activerecord-sqlserver-adapter', '~> 7.2.0'
       else
         warn("Unknown database adapter `#{adapter}` found in config/database.yml, use Gemfile.local to load your own database gems")
       end
@@ -95,9 +90,14 @@ else
   warn("Please configure your config/database.yml first")
 end
 
+group :development, :test do
+  gem 'debug'
+end
+
 group :development do
   gem 'listen', '~> 3.3'
-  gem "yard"
+  gem 'yard', require: false
+  gem 'svg_sprite', require: false
 end
 
 group :test do
@@ -108,17 +108,13 @@ group :test do
   # For running system tests
   gem 'puma'
   gem "capybara", ">= 3.39"
-  if Gem.ruby_version < Gem::Version.new('3.0')
-    gem "selenium-webdriver", "<= 4.9.0"
-    gem "webdrivers", require: false
-  else
-    gem "selenium-webdriver", ">= 4.11.0"
-  end
+  gem 'selenium-webdriver', '>= 4.11.0'
   # RuboCop
-  gem 'rubocop', '~> 1.57.0', require: false
+  gem 'rubocop', '~> 1.68.0', require: false
   gem 'rubocop-ast', '~> 1.40.0', require: false
-  gem 'rubocop-performance', '~> 1.19.0', require: false
-  gem 'rubocop-rails', '~> 2.22.1', require: false
+  gem 'rubocop-performance', '~> 1.22.0', require: false
+  gem 'rubocop-rails', '~> 2.27.0', require: false
+  gem 'bundle-audit', require: false
 end
 
 local_gemfile = File.join(File.dirname(__FILE__), "Gemfile.local")

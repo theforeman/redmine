@@ -2,6 +2,7 @@ syntax: glob
 
 .project
 .idea
+.vscode
 .loadpath
 .powrc
 .rvmrc
@@ -24,6 +25,7 @@ lib/redmine/scm/adapters/mercurial/redminehelper.pyc
 lib/redmine/scm/adapters/mercurial/redminehelper.pyo
 log/*.log*
 log/mongrel_debug
+public/assets/*
 public/dispatch.*
 public/plugin_assets/*
 tmp/*

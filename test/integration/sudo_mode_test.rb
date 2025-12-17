@@ -26,7 +26,7 @@ class SudoModeTest < Redmine::IntegrationTest
         }
       }
     )
-    assert_response 302
+    assert_response :found
 
     user = User.find_by_login("psmith")
     assert_kind_of User, user
@@ -66,7 +66,7 @@ class SudoModeTest < Redmine::IntegrationTest
         :sudo_password => 'admin'
       }
     )
-    assert_response 302
+    assert_response :found
 
     user = User.find_by_login("psmith")
     assert_kind_of User, user

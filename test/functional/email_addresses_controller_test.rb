@@ -57,7 +57,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
   def test_index_by_another_user_should_be_denied
     @request.session[:user_id] = 3
     get(:index, :params => {:user_id => 2})
-    assert_response 403
+    assert_response :forbidden
   end
 
   def test_create
@@ -72,7 +72,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
           }
         }
       )
-      assert_response 302
+      assert_response :found
       assert_redirected_to '/users/2/email_addresses'
     end
     email = EmailAddress.order('id DESC').first
@@ -93,7 +93,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
         },
         :xhr => true
       )
-      assert_response 200
+      assert_response :ok
     end
   end
 
@@ -186,7 +186,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
         :notify => '0'
       }
     )
-    assert_response 302
+    assert_response :found
 
     assert_equal false, email.reload.notify
   end
@@ -204,7 +204,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
       },
       :xhr => true
     )
-    assert_response 200
+    assert_response :ok
 
     assert_equal false, email.reload.notify
   end
@@ -243,7 +243,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
           :id => email.id
         }
       )
-      assert_response 302
+      assert_response :found
       assert_redirected_to '/users/2/email_addresses'
     end
   end
@@ -261,7 +261,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
         },
         :xhr => true
       )
-      assert_response 200
+      assert_response :ok
     end
   end
 
@@ -276,7 +276,7 @@ class EmailAddressesControllerTest < Redmine::ControllerTest
           :id => User.find(2).email_address.id
         }
       )
-      assert_response 404
+      assert_response :not_found
     end
   end
 

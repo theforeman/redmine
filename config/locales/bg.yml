@@ -75,7 +75,7 @@ bg:
   number:
     format:
       separator: "."
-      delimiter: ""
+      delimiter: " "
       precision: 3
 
     human:
@@ -138,6 +138,7 @@ bg:
         must_contain_digits: "трябва да съдържа цифри (0-9)"
         must_contain_special_chars: "трябва да съдържа специални символи (!, $, %, ...)"
         domain_not_allowed: "contains a domain not allowed (%{domain})"
+        too_simple: "is too simple"
 
   actionview_instancetag_blank_option: Изберете
 
@@ -207,7 +208,7 @@ bg:
   error_no_tracker_in_project: Няма асоциирани тракери с този проект. Проверете настройките на проекта.
   error_no_default_issue_status: Няма установено подразбиращо се състояние за задачите. Моля проверете вашата конфигурация (Вижте "Администрация -> Състояния на задачи").
   error_can_not_delete_custom_field: Невъзможност за изтриване на потребителско поле
-  error_can_not_delete_tracker: Този тракер съдържа задачи и не може да бъде изтрит.
+  error_can_not_delete_tracker_html: Този тракер съдържа задачи и не може да бъде изтрит.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   error_can_not_remove_role: Тази роля се използва и не може да бъде изтрита.
   error_can_not_reopen_issue_on_closed_version: Задача, асоциирана със затворена версия не може да бъде отворена отново
   error_can_not_archive_project: Този проект не може да бъде архивиран
@@ -420,7 +421,10 @@ bg:
   field_default_issue_query: Заявка по подразбиране
   field_default_project_query: Заявка по подразбиране за проекта
   field_default_time_entry_activity: Дейност по подразбиране за изразходвано време
+  field_estimated_remaining_hours: Изчислено оставащо време
   field_any_searchable: Всички обекти с текст (заглавие, описание, коментари на задачи, потребителски полета)
+  field_last_activity_date: Последна активност
+  field_thousands_delimiter: Раделител на хилядите
 
   setting_app_title: Заглавие
   setting_welcome_text: Допълнителен текст
@@ -478,6 +482,7 @@ bg:
   setting_default_projects_modules: Активирани модули по подразбиране за нов проект
   setting_issue_done_ratio: Изчисление на процента на готови задачи с
   setting_issue_done_ratio_issue_field: Използване на поле '% Прогрес'
+  setting_issue_done_ratio_interval: Done ratio options interval
   setting_issue_done_ratio_issue_status: Използване на състоянието на задачите
   setting_start_of_week: Първи ден на седмицата
   setting_rest_api_enabled: Разрешаване на REST web сървис
@@ -502,6 +507,7 @@ bg:
   setting_force_default_language_for_anonymous: Задължително език по подразбиране за анонимните потребители
   setting_force_default_language_for_loggedin: Задължително език по подразбиране за потребителите, влезли в Redmine
   setting_link_copied_issue: Свързване на задачите при копиране
+  setting_copy_attachments_on_issue_copy: Копиране на файловете при копиране
   setting_max_additional_emails: Максимален брой на допълнителните имейл адреси
   setting_email_domains_allowed: Разрешени имейл домейни
   setting_email_domains_denied: Забранени имейл домейни
@@ -632,6 +638,7 @@ bg:
   label_issue_assigned_to_updated: Задачата е с назначен нов изпълнител
   label_issue_priority_updated: Обновен приоритет
   label_issue_fixed_version_updated: Променена версия
+  label_issue_attachment_added: Добавен файл
   label_document: Документ
   label_document_new: Нов документ
   label_document_plural: Документи
@@ -713,6 +720,10 @@ bg:
   label_attachment_plural: Файлове
   label_file_added: Добавен файл
   label_attachment_description: Описание на файла
+  label_attachment_summary:
+    zero: "%{filename}"
+    one: "%{filename} и 1 файл"
+    other: "%{filename} и %{count} файла"
   label_report: Справка
   label_report_plural: Справки
   label_news: Новини
@@ -828,7 +839,6 @@ bg:
   label_repository: Хранилище
   label_repository_new: Ново хранилище
   label_repository_plural: Хранилища
-  label_browse: Разглеждане
   label_branch: работен вариант
   label_tag: Версия
   label_revision: Ревизия
@@ -882,6 +892,7 @@ bg:
   label_diff_inline: хоризонтално
   label_diff_side_by_side: вертикално
   label_options: Опции
+  label_option_auto_lang: автоматично
   label_copy_workflow_from: Копирай работния процес от
   label_permissions_report: Справка за права
   label_watched_issues: Наблюдавани задачи
@@ -1141,6 +1152,7 @@ bg:
   label_default_query: Заявка по подразбиране
   label_edited: Редактирано
   label_time_by_author: "%{time} от %{author}"
+  label_involved_principals: Автор / Предишен назначен
 
   button_login: Вход
   button_submit: Изпращане
