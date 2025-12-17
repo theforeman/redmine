@@ -51,6 +51,8 @@ class MessagesController < ApplicationController
       offset(@reply_pages.offset).
       to_a
 
+    Message.preload_reaction_details(@replies)
+
     @reply = Message.new(:subject => "RE: #{@message.subject}")
     render :action => "show", :layout => false if request.xhr?
   end
@@ -134,7 +136,7 @@ class MessagesController < ApplicationController
 
   def preview
     message = @board.messages.find_by_id(params[:id])
-    @text = params[:text] ? params[:text] : nil
+    @text = params[:text] || nil
     @previewed = message
     render :partial => 'common/preview'
   end

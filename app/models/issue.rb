@@ -26,6 +26,7 @@ class Issue < ApplicationRecord
   before_validation :clear_disabled_fields
   before_save :set_parent_id
   include Redmine::NestedSet::IssueNestedSet
+  include Redmine::Reaction::Reactable
 
   belongs_to :project
   belongs_to :tracker
@@ -189,6 +190,11 @@ class Issue < ApplicationRecord
     end
   end
 
+  # Returns true if user or current user is allowed to log time on the issue
+  def time_loggable?(user=User.current)
+    user.allowed_to?(:log_time, project) && (Setting.timelog_accept_closed_issues? || !closed?)
+  end
+
   # Returns true if user or current user is allowed to edit or add notes to the issue
   def editable?(user=User.current)
     attributes_editable?(user) || notes_addable?(user)
@@ -264,7 +270,7 @@ class Issue < ApplicationRecord
   end
 
   alias :base_reload :reload
-  def reload(*args)
+  def reload(*)
     @workflow_rule_by_attribute = nil
     @assignable_versions = nil
     @relations = nil
@@ -273,7 +279,7 @@ class Issue < ApplicationRecord
     @total_estimated_hours = nil
     @last_updated_by = nil
     @last_notes = nil
-    base_reload(*args)
+    base_reload(*)
   end
 
   # Overrides Redmine::Acts::Customizable::InstanceMethods#available_custom_fields
@@ -465,7 +471,7 @@ class Issue < ApplicationRecord
   end
 
   # Overrides assign_attributes so that project and tracker get assigned first
-  def assign_attributes(new_attributes, *args)
+  def assign_attributes(new_attributes, *)
     return if new_attributes.nil?
 
     attrs = new_attributes.dup
@@ -476,7 +482,7 @@ class Issue < ApplicationRecord
         send :"#{attr}=", attrs.delete(attr)
       end
     end
-    super(attrs, *args)
+    super(attrs, *)
   end
 
   def attributes=(new_attributes)
@@ -912,7 +918,8 @@ class Issue < ApplicationRecord
     result = journals.
       preload(:details).
       preload(:user => :email_address).
-      reorder(:created_on, :id).to_a
+      reorder(:created_on, :id).
+      to_a
 
     result.each_with_index {|j, i| j.indice = i + 1}
 
@@ -923,6 +930,9 @@ class Issue < ApplicationRecord
     end
     Journal.preload_journals_details_custom_fields(result)
     result.select! {|journal| journal.notes? || journal.visible_details.any?}
+
+    Journal.preload_reaction_details(result)
+
     result
   end
 
@@ -1166,7 +1176,7 @@ class Issue < ApplicationRecord
       if leaf?
         spent_hours
       else
-        self_and_descendants.joins(:time_entries).sum("#{TimeEntry.table_name}.hours").to_f || 0.0
+        self_and_descendants.joins(:time_entries).sum("#{TimeEntry.table_name}.hours").to_f
       end
   end
 
@@ -1199,11 +1209,7 @@ class Issue < ApplicationRecord
   end
 
   def last_notes
-    if @last_notes
-      @last_notes
-    else
-      journals.visible.where.not(notes: '').reorder(:id => :desc).first.try(:notes)
-    end
+    @last_notes || journals.visible.where.not(notes: '').reorder(:id => :desc).first.try(:notes)
   end
 
   # Preloads relations for a collection of issues

@@ -231,6 +231,16 @@ issue_list_default_columns:
 issue_list_default_totals:
   serialized: true
   default: []
+related_issues_default_columns:
+  serialized: true
+  default:
+  - status
+  - assigned_to
+  - start_date
+  - due_date
+  - done_ratio
+display_related_issues_table_headers:
+  default: 0
 display_subprojects_issues:
   default: 1
 time_entry_list_defaults:
@@ -291,6 +301,11 @@ default_users_no_self_notified:
   default: 1
 default_users_time_zone:
   default: ""
+default_users_auto_watch_on:
+  serialized: true
+  default:
+  - issue_created
+  - issue_contributed_to
 # encodings used to convert files content to UTF-8
 # multiple values accepted, comma separated
 repositories_encodings:
@@ -347,5 +362,11 @@ timelog_max_hours_per_day:
   default: 999
 timelog_accept_future_dates:
   default: 1
+timelog_accept_closed_issues:
+  default: 1
 show_status_changes_in_mail_subject:
+  default: 1
+wiki_tablesort_enabled:
+  default: 0
+reactions_enabled:
   default: 1

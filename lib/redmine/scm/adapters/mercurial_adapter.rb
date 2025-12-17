@@ -50,7 +50,10 @@ module Redmine
           end
 
           def client_available
-            client_version_above?([1, 2])
+            client_version_above?([5, 1]) &&
+            # Redmine >= 6.1 has dropped support for Python 2.7, and
+            # Mercurial has never supported Python 3.0 to 3.4
+            (python_version <=> [3, 5]) >= 0
           end
 
           def hgversion
@@ -65,6 +68,23 @@ module Redmine
 
           def hgversion_from_command_line
             shellout("#{sq_bin} --version") {|io| io.read}.to_s
+          end
+
+          def python_version
+            @@python_version ||= begin
+              debuginstall = hgdebuginstall_from_command_line
+              if (m = debuginstall.match(/checking Python version \(([\d.]+)\)/))
+                m[1].scan(%r{\d+})
+                    .collect(&:to_i)
+                    .presence
+              else
+                nil
+              end
+            end
+          end
+
+          def hgdebuginstall_from_command_line
+            shellout("#{sq_bin} debuginstall") {|io| io.read}.to_s
           end
 
           def template_path
@@ -153,13 +173,13 @@ module Redmine
 
           entries = Entries.new
           as_ary(manifest['dir']).each do |e|
-            n = scm_iconv('UTF-8', @path_encoding, CGI.unescape(e['name']))
+            n = CGI.unescape(e['name'])
             p = "#{path_prefix}#{n}"
             entries << Entry.new(:name => n, :path => p, :kind => 'dir')
           end
 
           as_ary(manifest['file']).each do |e|
-            n = scm_iconv('UTF-8', @path_encoding, CGI.unescape(e['name']))
+            n = CGI.unescape(e['name'])
             p = "#{path_prefix}#{n}"
             lr = Revision.new(:revision => e['revision'], :scmid => e['node'],
                               :identifier => e['node'],
@@ -326,6 +346,7 @@ module Redmine
           full_args = ["-R#{repo_path}", '--encoding=utf-8']
           # don't use "--config=<value>" form for compatibility with ancient Mercurial
           full_args << '--config' << "extensions.redminehelper=#{HG_HELPER_EXT}"
+          full_args << '--config' << "redminehelper.path_encoding=#{@path_encoding}"
           full_args << '--config' << 'diff.git=false'
           full_args += args
           ret =
