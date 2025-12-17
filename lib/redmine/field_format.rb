@@ -110,8 +110,8 @@ module Redmine
       end
       private_class_method :add
 
-      def self.field_attributes(*args)
-        CustomField.store_accessor :format_store, *args
+      def self.field_attributes(*)
+        CustomField.store_accessor(:format_store, *)
       end
 
       field_attributes :url_pattern, :full_width_layout
@@ -1102,6 +1102,77 @@ module Redmine
               :filedrop => true,
               :attachment_format_custom_field => true
             })
+      end
+    end
+
+    class ProgressbarFormat < Numeric
+      add 'progressbar'
+
+      self.form_partial = 'custom_fields/formats/progressbar'
+      self.totalable_supported = false
+      field_attributes :ratio_interval
+
+      # Take the default value from Setting.issue_done_ratio_interval.to_i
+      # in order to have a consistent behaviour for default ratio interval.
+      def self.default_ratio_interval
+        Setting.issue_done_ratio_interval.to_i
+      end
+
+      def label
+        "label_progressbar"
+      end
+
+      def cast_single_value(custom_field, value, customized=nil)
+        value.to_i.clamp(0, 100)
+      end
+
+      def validate_single_value(custom_field, value, customized=nil)
+        errs = super
+        errs << ::I18n.t('activerecord.errors.messages.not_a_number') unless /^\d*$/.match?(value.to_s.strip)
+        errs << ::I18n.t('activerecord.errors.messages.invalid') unless value.to_i.between?(0, 100)
+        errs
+      end
+
+      def query_filter_options(custom_field, query)
+        {:type => :integer}
+      end
+
+      def group_statement(custom_field)
+        order_statement(custom_field)
+      end
+
+      def before_custom_field_save(custom_field)
+        super
+
+        if custom_field.ratio_interval.blank?
+          custom_field.ratio_interval = self.class.default_ratio_interval
+        end
+      end
+
+      def edit_tag(view, tag_id, tag_name, custom_value, options={})
+        view.select_tag(
+          tag_name,
+          view.options_for_select(
+            (0..100).step(custom_value.custom_field.ratio_interval.to_i).to_a.collect {|r| ["#{r} %", r]},
+            custom_value.value
+          ),
+          options.merge(id: tag_id, style: "width: 75px;")
+        )
+      end
+
+      def bulk_edit_tag(view, tag_id, tag_name, custom_field, objects, value, options={})
+        opts = view.options_for_select([[l(:label_no_change_option), '']] + (0..100).step(custom_field.ratio_interval.to_i).to_a.collect {|r| ["#{r} %", r]})
+        view.select_tag(tag_name, opts, options.merge(id: tag_id, style: "width: 75px;")) +
+          bulk_clear_tag(view, tag_id, tag_name, custom_field, value)
+      end
+
+      def formatted_value(view, custom_field, value, customized=nil, html=false)
+        if html
+          text = "#{value}%"
+          view.progress_bar(value.to_i, legend: (text if view.action_name == 'show'))
+        else
+          value.to_s
+        end
       end
     end
   end

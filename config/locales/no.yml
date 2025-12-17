@@ -2,7 +2,9 @@
 "no":
   support:
     array:
-      sentence_connector: "og"
+      last_word_connector: " og "
+      two_words_connector: " og "
+      words_connector: ", "
   direction: ltr
   date:
     formats:
@@ -1488,4 +1490,39 @@
     zero: "%{filename}"
     one: "%{filename} and 1 file"
     other: "%{filename} and %{count} files"
+  setting_wiki_tablesort_enabled: JavaScript based table sorting in wiki content
+  label_progressbar: Progress bar
+  error_spent_on_closed_issue: Cannot log time on a closed issue
+  setting_timelog_accept_closed_issues: Accept time logs on closed issues
+  setting_related_issues_default_columns: Related and sub issues list defaults
+  setting_display_related_issues_table_headers: Show table headers
+  error_can_not_remove_role_reason_members_html: "<p>The following projects have members
+    with this role:<br>%{projects}</p>"
+  setting_reactions_enabled: Enable reactions
+  reaction_text_x_other_users:
+    one: 1 other
+    other: "%{count} others"
+  text_setting_gravatar_default_initials_html: Users' initials are sent to <a href="https://www.gravatar.com">https://www.gravatar.com</a>
+    to generate their avatars.
+  permission_view_project: View projects
+  permission_search_project: Search projects
+  permission_view_members: View project members
+  label_oauth_permission_admin: Administrate this Redmine
+  label_oauth_admin_access: Administration
+  label_oauth_application_plural: Applications
+  label_oauth_authorized_application_plural: Authorized applications
+  text_oauth_admin_permission: Full administrative access. When authorized by an Administrator,
+    this application will be able to read and write all data and impersonate other users.
+  text_oauth_admin_permission_info: This application requests full administrative access.
+    If you are an Administrator (or become one in the future), it will be able to read
+    and write all data and impersonate other users on your behalf. If you want to avoid
+    this, authorize it as a user without Administrator privileges instead.
+  text_oauth_copy_secret_now: Copy the secret to a safe place now, it will not be shown
+    again.
+  text_oauth_implicit_permissions: View your name, login and primary email address
+  text_oauth_info_scopes: Select the scopes this application may request. The application
+    will not be allowed to do more than what is selected here. It will also always be
+    limited by the roles and project memberships of the user who authorized it.
+  label_position: Position
+  label_message: Message
   twofa_already_setup: Two-factor authentication already set up

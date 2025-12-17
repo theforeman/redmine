@@ -45,10 +45,13 @@ function addFile(inputEl, file, eagerUpload) {
 addFile.nextAttachmentId = 1;
 
 function ajaxUpload(file, attachmentId, fileSpan, inputEl) {
+  let attachmentIcon = $(fileSpan).find('svg.svg-attachment');
 
   function onLoadstart(e) {
     fileSpan.removeClass('ajax-waiting');
     fileSpan.addClass('ajax-loading');
+    attachmentIcon.addClass('svg-loader');
+    updateSVGIcon(attachmentIcon[0], 'loader')
     $('input:submit', $(this).parents('form')).attr('disabled', 'disabled');
   }
 
@@ -76,6 +79,8 @@ function ajaxUpload(file, attachmentId, fileSpan, inputEl) {
       }).always(function() {
         ajaxUpload.uploading--;
         fileSpan.removeClass('ajax-loading');
+        attachmentIcon.removeClass('svg-loader');
+        updateSVGIcon(attachmentIcon[0], 'attachment');
         var form = fileSpan.parents('form');
         if (form.queue('upload').length == 0 && ajaxUpload.uploading == 0) {
           $('input:submit', form).removeAttr('disabled');
@@ -87,6 +92,7 @@ function ajaxUpload(file, attachmentId, fileSpan, inputEl) {
   var progressSpan = $('<div>').insertAfter(fileSpan.find('input.filename'));
   progressSpan.progressbar();
   fileSpan.addClass('ajax-waiting');
+  updateSVGIcon(attachmentIcon[0], 'hourglass');
 
   var maxSyncUpload = $(inputEl).data('max-concurrent-uploads');
 
@@ -235,15 +241,60 @@ function setupFileDrop() {
   }
 }
 
+function getImageWidth(file) {
+  return new Promise((resolve, reject) => {
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          resolve(img.width);
+        };
+        img.onerror = reject;
+        img.src = event.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    } else {
+      resolve(0);
+    }
+  });
+}
+
+async function getInlineAttachmentMarkup(file) {
+  const sanitizedFilename = file.name.replace(/[\/\?\%\*\:\|\"\'<>\n\r]+/g, '_');
+  const inlineFilename = encodeURIComponent(sanitizedFilename)
+    .replace(/[!()]/g, function(match) { return "%" + match.charCodeAt(0).toString(16) });
+
+  const isFromClipboard = /^clipboard-\d{12}-[a-z0-9]{5}\.\w+$/.test(file.name);
+  let imageDisplayWidth;
+  if (isFromClipboard) {
+    const imageWidth = await getImageWidth(file).catch(() => 0);
+    imageDisplayWidth = Math.round(imageWidth / window.devicePixelRatio);
+  }
+  const hasValidWidth = isFromClipboard && imageDisplayWidth > 0;
+
+  switch (document.body.getAttribute('data-text-formatting')) {
+    case 'textile':
+      return hasValidWidth
+        ? `!{width: ${imageDisplayWidth}px}.${inlineFilename}!`
+        : `!${inlineFilename}!`;
+    case 'common_mark':
+      return hasValidWidth
+        ? `<img style="width: ${imageDisplayWidth}px;" src="${inlineFilename}"><br>`
+        : `![](${inlineFilename})`;
+    default:
+      // Text formatting is "none" or unknown
+      return '';
+  }
+}
+
 function addInlineAttachmentMarkup(file) {
   // insert uploaded image inline if dropped area is currently focused textarea
   if($(handleFileDropEvent.target).hasClass('wiki-edit') && $.inArray(file.type, window.wikiImageMimeTypes) > -1) {
     var $textarea = $(handleFileDropEvent.target);
     var cursorPosition = $textarea.prop('selectionStart');
     var description = $textarea.val();
-    var sanitizedFilename = file.name.replace(/[\/\?\%\*\:\|\"\'<>\n\r]+/, '_');
-    var inlineFilename = encodeURIComponent(sanitizedFilename)
-      .replace(/[!()]/g, function(match) { return "%" + match.charCodeAt(0).toString(16) });
     var newLineBefore = true;
     var newLineAfter = true;
     if(cursorPosition === 0 || description.substr(cursorPosition-1,1).match(/\r|\n/)) {
@@ -253,20 +304,16 @@ function addInlineAttachmentMarkup(file) {
       newLineAfter = false;
     }
 
-    $textarea.val(
-      description.substring(0, cursorPosition)
-      + (newLineBefore ? '\n' : '')
-      + inlineFilename
-      + (newLineAfter ? '\n' : '')
-      + description.substring(cursorPosition, description.length)
-    );
-
-    $textarea.prop({
-      'selectionStart': cursorPosition + newLineBefore,
-      'selectionEnd': cursorPosition + inlineFilename.length + newLineBefore
-    });
-    $textarea.parents('.jstBlock')
-      .find('.jstb_img').click();
+    getInlineAttachmentMarkup(file)
+      .then(imageMarkup => {
+        $textarea.val(
+          description.substring(0, cursorPosition)
+          + (newLineBefore ? '\n' : '')
+          + imageMarkup
+          + (newLineAfter ? '\n' : '')
+          + description.substring(cursorPosition, description.length)
+        );
+      })
 
     // move cursor into next line
     cursorPosition = $textarea.prop('selectionStart');

@@ -280,6 +280,11 @@ module Redmine
                   {:controller => 'auth_sources', :action => 'index'},
                   :icon => 'server-authentication',
                   :html => {:class => 'icon icon-server-authentication'}
+        menu.push :applications, {:controller => 'oauth2_applications', :action => 'index'},
+                  :if => Proc.new { Setting.rest_api_enabled? },
+                  :caption => :'doorkeeper.layouts.admin.nav.applications',
+                  :icon => 'apps',
+                  :html => {:class => 'icon icon-applications'}
         menu.push :plugins, {:controller => 'admin', :action => 'plugins'},
                   :last => true,
                   :icon => 'plugins',
@@ -408,9 +413,7 @@ module Redmine
 
       WikiFormatting.map do |format|
         format.register :textile
-        if Object.const_defined?(:CommonMarker)
-          format.register :common_mark, label: 'CommonMark Markdown (GitHub Flavored)'
-        end
+        format.register :common_mark, label: 'CommonMark Markdown (GitHub Flavored)'
       end
 
       ActionView::Template.register_template_handler :rsb, Views::ApiTemplateHandler

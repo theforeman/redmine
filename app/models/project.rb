@@ -186,7 +186,7 @@ class Project < ApplicationRecord
     perm = Redmine::AccessControl.permission(permission)
     base_statement =
       if perm && perm.read?
-        "#{Project.table_name}.status <> #{Project::STATUS_ARCHIVED} AND #{Project.table_name}.status <> #{Project::STATUS_SCHEDULED_FOR_DELETION}"
+        "#{Project.table_name}.status IN (#{Project::STATUS_ACTIVE}, #{Project::STATUS_CLOSED})"
       else
         "#{Project.table_name}.status = #{Project::STATUS_ACTIVE}"
       end
@@ -358,12 +358,12 @@ class Project < ApplicationRecord
     end
   end
 
-  def self.find_by_param(*args)
-    self.find(*args)
+  def self.find_by_param(*)
+    self.find(*)
   end
 
   alias :base_reload :reload
-  def reload(*args)
+  def reload(*)
     @principals = nil
     @users = nil
     @shared_versions = nil
@@ -382,7 +382,7 @@ class Project < ApplicationRecord
     @override_members = nil
     @assignable_users = nil
     @last_activity_date = nil
-    base_reload(*args)
+    base_reload(*)
   end
 
   def to_param

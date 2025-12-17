@@ -250,7 +250,7 @@ module Redmine
               )
             end
           elsif req.is_a?(Range)
-            unless compare_versions(req.first, current) <= 0 && compare_versions(req.last, current) >= 0
+            unless compare_versions(req.first, current) <= 0 && compare_versions(req.last, current) >= 0  # rubocop:disable Style/ComparableBetween
               raise PluginRequirementError.new(
                 "#{id} plugin requires a Redmine version between #{req.first} " \
                 "and #{req.last} but current is #{current.join('.')}"
@@ -406,8 +406,8 @@ module Redmine
     #   Meeting.find_events('scrums', User.current, 5.days.ago, Date.today, :project => foo) # events for project foo only
     #
     # Note that :view_scrums permission is required to view these events in the activity view.
-    def activity_provider(*args)
-      Redmine::Activity.register(*args)
+    def activity_provider(*)
+      Redmine::Activity.register(*)
     end
 
     # Registers a wiki formatter.
@@ -423,8 +423,8 @@ module Redmine
     # Examples:
     #   wiki_format_provider(:custom_formatter, CustomFormatter, :label => "My custom formatter")
     #
-    def wiki_format_provider(name, *args)
-      Redmine::WikiFormatting.register(name, *args)
+    def wiki_format_provider(name, *)
+      Redmine::WikiFormatting.register(name, *)
     end
 
     # Register plugin models that use acts_as_attachable.

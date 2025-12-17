@@ -23,11 +23,12 @@ function toggleCheckboxesBySelector(selector) {
 }
 
 function showAndScrollTo(id, focus) {
-  $('#'+id).show();
-  if (focus !== null) {
-    $('#'+focus).focus();
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = ''; // show()
+    if (focus) document.getElementById(focus)?.focus({ preventScroll: true });
+    el.scrollIntoView({ behavior: 'instant' });
   }
-  $('html, body').animate({scrollTop: $('#'+id).offset().top}, 100);
 }
 
 function toggleRowGroup(el) {
@@ -67,6 +68,12 @@ function updateSVGIcon(element, icon) {
 
   const iconPath = iconElement.getAttribute('href');
   iconElement.setAttribute('href', iconPath.replace(/#.*$/g, "#icon--" + icon))
+}
+
+function createSVGIcon(icon) {
+  const clonedIcon = document.querySelector('#icon-copy-source svg').cloneNode(true);
+  updateSVGIcon(clonedIcon, icon);
+  return clonedIcon
 }
 
 function collapseAllRowGroups(el) {
@@ -222,8 +229,7 @@ function buildFilterRow(field, operator, values) {
   case "list_status":
   case "list_subprojects":
     const iconType = values.length > 1 ? 'toggle-minus' : 'toggle-plus';
-    const clonedIcon = document.querySelector('#icon-copy-source svg').cloneNode(true);
-    updateSVGIcon(clonedIcon, iconType);
+    const iconSvg = createSVGIcon(iconType)
 
     tr.find('.values').append(
       $('<span>', { style: 'display:none;' }).append(
@@ -233,7 +239,7 @@ function buildFilterRow(field, operator, values) {
           name: `v[${field}][]`,
         }),
         '\n',
-        $('<span>', { class: `toggle-multiselect icon-only icon-${iconType}` }).append(clonedIcon)
+        $('<span>', { class: `toggle-multiselect icon-only icon-${iconType}` }).append(iconSvg)
       )
     );
     select = tr.find('.values select');
@@ -421,7 +427,7 @@ function showIssueHistory(journal, url) {
       tab_content.find('.journal').show();
       tab_content.find('.journal:not(.has-notes)').hide();
       tab_content.find('.journal .wiki').show();
-      tab_content.find('.journal .contextual .journal-actions').show();
+      tab_content.find('.journal .journal-actions > *').show();
 
       // always show thumbnails in notes tab
       var thumbnails = tab_content.find('.journal .thumbnails');
@@ -434,13 +440,15 @@ function showIssueHistory(journal, url) {
       tab_content.find('.journal:not(.has-details)').hide();
       tab_content.find('.journal .wiki').hide();
       tab_content.find('.journal .thumbnails').hide();
-      tab_content.find('.journal .contextual .journal-actions').hide();
+      tab_content.find('.journal .journal-actions > *').hide();
+      // Show reaction button in properties tab
+      tab_content.find('.journal .journal-actions .reaction-button-wrapper').show();
       break;
     default:
       tab_content.find('.journal').show();
       tab_content.find('.journal .wiki').show();
       tab_content.find('.journal .thumbnails').show();
-      tab_content.find('.journal .contextual .journal-actions').show();
+      tab_content.find('.journal .journal-actions > *').show();
   }
 
   return false;
@@ -642,21 +650,63 @@ function randomKey(size) {
   return key;
 }
 
-function copyTextToClipboard(target) {
-  if (target) {
-    var temp = document.createElement('textarea');
-    temp.value = target.getAttribute('data-clipboard-text');
-    document.body.appendChild(temp);
-    temp.select();
-    document.execCommand('copy');
-    if (temp.parentNode) {
-      temp.parentNode.removeChild(temp);
-    }
-    if ($(target).closest('.drdn.expanded').length) {
-      $(target).closest('.drdn.expanded').removeClass("expanded");
-    }
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    return navigator.clipboard.writeText(text).catch(() => {
+      return fallbackClipboardCopy(text);
+    });
+  } else {
+    return fallbackClipboardCopy(text);
+  }
+}
+
+function fallbackClipboardCopy(text) {
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.style.position = 'fixed';
+  temp.style.left = '-9999px';
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand('copy');
+  document.body.removeChild(temp);
+  return Promise.resolve();
+}
+
+function copyDataClipboardTextToClipboard(target) {
+  copyToClipboard(target.getAttribute('data-clipboard-text'));
+
+  if ($(target).closest('.drdn.expanded').length) {
+    $(target).closest('.drdn.expanded').removeClass("expanded");
   }
   return false;
+}
+
+function setupCopyButtonsToPreElements() {
+  document.querySelectorAll('.wiki pre:not(.pre-wrapper pre)').forEach((pre) => {
+    // Wrap the <pre> element with a container and add a copy button
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("pre-wrapper");
+
+    const copyButton = document.createElement("a");
+    copyButton.title = rm.I18n.buttonCopy;
+    copyButton.classList.add("copy-pre-content-link", "icon-only");
+    copyButton.append(createSVGIcon("copy-pre-content"));
+
+    wrapper.appendChild(copyButton);
+    wrapper.append(pre.cloneNode(true));
+    pre.replaceWith(wrapper);
+
+    // Copy the contents of the pre tag when copyButton is clicked
+    copyButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      let textToCopy = (pre.querySelector("code") || pre).textContent.replace(/\n$/, '');
+      if (pre.querySelector("code.syntaxhl")) { textToCopy = textToCopy.replace(/ $/, ''); } // Workaround for half-width space issue in Textile's highlighted code
+      copyToClipboard(textToCopy).then(() => {
+        updateSVGIcon(copyButton, "checked");
+        setTimeout(() => updateSVGIcon(copyButton, "copy-pre-content"), 2000);
+      });
+    });
+  });
 }
 
 function updateIssueFrom(url, el) {
@@ -1163,6 +1213,7 @@ function setupAttachmentDetail() {
 }
 
 function setupWikiTableSortableHeader() {
+  if (typeof Tablesort === 'undefined') { return; }
   $('div.wiki table').each(function(i, table){
     if (table.rows.length < 3) return true;
     var tr = $(table.rows).first();
@@ -1174,8 +1225,8 @@ function setupWikiTableSortableHeader() {
   });
 }
 
-$(function () {
-  $("[title]:not(.no-tooltip)").tooltip({
+function setupHoverTooltips(container) {
+  $(container || 'body').find("[title]:not(.no-tooltip)").tooltip({
     show: {
       delay: 400
     },
@@ -1184,7 +1235,11 @@ $(function () {
       at: "center top"
     }
   });
-});
+}
+function removeHoverTooltips(container) {
+  $(container || 'body').find("[title]:not(.no-tooltip)").tooltip('destroy')
+}
+$(function() { setupHoverTooltips(); });
 
 function inlineAutoComplete(element) {
     'use strict';
@@ -1202,7 +1257,17 @@ function inlineAutoComplete(element) {
       }
     }
 
-    const remoteSearch = function(url, cb) {
+    const debounce = function(func, delay) {
+      let timeout;
+
+      return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+      };
+    }
+
+    const remoteSearch = debounce((url, cb) => {
       const xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function ()
       {
@@ -1217,7 +1282,7 @@ function inlineAutoComplete(element) {
       };
       xhr.open("GET", url, true);
       xhr.send();
-    };
+    }, 200);
 
     const tribute = new Tribute({
       collection: [
@@ -1378,3 +1443,4 @@ $(document).ready(setupWikiTableSortableHeader);
 $(document).on('focus', '[data-auto-complete=true]', function(event) {
   inlineAutoComplete(event.target);
 });
+document.addEventListener("DOMContentLoaded", () => { setupCopyButtonsToPreElements(); });

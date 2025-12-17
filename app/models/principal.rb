@@ -35,6 +35,8 @@ class Principal < ApplicationRecord
            :foreign_key => 'user_id'
   has_many :projects, :through => :memberships
   has_many :issue_categories, :foreign_key => 'assigned_to_id', :dependent => :nullify
+  # Always returns nil for groups
+  has_one :email_address, lambda {where :is_default => true}, :autosave => true, :foreign_key => 'user_id'
 
   validate :validate_status
 
@@ -126,6 +128,11 @@ class Principal < ApplicationRecord
 
   def name(formatter = nil)
     to_s
+  end
+
+  # Returns nil by default, subclasses should implement this method
+  def initials(formatter = nil)
+    nil
   end
 
   def mail=(*args)

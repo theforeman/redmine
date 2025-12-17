@@ -28,46 +28,55 @@ class User < Principal
   USER_FORMATS = {
     :firstname_lastname => {
       :string => '#{firstname} #{lastname}',
+      :initials => '#{firstname.to_s.first}#{lastname.to_s.first}',
       :order => %w(firstname lastname id),
       :setting_order => 1
     },
     :firstname_lastinitial => {
       :string => '#{firstname} #{lastname.to_s.chars.first}.',
+      :initials => '#{firstname.to_s.first}#{lastname.to_s.first}',
       :order => %w(firstname lastname id),
       :setting_order => 2
     },
     :firstinitial_lastname => {
       :string => '#{firstname.to_s.gsub(/(([[:alpha:]])[[:alpha:]]*\.?)/, \'\2.\')} #{lastname}',
+      :initials => '#{firstname.to_s.gsub(/(([[:alpha:]])[[:alpha:]]*\.?)/, \'\2.\').first}#{lastname.to_s.first}',
       :order => %w(firstname lastname id),
       :setting_order => 2
     },
     :firstname => {
       :string => '#{firstname}',
+      :initials => '#{firstname.to_s.first(2)}',
       :order => %w(firstname id),
       :setting_order => 3
     },
     :lastname_firstname => {
       :string => '#{lastname} #{firstname}',
+      :initials => '#{lastname.to_s.first}#{firstname.to_s.first}',
       :order => %w(lastname firstname id),
       :setting_order => 4
     },
     :lastnamefirstname => {
       :string => '#{lastname}#{firstname}',
+      :initials => '#{lastname.to_s.first}#{firstname.to_s.first}',
       :order => %w(lastname firstname id),
       :setting_order => 5
     },
     :lastname_comma_firstname => {
       :string => '#{lastname}, #{firstname}',
+      :initials => '#{lastname.to_s.first}#{firstname.to_s.first}',
       :order => %w(lastname firstname id),
       :setting_order => 6
     },
     :lastname => {
       :string => '#{lastname}',
+      :initials => '#{lastname.to_s.first(2)}',
       :order => %w(lastname id),
       :setting_order => 7
     },
     :username => {
       :string => '#{login}',
+      :initials => '#{login.to_s.first(2)}',
       :order => %w(login id),
       :setting_order => 8
     },
@@ -91,8 +100,8 @@ class User < Principal
   has_one :preference, :dependent => :destroy, :class_name => 'UserPreference'
   has_one :atom_token, lambda {where "#{table.name}.action='feeds'"}, :class_name => 'Token'
   has_one :api_token, lambda {where "#{table.name}.action='api'"}, :class_name => 'Token'
-  has_one :email_address, lambda {where :is_default => true}, :autosave => true
   has_many :email_addresses, :dependent => :delete_all
+  has_many :reactions, dependent: :delete_all
   belongs_to :auth_source
 
   scope :logged, lambda {where("#{User.table_name}.status <> #{STATUS_ANONYMOUS}")}
@@ -103,6 +112,7 @@ class User < Principal
   attr_accessor :password, :password_confirmation, :generate_password
   attr_accessor :last_before_login_on
   attr_accessor :remote_ip
+  attr_writer   :oauth_scope
 
   LOGIN_LENGTH_LIMIT = 60
   MAIL_LENGTH_LIMIT = 254
@@ -170,7 +180,7 @@ class User < Principal
   end
 
   alias :base_reload :reload
-  def reload(*args)
+  def reload(*)
     @name = nil
     @roles = nil
     @projects_by_role = nil
@@ -181,7 +191,7 @@ class User < Principal
     @builtin_role = nil
     @visible_project_ids = nil
     @managed_roles = nil
-    base_reload(*args)
+    base_reload(*)
   end
 
   def mail
@@ -273,6 +283,14 @@ class User < Principal
     else
       @name ||= eval('"' + f[:string] + '"')
     end
+  end
+
+  # Return user's initials based on name format
+  def initials(formatter = nil)
+    f = self.class.name_formatter(formatter)
+    format = f[:initials] || USER_FORMATS[:firstname_lastname][:initials]
+    initials = eval('"' + format + '"')
+    initials.upcase
   end
 
   def registered?
@@ -643,7 +661,7 @@ class User < Principal
   def projects_by_role
     return @projects_by_role if @projects_by_role
 
-    result = Hash.new([])
+    result = Hash.new {|_h, _k| []}
     project_ids_by_role.each do |role, ids|
       result[role] = Project.where(:id => ids).to_a
     end
@@ -676,7 +694,7 @@ class User < Principal
         hash[role_id] << project_id
       end
 
-      result = Hash.new([])
+      result = Hash.new {|_h, _k| []}
       if hash.present?
         roles = Role.where(:id => hash.keys).to_a
         hash.each do |role_id, proj_ids|
@@ -715,6 +733,20 @@ class User < Principal
     end
   end
 
+  def admin?
+    if authorized_by_oauth?
+      # when signed in via oauth, the user only acts as admin when the admin scope is set
+      super and @oauth_scope.include?(:admin)
+    else
+      super
+    end
+  end
+
+  # true if the user has signed in via oauth
+  def authorized_by_oauth?
+    !@oauth_scope.nil?
+  end
+
   # Return true if the user is allowed to do the specified action on a specific context
   # Action can be:
   # * a parameter-like Hash (eg. :controller => 'projects', :action => 'edit')
@@ -735,7 +767,7 @@ class User < Principal
 
       roles.any? do |role|
         (context.is_public? || role.member?) &&
-        role.allowed_to?(action) &&
+        role.allowed_to?(action, @oauth_scope) &&
         (block ? yield(role, self) : true)
       end
     elsif context && context.is_a?(Array)
@@ -754,7 +786,7 @@ class User < Principal
       # authorize if user has at least one role that has this permission
       roles = self.roles.to_a | [builtin_role]
       roles.any? do |role|
-        role.allowed_to?(action) &&
+        role.allowed_to?(action, @oauth_scope) &&
         (block ? yield(role, self) : true)
       end
     else

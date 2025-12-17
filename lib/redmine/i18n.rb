@@ -65,9 +65,9 @@ module Redmine
     end
 
     # Localizes the given args with user's language
-    def lu(user, *args)
+    def lu(user, *)
       lang = user.try(:language).presence || Setting.default_language
-      ll(lang, *args)
+      ll(lang, *)
     end
 
     def format_date(date)
@@ -152,7 +152,7 @@ module Redmine
             languages_options :cache => false
           end
         end
-      options.map {|name, lang| [name.force_encoding("UTF-8"), lang.force_encoding("UTF-8")]}
+      options.map {|name, lang| [(+name).force_encoding("UTF-8"), (+lang).force_encoding("UTF-8")]}
     end
 
     def find_language(lang)
@@ -172,23 +172,6 @@ module Redmine
 
     def current_language
       ::I18n.locale
-    end
-
-    # Custom backend based on I18n::Backend::Simple with the following changes:
-    # * available_locales are determined by looking at translation file names
-    class Backend < ::I18n::Backend::Simple
-      # Get available locales from the translations filenames
-      def available_locales
-        @available_locales ||= begin
-          redmine_locales = Dir[Rails.root / 'config' / 'locales' / '*.yml'].map { |f| File.basename(f, '.yml').to_sym }
-          super & redmine_locales
-        end
-      end
-
-      # Adds custom pluralization rules
-      include ::I18n::Backend::Pluralization
-      # Adds fallback to default locale for untranslated strings
-      include ::I18n::Backend::Fallbacks
     end
   end
 end

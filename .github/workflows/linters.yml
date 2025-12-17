@@ -11,16 +11,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Delete Gemfile.lock
-        run: rm -f Gemfile.lock
-
-      - name: Setup secure config
-        run: |
-          sudo mkdir -p /etc/redmine
-          sudo mkdir -p /var/lib/redmine
-          sudo chown runner /var/lib/redmine
-          printf '{"data_dir":"/var/lib/redmine"}' | sudo tee /etc/redmine/secure_config.yaml
-
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -54,16 +44,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Delete Gemfile.lock
-        run: rm -f Gemfile.lock
-
-      - name: Setup secure config
-        run: |
-          sudo mkdir -p /etc/redmine
-          sudo mkdir -p /var/lib/redmine
-          sudo chown runner /var/lib/redmine
-          printf '{"data_dir":"/var/lib/redmine"}' | sudo tee /etc/redmine/secure_config.yaml
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
