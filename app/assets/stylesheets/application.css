@@ -362,7 +362,7 @@ table.list td.buttons img, div.buttons img {vertical-align:middle;}
 table.list td.reorder {width:15%; white-space:nowrap; text-align:center; }
 table.list table.progress td {padding-right:0; border-top: none;}
 table.list caption { text-align: left; padding: 0.5em 0.5em 0.5em 0; }
-table.list tr.overdue td.due_date  { color: #c22; }
+table.list tr.overdue:not(.context-menu-selection) td.due_date  { color: #c22; }
 #role-permissions-trackers table.list th {white-space:normal;}
 table.list div.wiki p {
   margin: 0;
@@ -444,13 +444,13 @@ tr.version td.date, tr.version td.status, tr.version td.sharing { text-align: ce
 #principals_for_new_member .icon-user, #users_for_watcher .icon-user {background:transparent;}
 #principals_for_new_member svg, #principals_for_new_member img {margin-right: 4px;}
 
-tr.user td {width:13%;white-space: nowrap;}
-td.username, td.firstname, td.lastname, td.email {text-align:left !important;}
-tr.user td.email { width:18%; }
+tr.user td {white-space: nowrap;}
+td.login, td.firstname, td.lastname, td.mail {text-align:start !important;}
 tr.user.locked, tr.user.registered { color: #aaa; }
 tr.user.locked a, tr.user.registered a { color: #aaa; }
 
 table.permissions td.role {color:#999;font-size:90%;font-weight:normal !important;text-align:center;vertical-align:bottom;}
+table.permissions td.name {min-width: 10rem;}
 table.permissions tr.group>td:nth-of-type(1),
 table.tracker-summary tr.group>td:nth-of-type(1) {font-weight: bold;}
 
@@ -1576,6 +1576,7 @@ div.wiki *:not(pre)>code, div.wiki>code {
   background: rgba(62, 91, 118, 0.08);
   padding: 0.1em 0.1em;
   border-radius: 0.1em;
+  white-space: pre-wrap;
 }
 
 div.wiki ul.toc {
