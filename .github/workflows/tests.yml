@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Delete Gemfile.lock
         run: rm -f Gemfile.lock
@@ -61,6 +63,11 @@ jobs:
         with:
           db-type: ${{ matrix.db }}
           ruby-version: ${{ matrix.ruby }}
+
+      - name: Setup plugins
+        run: bundle exec rake redmine:plugins:migrate
+        env:
+          RAILS_ENV: test
 
       - name: Run tests
         run: |
@@ -84,6 +91,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Delete Gemfile.lock
         run: rm -f Gemfile.lock
@@ -100,6 +109,11 @@ jobs:
         with:
           db-type: sqlite3
           ruby-version: '3.3'
+
+      - name: Setup plugins
+        run: bundle exec rake redmine:plugins:migrate
+        env:
+          RAILS_ENV: test
 
       # System tests use Chrome and ChromeDriver installed on the GitHub Actions Ubuntu image.
       # They are generally updated to the latest stable versions.
