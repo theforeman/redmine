@@ -106,7 +106,7 @@ module FixedIssuesExtension
         done = self.open(open).sum do |c|
           estimated = c.total_estimated_hours.to_f
           estimated = estimated_average unless estimated > 0.0
-          ratio = c.closed? ? 100 : (c.done_ratio || 0)
+          ratio = open ? (c.done_ratio || 0) : 100
           estimated * ratio
         end
         progress = done / (estimated_average * issues_count)
@@ -211,8 +211,8 @@ class Version < ApplicationRecord
   end
 
   # Version files have same visibility as project files
-  def attachments_visible?(*args)
-    project.present? && project.attachments_visible?(*args)
+  def attachments_visible?(*)
+    project.present? && project.attachments_visible?(*)
   end
 
   def attachments_deletable?(usr=User.current)
@@ -220,10 +220,10 @@ class Version < ApplicationRecord
   end
 
   alias :base_reload :reload
-  def reload(*args)
+  def reload(*)
     @default_project_version = nil
     @visible_fixed_issues = nil
-    base_reload(*args)
+    base_reload(*)
   end
 
   def start_date
@@ -312,10 +312,7 @@ class Version < ApplicationRecord
   end
 
   def wiki_page
-    if project.wiki && !wiki_page_title.blank?
-      @wiki_page ||= project.wiki.find_page(wiki_page_title)
-    end
-    @wiki_page
+    @wiki_page ||= project.wiki&.find_page(wiki_page_title) if wiki_page_title.present?
   end
 
   def to_s; name end

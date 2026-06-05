@@ -96,8 +96,9 @@ bg:
 # Used in array.to_sentence.
   support:
     array:
-      sentence_connector: "и"
-      skip_last_comma: false
+      last_word_connector: " и "
+      two_words_connector: " и "
+      words_connector: ", "
 
   activerecord:
     errors:
@@ -210,6 +211,7 @@ bg:
   error_can_not_delete_custom_field: Невъзможност за изтриване на потребителско поле
   error_can_not_delete_tracker_html: Този тракер съдържа задачи и не може да бъде изтрит.<p>The following projects have issues with this tracker:<br>%{projects}</p>
   error_can_not_remove_role: Тази роля се използва и не може да бъде изтрита.
+  error_can_not_remove_role_reason_members_html: "<p>Следващите проекти имат членове с тази роля:<br>%{projects}</p>"
   error_can_not_reopen_issue_on_closed_version: Задача, асоциирана със затворена версия не може да бъде отворена отново
   error_can_not_archive_project: Този проект не може да бъде архивиран
   error_issue_done_ratios_not_updated: Процентът на завършените задачи не е обновен.
@@ -238,6 +240,7 @@ bg:
   error_exceeds_maximum_hours_per_day: Не можете да запишете повече от %{max_hours} часа на един ден (%{logged_hours} часове вече са записани)
   error_can_not_delete_auth_source: Този режим за идентификация се използва и не може да бъде премахнат.
   error_spent_on_future_date: Не е възможно да се отчете изразходвано време на дата в бъдещето
+  error_spent_on_closed_issue: Не е възможно да се отчете изразходвано време за затворена задача
   error_not_allowed_to_log_time_for_other_users: Вие нямате разрешение да записвате изразходвано време за други потребители
   error_can_not_execute_macro_html: Грешка при изпълнение на <strong>%{name}</strong> макрос
     (%{error})
@@ -522,9 +525,13 @@ bg:
   setting_timelog_accept_0_hours: Приемане на записи с 0 часа
   setting_timelog_max_hours_per_day: Максимум часове, които могат да бъдат записани за ден и за потребител
   setting_timelog_accept_future_dates: Разрешено отчитане на изразходвано време на дата в бъдещето
+  setting_timelog_accept_closed_issues: Разрешено отчитане на изразходвано време за затворени задачи
   setting_show_status_changes_in_mail_subject: Показване на промените на състоянието на задачите в поле Относно на имейлите
   setting_project_list_defaults: Проектен списък
   setting_twofa: Двуфакторна автентикация
+  setting_related_issues_default_columns: Колони по подразбиране за свързани и подзадачи
+  setting_display_related_issues_table_headers: Показване на заглавия на таблиците
+  setting_reactions_enabled: Разрешаване на реакциите
 
   permission_add_project: Създаване на проект
   permission_add_subprojects: Създаване на подпроекти
@@ -601,6 +608,9 @@ bg:
   permission_manage_related_issues: Управление на връзките между задачи и ревизии
   permission_import_issues: Импорт на задачи
   permission_log_time_for_other_users: Записване на изразходвано време за други потребители
+  permission_view_project: Разглеждане на проекти
+  permission_search_project: Търсене на проекти
+  permission_view_members: Рззглеждане на членовете на проекти
 
   project_module_issue_tracking: Тракинг
   project_module_time_tracking: Отделяне на време
@@ -1110,6 +1120,8 @@ bg:
   label_relations_mapping: Съответствие между релациите
   label_file_content_preview: Предварителен преглед на съдържанието на файла
   label_create_missing_values: Създаване на липсващи стойности
+  label_position: Позиция
+  label_message: Съобщение
   label_api: API
   label_field_format_enumeration: Списък ключ/стойност
   label_default_values_for_new_users: Стойности по подразбиране за нови потребители
@@ -1153,6 +1165,16 @@ bg:
   label_edited: Редактирано
   label_time_by_author: "%{time} от %{author}"
   label_involved_principals: Автор / Предишен назначен
+  label_progressbar: Прогрес бар
+  label_oauth_permission_admin: Администриране на тази инсталация на Redmine
+  label_oauth_admin_access: Администриране
+  label_oauth_application_plural: Приложения
+  label_oauth_authorized_application_plural: Оторизирани приложения
+  label_alert_note: Бележка
+  label_alert_tip: Съвет
+  label_alert_warning: Предупреждение
+  label_alert_caution: Внимание
+  label_alert_important: Важно
 
   button_login: Вход
   button_submit: Изпращане
@@ -1338,6 +1360,18 @@ bg:
     Бие можете да го конфигурирате в config/configuration.yml.
   text_allowed_queries_to_select: Само публичните (за всички потребители) заявки са достъпни за избор
   text_setting_config_change: Вие можете да конфигурирате поведението в config/configuration.yml. Моля, рестартирайте Redmine след редактиране на файла.
+  text_setting_gravatar_default_initials_html: Инициалите на потребителите са изпратени на <a href="https://www.gravatar.com">https://www.gravatar.com</a> за генериране на техните аватари.
+  text_oauth_admin_permission: Пълен административен достъп. След оторизиране от администратор,
+    това приложение ще има възможност да чете и записва всички данни и да имитира други потребители.
+  text_oauth_admin_permission_info: Това приложение иска пълен административен достъп.
+    Ако вие сте Администратор (или станете такъв след време), то ще бъде способно да чете
+    и записва всички данни и да имитира други потребители за ваша сметка. Ако вие не желаете
+    такова поведение, оторизирайте го като потребител без административни привилегии.
+  text_oauth_copy_secret_now: Копирайте секретната фраза на сигурно място сега. Тя няма да бъде показана отново.
+  text_oauth_implicit_permissions: Разглеждане на вашето име, потребителско име (login) и главен email адрес
+  text_oauth_info_scopes: Изберете какво може да заявява приложението. На приложението няма да бъде позволено
+    повече от това, което е избрано тук. То също така ще бъде ограничено от ролите и членството в проекти на
+    на потребителя, който го е оторизирал.
 
   default_role_manager: Мениджър
   default_role_developer: Разработчик
@@ -1434,6 +1468,7 @@ bg:
   twofa_text_backup_codes_created_at: Резервни кодове генерирани на %{datetime}.
   twofa_backup_codes_already_shown: Резервните кодове не могат да бъдат показани отново, моля <a data-method="post"
     href="%{bc_path}">генерирайте нови резервни кодове</a>, ако е необходимо.
+  twofa_already_setup: Двуфактораната автентикация вече е направена.
   twofa_text_group_required: Този избор е ефективен само, когато глобалната двуфакторна автентикация е установена на 'по избор'.
     Понастоящем, двуфакторната автентикация се изисква за всички потребители.
   twofa_text_group_disabled: Този избор е ефективен само, когато глобалната двуфакторна автентикация е установена на 'по избор'.
@@ -1443,4 +1478,8 @@ bg:
     За да потвърдите, въведете името (%{login}) по-долу.
   text_project_destroy_enter_identifier: За да потвърдите действието, въведете идентификатора на проекта (%{identifier}) по-долу.
   field_name_or_email_or_login: Име, e-mail или login име
-  twofa_already_setup: Two-factor authentication already set up
+  setting_wiki_tablesort_enabled: Сортиране на таблици чрез JavaScript във wiki страници
+  reaction_text_x_other_users:
+    one: 1 друг
+    other: "%{count} други"
+  field_ratio_interval: Ratio interval

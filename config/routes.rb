@@ -18,6 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 Rails.application.routes.draw do
+  use_doorkeeper do
+    controllers :applications => 'oauth2_applications'
+  end
+
+  root :to => 'welcome#index'
   root :to => 'welcome#index', :as => 'home'
 
   match 'login', :to => 'account#login', :as => 'signin', :via => [:get, :post]
@@ -60,6 +65,8 @@ Rails.application.routes.draw do
       get 'diff'
     end
   end
+
+  resources :reactions, only: [:create, :destroy]
 
   get '/projects/:project_id/issues/gantt', :to => 'gantts#show', :as => 'project_gantt'
   get '/issues/gantt', :to => 'gantts#show'
@@ -408,6 +415,10 @@ Rails.application.routes.draw do
   match 'uploads', :to => 'attachments#upload', :via => :post
 
   get 'robots.:format', :to => 'welcome#robots', :constraints => {:format => 'txt'}
+
+  if Rails.env.development?
+    get 'rails/info/svg_icons', :to => 'svg_icons#index'
+  end
 
   get 'help/wiki_syntax/(:type)', :controller => 'help', :action => 'show_wiki_syntax', :constraints => { :type => /detailed/ }, :as => 'help_wiki_syntax'
   get 'help/code_highlighting', :controller => 'help', :action => 'show_code_highlighting',  :as => 'help_code_highlighting'

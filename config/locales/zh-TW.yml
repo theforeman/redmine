@@ -42,8 +42,6 @@
       words_connector: ", "
       two_words_connector: " 和 "
       last_word_connector: ", 和 "
-      sentence_connector: "且"
-      skip_last_comma: false
 
   number:
     # 使用於 number_with_delimiter()
@@ -266,7 +264,7 @@
   notice_default_data_loaded: 預設組態已載入成功。
   notice_unable_delete_version: 無法刪除版本。
   notice_unable_delete_time_entry: 無法刪除工時記錄項目。
-  notice_issue_done_ratios_updated: 議題完成百分比已更新。
+  notice_issue_done_ratios_updated: 議題完成比例已更新。
   notice_gantt_chart_truncated: "由於項目數量超過可顯示數量的最大值 (%{max})，故此甘特圖尾部已被截斷"
   notice_issue_successful_create: "議題 %{id} 已建立。"
   notice_issue_update_conflict: "當您正在編輯這個議題的時候，它已經被其他人搶先一步更新過。"
@@ -371,7 +369,7 @@
   field_priority: 優先權
   field_fixed_version: 版本
   field_user: 用戶
-  field_principal: User or Group
+  field_principal: 用戶或群組
   field_role: 角色
   field_homepage: 網站首頁
   field_is_public: 公開
@@ -398,7 +396,7 @@
   field_attr_mail: 電子郵件信箱屬性
   field_onthefly: 即時建立使用者
   field_start_date: 開始日期
-  field_done_ratio: 完成百分比
+  field_done_ratio: 完成比例
   field_auth_source: 驗證模式
   field_hide_mail: 隱藏我的電子郵件
   field_comments: 回應
@@ -515,8 +513,8 @@
   setting_lost_password: 允許使用電子郵件重新設定密碼
   setting_new_project_user_role_id: 管理者以外之用戶建立新專案時，將被分派的角色
   setting_default_projects_modules: 新專案預設啟用的模組
-  setting_issue_done_ratio: 計算議題完成百分比之方式
-  setting_issue_done_ratio_issue_field: 依據議題完成百分比欄位
+  setting_issue_done_ratio: 計算議題完成比例之方式
+  setting_issue_done_ratio_issue_field: 依據議題完成比例欄位
   setting_issue_done_ratio_issue_status: 依據議題狀態
   setting_start_of_week: 週的第一天
   setting_rest_api_enabled: 啟用 REST 網路服務技術（Web Service）
@@ -992,7 +990,7 @@
   label_version_sharing_hierarchy: 與專案階層架構共用
   label_version_sharing_tree: 與專案樹共用
   label_version_sharing_system: 與全部的專案共用
-  label_update_issue_done_ratios: 更新議題完成百分比
+  label_update_issue_done_ratios: 更新議題完成比例
   label_copy_source: 來源
   label_copy_target: 目的地
   label_copy_same_as_target: 與目的地相同
@@ -1507,7 +1505,7 @@
   label_issue_attachment_added: 附加檔案已新增
   field_estimated_remaining_hours: 預估剩餘工時
   field_last_activity_date: 最近一次活動
-  setting_issue_done_ratio_interval: 完成百分比選項的間隔值
+  setting_issue_done_ratio_interval: 完成比例選項的間隔值
   setting_copy_attachments_on_issue_copy: 連同附件檔案一起複製
   field_thousands_delimiter: 千分位分隔符號
   label_involved_principals: 作者 / 歷任被分派者
@@ -1515,4 +1513,43 @@
     zero: "%{filename}"
     one: "%{filename} 與另 1 個檔案"
     other: "%{filename} 與另外 %{count} 個檔案"
-  twofa_already_setup: Two-factor authentication already set up
+  setting_wiki_tablesort_enabled: 在維基頁面的內容中, 啟用基於 JavaScript 的表格排序功能
+  label_progressbar: 進度條
+  error_spent_on_closed_issue: 無法在已結束的議題上記錄工時
+  setting_timelog_accept_closed_issues: 允許在已結束的議題上紀錄工時
+  setting_related_issues_default_columns: 預設顯示於相關議題與子任務清單的欄位
+  setting_display_related_issues_table_headers: 顯示表格標題欄位
+  error_can_not_remove_role_reason_members_html: "<p>下列專案中有成員
+    屬於此角色:<br>%{projects}</p>"
+  setting_reactions_enabled: 啟用表情回應功能
+  reaction_text_x_other_users:
+    one: 1 位其他用戶
+    other: "%{count} 位其他用戶"
+  text_setting_gravatar_default_initials_html: 用戶姓名的首字母縮寫將被送往 <a href="https://www.gravatar.com">https://www.gravatar.com</a>
+    用以產生其大頭貼.
+  permission_view_project: 檢視專案
+  permission_search_project: 搜尋專案
+  permission_view_members: 檢視專案成員
+  label_oauth_permission_admin: 管理此 Redmine
+  label_oauth_admin_access: 管理權限
+  label_oauth_application_plural: 應用程式
+  label_oauth_authorized_application_plural: 已授權之應用程式
+  text_oauth_admin_permission: 完整的系統管理存取權限。經由管理者授權後，
+    本應用程式將可讀取與寫入所有資料，並能模擬其他使用者操作。
+  text_oauth_admin_permission_info: 此應用程式要求取得完整的系統管理存取權限。
+    若您目前（或未來具備）管理者身分，它將可代表您讀取及寫入所有資料，並能模擬其他使用者操作。
+    如欲避免此情況，請改以「一般使用者」（無管理者權限）身分進行授權。
+  text_oauth_copy_secret_now: 請立即將密鑰複製到安全的地方保存，之後將無法再次顯示。
+  text_oauth_implicit_permissions: 檢視您的姓名、登入帳號及主要電子郵件地址
+  text_oauth_info_scopes: 請選擇此應用程式可要求存取的權限範圍。
+    應用程式僅能執行您在此選擇的權限，無法超越此範圍。
+    此外，其存取權限也將始終受限於授權使用者的角色與所屬專案成員資格。
+  label_position: 位置
+  label_message: 訊息
+  twofa_already_setup: 雙因素驗證已啟用
+  label_alert_note: 提醒
+  label_alert_tip: 提示
+  label_alert_warning: 警告
+  label_alert_caution: 注意
+  label_alert_important: 重要
+  field_ratio_interval: 完成比例間隔

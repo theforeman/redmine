@@ -19,6 +19,7 @@
 
 module JournalsHelper
   include Redmine::QuoteReply::Helper
+  include ReactionsHelper
 
   # Returns the attachments of a journal that are displayed as thumbnails
   def journal_thumbnail_attachments(journal)
@@ -40,10 +41,12 @@ module JournalsHelper
                                )
     end
 
+    links << reaction_button(journal)
+
     if journal.notes.present?
       if options[:reply_links]
         url = quoted_issue_path(issue, :journal_id => journal, :journal_indice => indice)
-        links << quote_reply(url, "#journal-#{journal.id}-notes", icon_only: true)
+        links << quote_reply_button(url: url, icon_only: true)
       end
       if journal.editable_by?(User.current)
         links << link_to(sprite_icon('edit', l(:button_edit)),
@@ -66,7 +69,8 @@ module JournalsHelper
   end
 
   def render_notes(issue, journal, options={})
-    content_tag('div', textilizable(journal, :notes), :id => "journal-#{journal.id}-notes", :class => "wiki")
+    content_tag('div', textilizable(journal, :notes),
+      id: "journal-#{journal.id}-notes", class: "wiki journal-note", data: { quote_reply_target: 'content' })
   end
 
   def render_private_notes_indicator(journal)

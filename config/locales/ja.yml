@@ -114,8 +114,9 @@ ja:
 # Used in array.to_sentence.
   support:
     array:
-      sentence_connector: "及び"
-      skip_last_comma: true
+      last_word_connector: "、"
+      two_words_connector: "、"
+      words_connector: "、"
 
   activerecord:
     errors:
@@ -1172,6 +1173,8 @@ ja:
   label_fields_mapping: フィールドの対応関係
   label_file_content_preview: ファイル内容のプレビュー
   label_create_missing_values: 存在しない値は新規作成
+  label_position: 位置
+  label_message: メッセージ
   button_import: インポート
   field_total_estimated_hours: 合計予定工数
   label_api: API
@@ -1442,11 +1445,42 @@ ja:
   label_issue_attachment_added: 添付ファイルの追加
   field_estimated_remaining_hours: 残工数
   field_last_activity_date: 最終活動日
-  setting_issue_done_ratio_interval: 進捗率の選択肢の間隔
+  setting_issue_done_ratio_interval: 進捗率の間隔
   setting_copy_attachments_on_issue_copy: チケットをコピーするとき添付ファイルもコピー
   field_thousands_delimiter: 3桁区切り表示
   label_involved_principals: 作成者 / 直前担当者
   label_attachment_summary:
     zero: "%{filename}"
     other: "%{filename} ほか%{count}件"
-  twofa_already_setup: Two-factor authentication already set up
+  setting_wiki_tablesort_enabled: コンテンツ内テーブルの Tablesort (JavaScript) による並べ替え
+  label_progressbar: 進捗バー
+  error_spent_on_closed_issue: 完了したチケットに作業時間を記録することはできません
+  setting_timelog_accept_closed_issues: 完了したチケットへの作業時間の記録を許可
+  setting_related_issues_default_columns: 関連するチケットと子チケットの一覧で表示する項目
+  setting_display_related_issues_table_headers: テーブルヘッダを表示
+  error_can_not_remove_role_reason_members_html: "<p>以下のプロジェクトにこのロールのメンバーがいます:<br>%{projects}</p>"
+  setting_reactions_enabled: リアクション機能を有効にする
+  reaction_text_x_other_users:
+    one: 他1人
+    other: "他%{count}人"
+  text_setting_gravatar_default_initials_html: ユーザーの姓と名それぞれの先頭文字がアイコン生成のために <a href="https://www.gravatar.com">https://www.gravatar.com</a> に送信されます。
+  permission_view_project: プロジェクトの閲覧
+  permission_search_project: プロジェクトの検索
+  permission_view_members: プロジェクトのメンバーの閲覧
+  label_oauth_permission_admin: このRedmineの管理
+  label_oauth_admin_access: システム管理
+  label_oauth_application_plural: アプリケーション
+  label_oauth_authorized_application_plural: 認可済みアプリケーション
+  text_oauth_admin_permission: システム管理者権限。システム管理者によって認可された場合、このアプリケーションはすべてのデータを読み書きでき、また他のユーザーになりすますことができます。
+  text_oauth_admin_permission_info: このアプリケーションはシステム管理者権限を要求しています。
+    もしあなたがシステム管理者である場合（または将来的にシステム管理者になる場合）、このアプリケーションはすべてのデータを読み書きでき、あなたの代理で他のユーザーになりすますことができます。これを避けたい場合は、システム管理者権限のないユーザーとして認可してください。
+  text_oauth_copy_secret_now: シークレットは今すぐ安全な場所にコピーしてください。今後は再表示できません。
+  text_oauth_implicit_permissions: あなたの名前・ログインID・メインのメールアドレスの閲覧
+  text_oauth_info_scopes: このアプリケーションが要求できるスコープを選択してください。アプリケーションは、ここで選択された範囲を超えることはできません。また、認可したユーザーのロールおよび参加しているプロジェクトによる制限も常に適用されます。
+  twofa_already_setup: 二要素認証はすでに設定済みです。
+  label_alert_note: 注記
+  label_alert_tip: ヒント
+  label_alert_warning: 警告
+  label_alert_caution: 注意
+  label_alert_important: 重要
+  field_ratio_interval: 進捗率の間隔

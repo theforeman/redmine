@@ -26,6 +26,7 @@ module WatchersHelper
 
     watched = Watcher.any_watched?(objects, user)
     css = [watcher_css(objects), watched ? 'icon icon-fav' : 'icon icon-fav-off'].join(' ')
+    icon = watched ? 'unwatch' : 'watch'
     text = watched ? l(:button_unwatch) : l(:button_watch)
     url = watch_path(
       :object_type => objects.first.class.to_s.underscore,
@@ -33,7 +34,7 @@ module WatchersHelper
     )
     method = watched ? 'delete' : 'post'
 
-    link_to sprite_icon('fav', text), url, :remote => true, :method => method, :class => css
+    link_to sprite_icon(icon, text), url, :remote => true, :method => method, :class => css
   end
 
   # Returns the css class used to identify watch links for a given +object+
@@ -47,7 +48,9 @@ module WatchersHelper
   def watchers_list(object)
     remove_allowed = User.current.allowed_to?(:"delete_#{object.class.name.underscore}_watchers", object.project)
     content = ''.html_safe
-    lis = object.watcher_users.sorted.collect do |user|
+    scope = object.watcher_users
+    scope = scope.includes(:email_address) if Setting.gravatar_enabled?
+    lis = scope.sorted.collect do |user|
       s = ''.html_safe
       s << avatar(user, :size => "16").to_s if user.is_a?(User)
       s << link_to_principal(user, class: user.class.to_s.downcase)
