@@ -33,7 +33,7 @@ class ContextMenusController < ApplicationController
 
     @can = {
       :edit => @issues.all?(&:attributes_editable?),
-      :log_time => (@project && User.current.allowed_to?(:log_time, @project)),
+      :log_time => @issue&.time_loggable?,
       :copy => User.current.allowed_to?(:copy_issues, @projects) && Issue.allowed_target_projects.any?,
       :add_watchers => User.current.allowed_to?(:add_issue_watchers, @projects),
       :delete => @issues.all?(&:deletable?),
@@ -46,6 +46,24 @@ class ContextMenusController < ApplicationController
 
     @priorities = IssuePriority.active.reverse
     @back = back_url
+    begin
+      # Recognize the controller and action from the back_url to determine
+      # which view triggered the context menu.
+      if relative_url_root.present? && back_url&.starts_with?(relative_url_root)
+        normalized_back_url = back_url.delete_prefix(relative_url_root)
+      else
+        normalized_back_url = back_url
+      end
+      route = Rails.application.routes.recognize_path(normalized_back_url)
+      @include_delete =
+        [
+          {controller: 'issues', action: 'index'},
+          {controller: 'gantts', action: 'show'},
+          {controller: 'calendars', action: 'show'}
+        ].any?(route.slice(:controller, :action))
+    rescue ActionController::RoutingError
+      @include_delete = false
+    end
 
     @columns = params[:c]
 

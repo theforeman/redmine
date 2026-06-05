@@ -198,12 +198,18 @@ module Redmine
 
       # Returns the distinct versions of the issues that belong to +project+
       def project_versions(project)
-        project_issues(project).filter_map(&:fixed_version).uniq
+        @project_versions ||= {}
+        @project_versions[project&.id] ||= begin
+          ids = project_issues(project).filter_map(&:fixed_version_id).uniq
+          Version.where(id: ids).to_a
+        end
       end
 
       # Returns the issues that belong to +project+ and are assigned to +version+
       def version_issues(project, version)
-        project_issues(project).select {|issue| issue.fixed_version == version}
+        @version_issues ||= {}
+        @version_issues[[project&.id, version&.id]] ||=
+          project_issues(project).select {|issue| issue.fixed_version_id == version&.id}
       end
 
       def render(options={})
@@ -232,7 +238,7 @@ module Redmine
         render_object_row(project, options)
         increment_indent(options) do
           # render issue that are not assigned to a version
-          issues = project_issues(project).select {|i| i.fixed_version.nil?}
+          issues = project_issues(project).select {|i| i.fixed_version_id.nil?}
           render_issues(issues, options)
           # then render project versions and their issues
           versions = project_versions(project)
@@ -502,7 +508,7 @@ module Redmine
           lines(:image => gc, :top => top, :zoom => zoom,
                 :subject_width => subject_width, :format => :image)
           # today red line
-          if User.current.today >= @date_from and User.current.today <= date_to
+          if User.current.today.between?(@date_from, date_to)
             gc.stroke('red')
             x = (User.current.today - @date_from + 1) * zoom + subject_width
             gc.draw('line %g,%g %g,%g' % [
@@ -725,7 +731,7 @@ module Redmine
           css_classes = +''
           css_classes << ' issue-overdue' if issue.overdue?
           css_classes << ' issue-behind-schedule' if issue.behind_schedule?
-          css_classes << ' icon icon-issue' unless Setting.gravatar_enabled? && issue.assigned_to
+          css_classes << ' icon icon-issue' unless issue.assigned_to
           css_classes << ' issue-closed' if issue.closed?
           if issue.start_date && issue.due_before && issue.done_ratio
             progress_date = calc_progress_date(issue.start_date,
@@ -734,8 +740,8 @@ module Redmine
             css_classes << ' over-end-date' if progress_date > self.date_to && issue.done_ratio > 0
           end
           s = (+"").html_safe
-          s << view.sprite_icon('issue').html_safe unless Setting.gravatar_enabled? && issue.assigned_to
-          s << view.assignee_avatar(issue.assigned_to, :size => 13, :class => 'icon-gravatar')
+          s << view.sprite_icon('issue').html_safe unless issue.assigned_to
+          s << view.assignee_avatar(issue.assigned_to, :size => 13, :class => 'icon-avatar')
           s << view.link_to_issue(issue).html_safe
           s << view.content_tag(:input, nil, :type => 'checkbox', :name => 'ids[]',
                                 :value => issue.id, :style => 'display:none;',
@@ -748,7 +754,7 @@ module Redmine
           html_class << (version.behind_schedule? ? 'version-behind-schedule' : '') << " "
           html_class << (version.overdue? ? 'version-overdue' : '')
           html_class << ' version-closed' unless version.open?
-          if version.start_date && version.due_date && version.visible_fixed_issues.completed_percent
+          if version.due_date && version.start_date && version.visible_fixed_issues.completed_percent
             progress_date = calc_progress_date(version.start_date,
                                                version.due_date, version.visible_fixed_issues.completed_percent)
             html_class << ' behind-start-date' if progress_date < self.date_from
@@ -778,10 +784,14 @@ module Redmine
           tag_options[:id] = "issue-#{object.id}"
           tag_options[:class] = "issue-subject hascontextmenu"
           tag_options[:title] = object.subject
-          children = object.leaf? ? [] : object.children & project_issues(object.project)
           has_children =
-            children.present? &&
-              children.collect(&:fixed_version).uniq.intersect?([object.fixed_version])
+            if object.leaf?
+              false
+            else
+              children = object.children & project_issues(object.project)
+              fixed_version_id = object.fixed_version_id
+              children.any? {|child| child.fixed_version_id == fixed_version_id}
+            end
         when Version
           tag_options[:id] = "version-#{object.id}"
           tag_options[:class] = "version-name"

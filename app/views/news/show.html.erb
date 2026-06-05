@@ -22,30 +22,43 @@
 </div>
 <% end %>
 
-<p><% unless @news.summary.blank? %><em><%= @news.summary %></em><br /><% end %>
-<span class="author"><%= authoring @news.created_on, @news.author %></span></p>
-<div class="wiki">
-<%= textilizable(@news, :description) %>
+<div class="news">
+  <div class="reaction">
+    <%= reaction_button @news %>
+  </div>
+  <p><% unless @news.summary.blank? %><em><%= @news.summary %></em><br /><% end %>
+  <span class="author"><%= authoring @news.created_on, @news.author %></span></p>
+  <div class="wiki">
+  <%= textilizable(@news, :description) %>
+  </div>
+  <%= link_to_attachments @news %>
 </div>
-<%= link_to_attachments @news %>
 <br />
 
-<div id="comments" style="margin-bottom:16px;">
+<div id="comments" class="journals">
 <h3 class="comments"><%= l(:label_comment_plural) %></h3>
 <% if @news.commentable? && @comments.size >= 3 %>
   <p><%= toggle_link l(:label_comment_add), "add_comment_form", :focus => "comment_comments", :scroll => "comment_comments" %></p>
 <% end %>
 <% @comments.each do |comment| %>
-    <% next if comment.new_record? %>
-    <div class="contextual">
-    <%= link_to_if_authorized sprite_icon('del', l(:button_delete)), { :controller => 'comments', :action => 'destroy', :id => @news, :comment_id => comment},
-                              :data => {:confirm => l(:text_are_you_sure)}, :method => :delete,
-                              :title => l(:button_delete),
-                              :class => 'icon-only icon-del' %>
-    </div>
-    <h4><%= avatar(comment.author) %><%= authoring comment.created_on, comment.author %></h4>
-    <div class="wiki">
-    <%= textilizable(comment.comments) %>
+    <div class="message reply journal" id="<%= "message-#{comment.id}" %>">
+      <% next if comment.new_record? %>
+      <h4 class="reply-header journal-header">
+        <span class="journal-info">
+          <%= avatar(comment.author) %>
+          <%= authoring comment.created_on, comment.author %>
+        </span>
+        <span class="journal-meta">
+          <%= reaction_button comment %>
+          <%= link_to_if_authorized sprite_icon('del', l(:button_delete)), { :controller => 'comments', :action => 'destroy', :id => @news, :comment_id => comment},
+                                    :data => {:confirm => l(:text_are_you_sure)}, :method => :delete,
+                                    :title => l(:button_delete),
+                                    :class => 'icon-only icon-del' %>
+        </span>
+      </h4>
+      <div class="wiki journal-content">
+        <%= textilizable(comment.comments) %>
+      </div>
     </div>
 <% end if @comments.any? %>
 </div>
@@ -57,7 +70,7 @@
     <%= text_area 'comment', 'comments', :cols => 80, :rows => 15, :class => 'wiki-edit',
                   :data => {
                     :auto_complete => true
-                  }
+                  }.merge(list_autofill_data_attributes)
     %>
     <%= wikitoolbar_for 'comment_comments', preview_news_path(:project_id => @project, :id => @news) %>
 </div>

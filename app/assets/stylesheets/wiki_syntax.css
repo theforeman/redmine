@@ -72,3 +72,14 @@ a:hover, a:active{ color: #c61a1a; text-decoration: underline;}
 .syntaxhl .s1 { background-color: #fff0f0 }
 
 span.more_info { font-weight: normal; }
+
+.markdown-alert {
+  border-inline-start: 4px solid;
+  padding-inline-start: 10px;
+  margin-inline-start: 10px;
+}
+.markdown-alert-title {
+  font-weight: bold;
+}
+.markdown-alert-note { border-color: #4263eb; /* oc-indigo-7 */ }
+.markdown-alert-note .markdown-alert-title { color: #364fc7; /* oc-indigo-9 */ }

@@ -182,6 +182,9 @@ class TimeEntry < ApplicationRecord
     if spent_on && spent_on_changed? && user
       errors.add :base, I18n.t(:error_spent_on_future_date) if !Setting.timelog_accept_future_dates? && (spent_on > user.today)
     end
+    if !Setting.timelog_accept_closed_issues? && issue&.closed? && issue.was_closed?
+      errors.add :base, I18n.t(:error_spent_on_closed_issue)
+    end
   end
 
   def hours=(h)
@@ -240,8 +243,11 @@ class TimeEntry < ApplicationRecord
   def assignable_users
     users = []
     if project
-      users = project.members.active.preload(:user)
-      users = users.map(&:user).select{|u| u.allowed_to?(:log_time, project)}
+      user_ids =
+        project.members.active.preload(:roles).filter_map do |m|
+          m.roles.any? {|role| role.allowed_to?(:log_time)} ? m.user_id : nil
+        end.uniq
+      users = User.where(:id => user_ids).sorted.to_a
     end
     users << User.current if User.current.logged? && !users.include?(User.current)
     users

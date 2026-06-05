@@ -313,9 +313,11 @@ module ApplicationHelper
           link_to_attachment(
             object,
             :class => ['icon-only', 'icon-download'],
+            :icon => 'download',
             :title => l(:button_download),
             :download => true
-          )
+          ),
+          class: 'attachment-filename'
         )
       else
         object.filename
@@ -346,19 +348,18 @@ module ApplicationHelper
   def thumbnail_tag(attachment)
     thumbnail_size = Setting.thumbnails_size.to_i
     thumbnail_path = thumbnail_path(attachment, :size => thumbnail_size * 2)
-    link_to(
-      image_tag(
-        thumbnail_path,
-        :srcset => "#{thumbnail_path} 2x",
-        :style => "max-width: #{thumbnail_size}px; max-height: #{thumbnail_size}px;",
-        :title => attachment.filename,
-        :alt => attachment.filename,
-        :loading => "lazy"
-      ),
-      attachment_path(
-        attachment
+    tag.div class: 'thumbnail', title: attachment.filename do
+      link_to(
+        image_tag(
+          thumbnail_path,
+          :srcset => "#{thumbnail_path} 2x",
+          :style => "max-width: #{thumbnail_size}px; max-height: #{thumbnail_size}px;",
+          :alt => attachment.filename,
+          :loading => "lazy"
+        ),
+        attachment_path(attachment)
       )
-    )
+    end
   end
 
   def toggle_link(name, id, options={})
@@ -415,8 +416,16 @@ module ApplicationHelper
   end
 
   def format_activity_description(text)
-    h(text.to_s.truncate(120).gsub(%r{[\r\n]*<(pre|code)>.*$}m, '...')).
-      gsub(/[\r\n]+/, "<br />").html_safe
+    h(
+      # Limit input to avoid regex performance issues
+      text.to_s.slice(0, 10240)
+      # Abbreviate consecutive quoted lines as '> ...', keeping the first line
+      .gsub(%r{(^>.*?(?:\r?\n))(?:>.*?(?:\r?\n)+)+}m, "\\1> ...\n")
+      # Remove all content following the first <pre> or <code> tag
+      .sub(%r{[\r\n]*<(pre|code)>.*$}m, '')
+      # Truncate the description to a specified length and append '...'
+      .truncate(240)
+    ).gsub(/[\r\n]+/, "<br>").html_safe
   end
 
   def format_version_name(version)
@@ -450,10 +459,7 @@ module ApplicationHelper
     s = +''
     if projects.any?
       ancestors = []
-      original_project = @project
       projects.sort_by(&:lft).each do |project|
-        # set the project environment to please macros.
-        @project = project
         if ancestors.empty? || project.is_descendant_of?(ancestors.last)
           s << "<ul class='projects #{ancestors.empty? ? 'root' : nil}'>\n"
         else
@@ -472,7 +478,6 @@ module ApplicationHelper
         ancestors << project
       end
       s << ("</li></ul>\n" * ancestors.size)
-      @project = original_project
     end
     s.html_safe
   end
@@ -511,6 +516,8 @@ module ApplicationHelper
   def render_flash_messages
     s = +''
     flash.each do |k, v|
+      next unless v.is_a?(String)
+
       s << content_tag('div', notice_icon(k) + v.html_safe, :class => "flash #{k}", :id => "flash_#{k}")
     end
     s.html_safe
@@ -570,7 +577,7 @@ module ApplicationHelper
     s = (+'').html_safe
     build_project_link = lambda do |project, level = 0|
       padding = level * 16
-      text = content_tag('span', project.name, :style => "padding-left:#{padding}px;")
+      text = content_tag('span', project.name, :style => "padding-inline-start:#{padding}px;")
       s << link_to(text, project_path(project, :jump => jump),
                    :title => project.name,
                    :class => (project == selected ? 'selected' : nil))
@@ -1431,6 +1438,16 @@ module ApplicationHelper
     end
   end
 
+  def list_autofill_data_attributes
+    return {} if Setting.text_formatting.blank?
+
+    {
+      controller: 'list-autofill',
+      action: 'beforeinput->list-autofill#handleBeforeInput',
+      list_autofill_text_formatting_param: Setting.text_formatting
+    }
+  end
+
   unless const_defined?(:MACROS_RE)
     MACROS_RE = /(
                   (!)?                        # escaping
@@ -1602,7 +1619,7 @@ module ApplicationHelper
 
   # Helper to render JSON in views
   def raw_json(arg)
-    arg.to_json.to_s.gsub('/', '\/').html_safe
+    arg.to_json.gsub('/', '\/').html_safe
   end
 
   def back_url_hidden_field_tag
@@ -1795,12 +1812,12 @@ module ApplicationHelper
     tags = javascript_include_tag(
       'jquery-3.7.1-ui-1.13.3',
       'rails-ujs',
-      'tribute-5.1.3.min',
-      'tablesort-5.2.1.min.js',
-      'tablesort-5.2.1.number.min.js',
-      'application',
-      'responsive'
+      'tribute-5.1.3.min'
     )
+    if Setting.wiki_tablesort_enabled?
+      tags << javascript_include_tag('tablesort-5.2.1.min.js', 'tablesort-5.2.1.number.min.js')
+    end
+    tags << javascript_include_tag('application-legacy', 'responsive')
     unless User.current.pref.warn_on_leaving_unsaved == '0'
       warn_text = escape_javascript(l(:text_warn_on_leaving_unsaved))
       tags <<
@@ -1912,6 +1929,14 @@ module ApplicationHelper
     end
   end
 
+  def heads_for_i18n
+    javascript_tag(
+      "rm = window.rm || {};" \
+      "rm.I18n = rm.I18n || {};" \
+      "rm.I18n = Object.freeze({buttonCopy: '#{l(:button_copy)}'});"
+    )
+  end
+
   def heads_for_auto_complete(project)
     data_sources = autocomplete_data_sources(project)
     javascript_tag(
@@ -1929,7 +1954,7 @@ module ApplicationHelper
 
   def copy_object_url_link(url)
     link_to_function(
-      sprite_icon('copy-link', l(:button_copy_link)), 'copyTextToClipboard(this);',
+      sprite_icon('copy-link', l(:button_copy_link)), 'copyDataClipboardTextToClipboard(this);',
       class: 'icon icon-copy-link',
       data: {'clipboard-text' => url}
     )
