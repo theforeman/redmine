@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Delete Gemfile.lock
         run: rm -f Gemfile.lock
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Delete Gemfile.lock
         run: rm -f Gemfile.lock
@@ -110,13 +110,10 @@ jobs:
         run: bin/rails test:system
         env:
           GOOGLE_CHROME_OPTS_ARGS: headless,disable-gpu,no-sandbox,disable-dev-shm-usage
-        # System tests might still be a bit unstable, so for now, even if a system test fails,
-        # output the results and consider the overall test as successful.
-        continue-on-error: true
 
       - name: Upload system test screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: system-test-screenshots
           path: tmp/screenshots

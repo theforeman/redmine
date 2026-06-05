@@ -2,14 +2,14 @@ source 'https://rubygems.org'
 
 ruby '>= 3.1.0', '< 3.4.0'
 
-gem 'rails', '7.2.2.2'
+gem 'rails', '7.2.3'
 gem 'rouge', '~> 4.5'
 gem 'mini_mime', '~> 1.1.0'
 gem "actionpack-xml_parser"
 gem 'roadie-rails', '~> 3.2.0'
 gem 'marcel'
 gem 'mail', '~> 2.8.1'
-gem 'nokogiri', '~> 1.18.3'
+gem 'nokogiri', Gem.ruby_version >= Gem::Version.new('3.2') ? '~> 1.19.1' : '~> 1.18.10'
 gem 'i18n', '~> 1.14.1'
 gem 'rbpdf', '~> 1.21.4'
 gem 'addressable'
@@ -115,6 +115,8 @@ group :test do
   gem 'rubocop-performance', '~> 1.22.0', require: false
   gem 'rubocop-rails', '~> 2.27.0', require: false
   gem 'bundle-audit', require: false
+  # `bin/rails test` fails at startup with minitest >= 6.0
+  gem 'minitest', '< 6.0'
 end
 
 local_gemfile = File.join(File.dirname(__FILE__), "Gemfile.local")
